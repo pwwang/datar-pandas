@@ -24,7 +24,7 @@ from datar.dplyr import (
 from ...pandas import DataFrame
 from ...contexts import Context
 from ...common import is_scalar, is_logical, setdiff, intersect
-from ...utils import vars_select
+from ...utils import PandasData, vars_select
 
 
 @where.register(DataFrame, context=Context.EVAL)
@@ -169,12 +169,13 @@ def _any_of(
     return list(intersect(vars, make_array(vars)[x]))
 
 
-@num_range.register(object, context=Context.EVAL)
-def num_range(
-    prefix: str,
+@num_range.register((str, PandasData), context=Context.EVAL)
+def _num_range(
+    prefix: str | PandasData,
     range: Sequence[int],
     width: int = None,
 ) -> List[str]:
+    prefix = getattr(prefix, "orig_data", prefix)
     zfill = lambda elem: (elem if not width else str(elem).zfill(width))
     return [f"{prefix}{zfill(elem)}" for elem in builtins.range(range)]
 

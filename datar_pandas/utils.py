@@ -12,6 +12,14 @@ from .pandas import DataFrame, Series, SeriesGroupBy
 NO_DEFAULT = object()
 
 
+class PandasData:
+
+    __slots__ = ("orig_data", )
+
+    def __init__(self, data: Any) -> None:
+        self.orig_data = data
+
+
 @singledispatch
 def name_of(value: Any) -> str:
     out = str(value)
