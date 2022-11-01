@@ -8,7 +8,7 @@ from datar.core.names import repair_names
 
 from .pandas import DataFrame, Index, Series, SeriesGroupBy, GroupBy
 
-from .common import is_scalar, intersect, setdiff
+from .common import is_scalar, intersect, setdiff, union
 from .utils import apply_dtypes, name_of
 
 if TYPE_CHECKING:
@@ -363,9 +363,7 @@ class TibbleGrouped(Tibble):
     ) -> "TibbleGrouped":
         """Group a tibble by variants"""
         if add and "grouped" in self._datar:
-            from ..base import union
-
-            cols = list(union(self.group_vars, cols, __ast_fallback="normal"))
+            cols = list(union(self.group_vars, cols))
 
         return Tibble.group_by(
             Tibble(self, copy=False),

@@ -4,6 +4,7 @@ from numbers import Number as PyNumber
 import numpy as np
 from pipda import Expression
 
+from .pandas import Series
 
 T = TypeVar("T")
 
@@ -13,4 +14,4 @@ Float = Union[float, np.floating, Expression]
 Bool = Union[bool, np.bool_, Expression]
 Str = Union[str, np.str_, Expression]
 
-Data = Union[T, np.ndarray[T], Tuple[T, ...], List[T], Expression]
+Data = Union[T, np.ndarray[T], Tuple[T, ...], List[T], Series, Expression]
