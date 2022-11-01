@@ -15,6 +15,7 @@ def setup():
     from datar.core.options import add_option
     pdtypes.patch()
     add_option("use_modin", False)
+    add_option("dplyr_summarise_inform", True)
 
 
 @plugin.impl
@@ -31,8 +32,34 @@ def base_api():
 @plugin.impl
 def dplyr_api():
     from .api.dplyr import (
+        across,
+        arrange,
+        bind,
+        context,
+        count_tally,
+        desc,
+        distinct,
+        filter_,
+        funs,
+        glimpse,
+        group_by,
         group_data,
+        group_iter,
+        if_else,
+        join,
+        lead_lag,
         mutate,
+        order_by,
+        pull,
+        rank,
+        recode,
+        relocate,
+        rename,
+        rows,
+        select,
+        sets,
+        slice_,
+        summarise,
         tidyselect,
     )
 

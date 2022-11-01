@@ -3,7 +3,7 @@ from __future__ import annotations
 
 import inspect
 from functools import singledispatch, wraps
-from typing import TYPE_CHECKING, Any, Callable, Mapping, Set, Tuple
+from typing import TYPE_CHECKING, Any, Callable, Mapping, Set, Tuple, Type
 
 from pipda import Verb, register_verb
 from pipda.context import ContextType
@@ -128,6 +128,34 @@ def _with_hooks(
 
 
 class BootstrappableVerb(Verb):
+
+    @classmethod
+    def from_verb(
+        cls: Type[BootstrappableVerb],
+        verb: Verb,
+    ) -> BootstrappableVerb:
+        """Create a BootstrappableVerb from a Verb"""
+        inst = cls(
+            verb._generic,
+            None,
+            None,
+            None,
+            None,
+            None,
+            None,
+            None,
+            None,
+            verb.dep,
+            verb.ast_fallback,
+        )
+        inst.contexts = verb.contexts
+        inst.extra_contexts = verb.extra_contexts
+        inst._generic = verb._generic
+        inst.func = verb.func
+        inst.registry = verb.registry
+        inst.dispatch = verb.dispatch
+        inst._signature = verb._signature
+        return inst
 
     @cached_property
     def kind_apply(self) -> Callable:
@@ -324,7 +352,6 @@ class BootstrappableVerb(Verb):
         extra_contexts: Mapping[str, ContextType] = NO_DEFAULT,
         pre: Callable = NO_DEFAULT,
         post: Callable = NO_DEFAULT,
-        backend: str = "pandas",
         **kwargs: Any,
     ) -> BootstrappableVerb:
         """Bootstrap a verb for new types, including Series, DataFrame, etc.
@@ -339,7 +366,6 @@ class BootstrappableVerb(Verb):
             extra_contexts: The extra contexts to use for the function.
             pre: A function to be called before the function.
             post: A function to be called after the function.
-            backend: The backend to use for the function.
             **kwargs: kind-specific arguments.
 
         Returns:
@@ -353,7 +379,6 @@ class BootstrappableVerb(Verb):
                 extra_contexts=extra_contexts,
                 pre=pre,
                 post=post,
-                backend=backend,
                 **kwargs,
             )
 
@@ -372,28 +397,8 @@ class BootstrappableVerb(Verb):
         if post is NO_DEFAULT:
             post = self.fact_post
 
-        if "pandas" in backend:
-            if kind == "agg":
-                return self._bootstrap_pandas_agg(
-                    func,
-                    context=context,
-                    extra_contexts=extra_contexts,
-                    pre=pre,
-                    post=post,
-                    **kwargs,
-                )
-
-            if kind == "transform":
-                return self._bootstrap_pandas_transform(
-                    func,
-                    context=context,
-                    extra_contexts=extra_contexts,
-                    pre=pre,
-                    post=post,
-                    **kwargs,
-                )
-
-            return self._bootstrap_pandas_apply(
+        if kind == "agg":
+            return self._bootstrap_pandas_agg(
                 func,
                 context=context,
                 extra_contexts=extra_contexts,
@@ -402,7 +407,24 @@ class BootstrappableVerb(Verb):
                 **kwargs,
             )
 
-        return self
+        if kind == "transform":
+            return self._bootstrap_pandas_transform(
+                func,
+                context=context,
+                extra_contexts=extra_contexts,
+                pre=pre,
+                post=post,
+                **kwargs,
+            )
+
+        return self._bootstrap_pandas_apply(
+            func,
+            context=context,
+            extra_contexts=extra_contexts,
+            pre=pre,
+            post=post,
+            **kwargs,
+        )
 
 
 def func_generic(
@@ -421,7 +443,7 @@ def func_generic(
     post: Callable = None,
 ) -> BootstrappableVerb:
     """Register a generic function to handle basic data types,
-    without any backend support.
+    without bootstrapping.
 
     Args:
         func: The focal function to apply to the data. If not provided, the
@@ -494,7 +516,6 @@ def func_factory(
     doc: str = None,
     module: str = None,
     signature: Signature = None,
-    backend: str = "pandas",
     pre: Callable = None,
     post: Callable = None,
     **kwargs,  # Other kind-specific arguments.
@@ -524,7 +545,6 @@ def func_factory(
         signature: The signature of the function. Only needed when
             signature is not available for the function (e.g. `np.sqrt`); and
             `extra_contexts` is provided or `kind` is `apply`
-        backend: The backend for the function
         pre: The pre hook, takes the `__data` and `*args`, `**kwargs`. If it
             returns None, the original `*args` and `**kwargs` will be used.
             Otherwise, it should return a tuple of `__data`, `args` and `kwargs`
@@ -549,7 +569,6 @@ def func_factory(
             doc=doc,
             module=module,
             signature=signature,
-            backend=backend,
             pre=pre,
             post=post,
             **kwargs,
@@ -570,7 +589,7 @@ def func_factory(
         post=post,
     )
 
-    return verb.bootstrap(func, kind=kind, backend=backend, **kwargs)
+    return verb.bootstrap(func, kind=kind, **kwargs)
 
 
 def func_dispatched(
@@ -601,3 +620,44 @@ def func_dispatched(
     for type_, method in func.registry.items():
         verb.register(type_)(method)
     return verb
+
+
+def func_bootstrap(
+    verb: Verb,
+    *,
+    func: Callable = None,
+    kind: str = "apply",
+    context: ContextType = NO_DEFAULT,
+    extra_contexts: Mapping[str, ContextType] = NO_DEFAULT,
+    pre: Callable = NO_DEFAULT,
+    post: Callable = NO_DEFAULT,
+    **kwargs: Any,
+) -> BootstrappableVerb:
+    """Bootstrap a verb"""
+    if not isinstance(verb, Verb):
+        raise TypeError("`verb` must be a pipda Verb")
+
+    if func is None:
+        return lambda fun: func_bootstrap(
+            verb,
+            func=fun,
+            kind=kind,
+            context=context,
+            extra_contexts=extra_contexts,
+            pre=pre,
+            post=post,
+            **kwargs,
+        )
+
+    if not isinstance(verb, BootstrappableVerb):
+        verb = BootstrappableVerb.from_verb(verb)
+
+    return verb.bootstrap(
+        func,
+        kind=kind,
+        context=context,
+        extra_contexts=extra_contexts,
+        pre=pre,
+        post=post,
+        **kwargs,
+    )

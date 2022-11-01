@@ -2,6 +2,7 @@ from typing import Any
 
 from datar.base import (
     is_atomic,
+    is_factor as _is_factor,
     is_logical as _is_logical,
     is_integer as _is_integer,
     intersect as _intersect,
@@ -21,6 +22,10 @@ def is_scalar(x: Any) -> bool:
 
 def is_null(x: Any) -> Data[Bool]:
     return pd.isnull(x)
+
+
+def is_factor(x: Any) -> bool:
+    return _is_factor(x, __ast_fallback="normal")
 
 
 def is_integer(x: Any) -> bool:

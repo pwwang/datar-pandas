@@ -42,7 +42,7 @@ def _enframe(x, name="name", value="value"):
         A data frame with two columns if `name` is not None (default) or
         one-column otherwise.
     """
-    x = getattr(x, "orig_data", x)
+    x = x.data if isinstance(x, PandasData) else x
     if not value:
         raise ValueError("`value` can't be empty.")
 

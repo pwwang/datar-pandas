@@ -4,20 +4,28 @@ import textwrap
 from typing import Any, Hashable, Iterable, Mapping
 from functools import singledispatch
 
+import numpy as np
+
 from .common import is_null, unique
 from .collections import Collection
 from .pandas import DataFrame, Series, SeriesGroupBy
 
 # Specify a "no default" value so that None can be used as a default value
 NO_DEFAULT = object()
+# Just for internal and testing uses
+NA_character_ = "<NA>"
+# Sentinels
+NA_integer_ = np.random.randint(np.iinfo(np.int32).max)
+NA_real_ = np.nan
+NA_compex_ = complex(NA_real_, NA_real_)
 
 
 class PandasData:
 
-    __slots__ = ("orig_data", )
+    __slots__ = ("data", )
 
     def __init__(self, data: Any) -> None:
-        self.orig_data = data
+        self.data = data
 
 
 @singledispatch

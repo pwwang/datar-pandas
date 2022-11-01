@@ -175,7 +175,7 @@ def _num_range(
     range: Sequence[int],
     width: int = None,
 ) -> List[str]:
-    prefix = getattr(prefix, "orig_data", prefix)
+    prefix = prefix.data if isinstance(prefix, PandasData) else prefix
     zfill = lambda elem: (elem if not width else str(elem).zfill(width))
     return [f"{prefix}{zfill(elem)}" for elem in builtins.range(range)]
 
