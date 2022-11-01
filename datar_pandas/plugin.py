@@ -1,5 +1,7 @@
 from typing import TYPE_CHECKING
+
 from simplug import Simplug
+
 
 if TYPE_CHECKING:
     from datar.data.metadata import Metadata
@@ -47,3 +49,9 @@ def get_versions():
 @plugin.impl
 def c_getitem(item):
     ...
+
+
+@plugin.impl
+def operate(op, x, y=None):
+    from .operators import operate as operate_
+    return operate_(op, x, y)

@@ -1,17 +1,14 @@
 """Provides wrapped DataFrame. Should be only used with pandas/modin backends"""
-from __future__ import annotations
-
 from itertools import chain
-from typing import TYPE_CHECKING, Callable, Mapping, Sequence
+from typing import TYPE_CHECKING, Callable, Mapping, Union, Sequence
 
 import numpy as np
 from pipda import evaluate_expr
 from datar.core.names import repair_names
-from datar.base import is_atomic, intersect, setdiff
 
-from .pandas import DataFrame, Index, Series
-from .pandas.core.groupby import SeriesGroupBy, GroupBy
+from .pandas import DataFrame, Index, Series, SeriesGroupBy, GroupBy
 
+from .common import is_scalar, intersect, setdiff
 from .utils import apply_dtypes, name_of
 
 if TYPE_CHECKING:
@@ -44,9 +41,9 @@ class Tibble(DataFrame):
         cls,
         names: Sequence[str],
         data: Sequence,
-        _name_repair: str | Callable = "check_unique",
-        _dtypes: Dtype | Mapping[str, Dtype] = None,
-    ) -> Tibble:
+        _name_repair: Union[str, Callable] = "check_unique",
+        _dtypes: Union["Dtype", Mapping[str, "Dtype"]] = None,
+    ) -> "Tibble":
         """Construct a tibble with name-value pairs
 
         Instead of do `**kwargs`, this allows duplicated names
@@ -169,11 +166,7 @@ class Tibble(DataFrame):
         if drop is None:
             drop = False
 
-        cols = (
-            [cols]
-            if is_atomic(cols, __ast_fallback="normal")
-            else list(cols)
-        )
+        cols = [cols] if is_scalar(cols) else list(cols)
         grouped = self.groupby(cols, observed=drop, sort=sort, dropna=dropna)
 
         return TibbleGrouped.from_groupby(grouped)
