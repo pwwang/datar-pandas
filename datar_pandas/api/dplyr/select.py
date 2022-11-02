@@ -64,18 +64,13 @@ def _eval_select(
     )
 
     if _missing_gvars_inform:
-        missing = setdiff(
-            _group_vars,
-            _all_columns[selected_idx],
-            __ast_fallback="normal",
-        )
+        missing = setdiff(_group_vars, _all_columns[selected_idx])
         if len(missing) > 0:
             logger.info("Adding missing grouping variables: %s", missing)
 
     selected_idx = union(
         _all_columns.get_indexer_for(_group_vars),
         selected_idx,
-        __ast_fallback="normal",
     )
 
     if not kwargs:

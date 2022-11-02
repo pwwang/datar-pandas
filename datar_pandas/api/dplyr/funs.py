@@ -53,7 +53,22 @@ def _coalesce(x, *replace):
     return x
 
 
-@func_bootstrap(na_if, data_args={"x", "y"})
+def _na_if_post(__out, x, y, __args_raw=None):
+    if not isinstance(__out, TibbleGrouped):
+        return __out
+    rawx = __args_raw["x"]
+    out = __out.groupby(
+        rawx.grouper,
+        sort=rawx.sort,
+        dropna=rawx.dropna,
+        observed=rawx.observed,
+    )
+    if getattr(rawx, "is_rowwise", False):
+        out.is_rowwise = True
+    return out
+
+
+@func_bootstrap(na_if, data_args={"x", "y"}, post=_na_if_post)
 def _na_if(x, y, __args_raw=None):
     if is_scalar(x) and is_scalar(y):  # rowwise
         return np.nan if x == y else x
@@ -66,20 +81,6 @@ def _na_if(x, y, __args_raw=None):
         )
     x[(x == y).values] = np.nan
     return x
-
-
-@na_if.register((TibbleGrouped, TibbleRowwise), func="default", post="decor")
-def _na_if_post(__out, x, y, __args_raw=None):
-    rawx = __args_raw["x"]
-    out = __out.groupby(
-        rawx.grouper,
-        sort=rawx.sort,
-        dropna=rawx.dropna,
-        observed=rawx.observed,
-    )
-    if getattr(rawx, "is_rowwise", False):
-        out.is_rowwise = True
-    return out
 
 
 def _near_post(__out, a, b, __args_raw=None):
@@ -98,29 +99,13 @@ def _near_post(__out, a, b, __args_raw=None):
     return out
 
 
-func_bootstrap(
+@func_bootstrap(
     near,
-    func=lambda a, b, __args_raw=None: np.isclose(a, b),
     data_args={"a", "b"},
-    name="near",
-    qualname="near",
-    module="datar.dplyr",
-    doc="""Compare numbers with tolerance
-
-    Args:
-        a: and
-        b: Numbers to compare
-        rtol: The relative tolerance parameter
-        atol: The absolute tolerance parameter
-        equal_nan: Whether to compare NaN's as equal.
-            If True, NA's in `a` will be
-            considered equal to NA's in `b` in the output array.
-
-    Returns:
-        A bool array indicating element-wise equvalence between a and b
-    """,
     post=_near_post,
 )
+def _near(a, b, __args_raw=None):
+    return np.isclose(a, b)
 
 
 def _nth_(x, n, order_by=np.nan, default=np.nan, __args_raw=None):

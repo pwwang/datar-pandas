@@ -155,6 +155,9 @@ class BootstrappableVerb(Verb):
         inst.registry = verb.registry
         inst.dispatch = verb.dispatch
         inst._signature = verb._signature
+        inst.fact_pre = None
+        inst.fact_post = None
+        inst.fact_func = verb._generic
         return inst
 
     @cached_property

@@ -1,6 +1,6 @@
 from typing import Any
 
-from datar.base import (
+from datar.apis.base import (
     is_atomic,
     is_factor as _is_factor,
     is_logical as _is_logical,

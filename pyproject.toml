@@ -19,7 +19,16 @@ modin = ["modin"]
 [tool.poetry.plugins.datar]
 pandas = "datar_pandas:plugin"
 
-
 [build-system]
 requires = ["poetry-core"]
 build-backend = "poetry.core.masonry.api"
+
+[tool.pytest.ini_options]
+addopts = "-vv --assert=plain -p no:asyncio --tb=short -n auto --cov-config=.coveragerc --cov=datar_pandas --cov-report xml:cov.xml --cov-report term-missing"
+filterwarnings = [
+    # "ignore::UserWarning",
+    # "ignore::RuntimeWarning",
+    # "error"
+]
+console_output_style = "progress"
+junit_family = "xunit1"

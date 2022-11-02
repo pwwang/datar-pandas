@@ -10,8 +10,8 @@ from datar.apis.tibble import (
 )
 
 from ...common import is_scalar
+from ...contexts import Context
 from ...pandas import DataFrame, DataFrameGroupBy
-
 from ...tibble import Tibble, TibbleGrouped
 
 if TYPE_CHECKING:
@@ -165,18 +165,18 @@ def _tibble_row(
     return df
 
 
-@as_tibble.register(DataFrame)
-def _as_tibble_df(df: DataFrame) -> Tibble:
+@as_tibble.register((dict, DataFrame), context=Context.EVAL)
+def _as_tibble_df(df: DataFrame | dict) -> Tibble:
     return Tibble(df)
 
 
-@as_tibble.register(DataFrameGroupBy)
+@as_tibble.register(DataFrameGroupBy, context=Context.EVAL)
 def _as_tibble_dfg(df: DataFrameGroupBy) -> TibbleGrouped:
     """Convert a pandas DataFrameGroupBy object to TibbleGrouped object"""
     return TibbleGrouped.from_groupby(df)
 
 
-@as_tibble.register(Tibble)
+@as_tibble.register(Tibble, context=Context.EVAL)
 def _as_tibble_tbl(df: Tibble) -> Tibble:
     """Convert a pandas DataFrame object to Tibble object"""
     return df

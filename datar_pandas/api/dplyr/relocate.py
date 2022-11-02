@@ -1,11 +1,10 @@
 """Relocate columns"""
 from typing import Any, Union
 
-from pipda import register_verb
 from datar.apis.tibble import as_tibble
 from datar.apis.dplyr import group_vars, relocate
-from ...pandas import DataFrame
 
+from ...pandas import DataFrame
 from ...contexts import Context
 from ...tibble import Tibble, TibbleGrouped
 from ...common import setdiff, union, intersect
@@ -65,17 +64,9 @@ def _relocate(
         if where not in to_move:
             to_move.append(where)
 
-    lhs = setdiff(range(where), to_move, __ast_fallback="normal")
-    rhs = setdiff(
-        range(where + 1, len(all_columns)),
-        to_move,
-        __ast_fallback="normal",
-    )
-    pos = union(
-        lhs,
-        union(to_move, rhs, __ast_fallback="normal"),
-        __ast_fallback="normal",
-    )
+    lhs = setdiff(range(where), to_move)
+    rhs = setdiff(range(where + 1, len(all_columns)), to_move)
+    pos = union(lhs, union(to_move, rhs))
 
     out = _data.iloc[:, pos]
     # out = out.copy()
@@ -83,7 +74,7 @@ def _relocate(
         out.rename(columns=new_names, inplace=True)
         if (
             isinstance(out, TibbleGrouped)
-            and len(intersect(gvars, new_names, __ast_fallback="normal")) > 0
+            and len(intersect(gvars, new_names)) > 0
         ):
             out._datar["group_vars"] = [
                 new_names.get(gvar, gvar) for gvar in gvars

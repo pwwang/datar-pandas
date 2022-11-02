@@ -184,7 +184,7 @@ def _group_trim_grouped(
     return reconstruct_tibble(_data, dropped, drop=_drop)
 
 
-@with_groups(DataFrame, context=Context.PENDING)
+@with_groups.register(DataFrame, context=Context.PENDING)
 def _with_groups(
     _data: DataFrame,
     _groups: Data[Int | Str],

@@ -191,7 +191,7 @@ def _slice_min(
     return _data.reindex(sliced.index.get_level_values(-1))
 
 
-@slice_max(DataFrame, context=Context.EVAL)
+@slice_max.register(DataFrame, context=Context.EVAL)
 def _slice_max(
     _data: DataFrame,
     order_by: Iterable[Any],
@@ -214,7 +214,7 @@ def _slice_max(
     return _data.reindex(sliced.index.get_level_values(-1))
 
 
-@slice_sample(DataFrame, context=Context.EVAL)
+@slice_sample.register(DataFrame, context=Context.EVAL)
 def _slice_sample(
     _data: DataFrame,
     n: int = 1,

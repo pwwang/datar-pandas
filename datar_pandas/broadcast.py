@@ -753,7 +753,7 @@ def _(value: SeriesGroupBy, name: str) -> Tibble:
 @init_tibble_from.register(DataFrame)
 @init_tibble_from.register(DataFrameGroupBy)
 def _(value: Union[DataFrame, DataFrameGroupBy], name: str) -> Tibble:
-    from .api.tibble import as_tibble
+    from datar.apis.tibble import as_tibble
 
     result = as_tibble(value, __ast_fallback="normal")
 

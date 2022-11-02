@@ -12,7 +12,7 @@ from datar.apis.dplyr import bind_rows, bind_cols
 from ... import pandas as pd
 from ...pandas import DataFrame, Categorical, union_categoricals
 from ...utils import PandasData
-from ...common import is_categorical, is_scalar, is_null
+from ...common import is_factor, is_scalar, is_null
 from ...contexts import Context
 from ...tibble import Tibble, TibbleGrouped, reconstruct_tibble
 
@@ -74,7 +74,7 @@ def _bind_rows(
             if col in dat and not dat[col].isna().all()
         ]
         all_categorical = [
-            is_categorical(ser) or is_null(ser).all()
+            is_factor(ser) or is_null(ser).all()
             for ser in all_series
         ]
         if all(all_categorical):
@@ -85,7 +85,7 @@ def _bind_rows(
                 data[col] = Categorical(
                     data[col],
                     categories=union_cat.categories,
-                    ordered=is_categorical(data[col])
+                    ordered=is_factor(data[col])
                     and data[col].cat.ordered,
                 )
         elif any(all_categorical):

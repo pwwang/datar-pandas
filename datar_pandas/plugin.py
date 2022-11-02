@@ -26,7 +26,26 @@ def load_dataset(name: str, meta: "Metadata"):
 
 @plugin.impl
 def base_api():
-    ...
+    from .api.base import (
+        arithm,
+        asis,
+        bessel,
+        complex,
+        cum,
+        factor,
+        funs,
+        null,
+        random,
+        seq,
+        special,
+        string,
+        trig,
+        verbs,
+        which,
+    )
+    from .api.base.asis import as_pd_date
+
+    return {"as_pd_date": as_pd_date}
 
 
 @plugin.impl
@@ -67,6 +86,26 @@ def dplyr_api():
 @plugin.impl
 def tibble_api():
     from .api.tibble import tibble, verbs
+
+
+@plugin.impl
+def other_api():
+    from .api.other import (
+        use_pandas,
+        itemgetter,
+        attrgetter,
+        pd_cat,
+        pd_dt,
+        pd_str,
+    )
+    return {
+        "use_pandas": use_pandas,
+        "itemgetter": itemgetter,
+        "attrgetter": attrgetter,
+        "pd_cat": pd_cat,
+        "pd_dt": pd_dt,
+        "pd_str": pd_str,
+    }
 
 
 @plugin.impl

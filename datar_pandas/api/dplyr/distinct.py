@@ -83,14 +83,17 @@ def _n_distinct(x: Any, na_rm: bool = True):
     return Series(x).nunique(dropna=na_rm)
 
 
-@func_bootstrap(kind="agg")
+@func_bootstrap(n_distinct, kind="agg")
 def _n_distinct_bootstrap(x: PandasObject, na_rm: bool = True):
     """Get the length of distinct elements"""
     return x.nunique(dropna=na_rm)
 
 
-n_distinct.register(
-    (TibbleGrouped, GroupBy),
-    func="nunique",
-    pre=lambda x, na_rm=True: (x, (), {"dropna": na_rm}),
-)
+@n_distinct.register(TibbleGrouped, context=Context.EVAL)
+def _n_distinct_grouped(x: Any, na_rm: bool = True):
+    return x._datar["grouped"].agg("nunique", dropna=na_rm)
+
+
+@n_distinct.register(GroupBy, context=Context.EVAL)
+def _n_distinct_groupby(x: Any, na_rm: bool = True):
+    return x.agg("nunique", dropna=na_rm)
