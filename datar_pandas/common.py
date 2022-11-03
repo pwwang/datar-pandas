@@ -1,7 +1,7 @@
 from typing import Any
 
+from datar_numpy.utils import is_scalar  # noqa: F401
 from datar.apis.base import (
-    is_atomic,
     is_factor as _is_factor,
     is_logical as _is_logical,
     is_integer as _is_integer,
@@ -12,12 +12,8 @@ from datar.apis.base import (
 )
 
 from . import pandas as pd
+from .pandas import unique  # noqa: F401
 from .typing import Data, Bool
-
-
-def is_scalar(x: Any) -> bool:
-    """Check if x is a scalar"""
-    return is_atomic(x, __ast_fallback="normal")
 
 
 def is_null(x: Any) -> Data[Bool]:
@@ -46,7 +42,3 @@ def setdiff(x: Any, y: Any) -> Any:
 
 def union(x: Any, y: Any) -> Any:
     return _union(x, y, __ast_fallback="normal")
-
-
-def unique(x: Any) -> Any:
-    return _unique(x, __ast_fallback="normal")

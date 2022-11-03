@@ -33,10 +33,7 @@ def _where(_data: DataFrame, fn: Callable) -> List[str]:
     _data = ungroup(_data, __ast_fallback="normal")
     mask = []
     for col in columns:
-        if isinstance(fn, Function):
-            dat = fn(_data[col])
-            mask.append(dat)
-        elif isinstance(fn, Verb):
+        if isinstance(fn, Verb) and fn.dep:
             dat = fn(_data, _data[col], __ast_fallback="normal")
             mask.append(dat)
         else:

@@ -1,7 +1,7 @@
 import builtins
 import numpy as np
 from datar.apis.base import (
-    # is_atomic,
+    is_atomic,
     is_character,
     is_complex,
     is_double,
@@ -45,6 +45,7 @@ from ...pandas import (
     is_numeric_dtype,
     is_categorical_dtype,
 )
+from ...common import is_scalar
 from ...contexts import Context
 from ...factory import func_bootstrap, func_factory
 
@@ -78,6 +79,12 @@ is_factor.register(SeriesGroupBy, context=Context.EVAL)(
     lambda x: x.agg(is_categorical_dtype)
 )
 
+func_bootstrap(
+    is_atomic,
+    func=is_scalar,
+    context=Context.EVAL,
+    kind="transform",
+)
 func_bootstrap(
     is_finite,
     func=np.isfinite,

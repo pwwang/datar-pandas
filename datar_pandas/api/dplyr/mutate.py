@@ -111,7 +111,7 @@ def _mutate(
         unused = setdiff(all_columns, list(used_refs))
         keep = intersect(
             data.columns,
-            c(gvars, unused, mutated_cols),
+            Collection(gvars, unused, mutated_cols),
         )
     elif keep == "used":
         keep = intersect(

@@ -88,22 +88,14 @@ class Across:
                 args = CurColumn.replace_args(self.args, column)
                 kwargs = CurColumn.replace_kwargs(self.kwargs, column)
 
-                if isinstance(fn, Verb):
-                    if fn.registered(DataFrame):
-                        value = fn(
-                            self.data,
-                            self.data[column],
-                            *args,
-                            __ast_fallback="normal",
-                            **kwargs,
-                        )
-                    else:
-                        value = fn(
-                            self.data[column],
-                            *args,
-                            __ast_fallback="normal",
-                            **kwargs,
-                        )
+                if isinstance(fn, Verb) and fn.dep:
+                    value = fn(
+                        self.data,
+                        self.data[column],
+                        *args,
+                        __ast_fallback="normal",
+                        **kwargs,
+                    )
                 else:
                     value = fn(
                         self.data[column],

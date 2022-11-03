@@ -21,12 +21,25 @@ from datar.base import (
 from datar.core.names import NameNonUniqueError
 from datar.data import iris, mtcars
 from datar.dplyr import group_by, rowwise, group_vars
-from datar.tibble import *
+from datar.tibble import (
+    tibble,
+    enframe,
+    deframe,
+    add_row,
+    add_column,
+    remove_rownames,
+    rowid_to_column,
+    rownames_to_column,
+    column_to_rownames,
+    has_rownames,
+)
 from datar_pandas import pandas as pd
 from datar_pandas.pandas import assert_frame_equal
 from datar_pandas.tibble import TibbleGrouped, TibbleRowwise
 
 from ..conftest import assert_iterable_equal
+
+has_rownames.ast_fallback = "normal"
 
 # enframe ------------------------------------------
 
@@ -453,8 +466,8 @@ def test_has_rownames_and_remove_rownames():
 # })
 
 
+# test_that("rownames_to_column keeps the tbl classes (#882)", {
 def test_rownames_to_column():
-    # test_that("rownames_to_column keeps the tbl classes (#882)", {
     res = rownames_to_column(mtcars)
     assert not has_rownames(res)
     assert_iterable_equal(res.rowname, rownames(mtcars))

@@ -32,6 +32,19 @@ def assert_factor_equal(x, y, na=8525.8525, approx=False):
     assert_iterable_equal(xlevs, ylevs, na=na, approx=approx)
 
 
+def assert_(x):
+    assert x
+
+
+# pytest modifies node for assert
+def assert_equal(x, y, approx=False):
+    if approx is True:
+        x = pytest.approx(x)
+    elif approx:
+        x = pytest.approx(x, rel=approx)
+    assert x == y
+
+
 def is_installed(pkg):
     try:
         __import__(pkg)
