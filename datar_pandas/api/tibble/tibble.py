@@ -1,24 +1,26 @@
 from __future__ import annotations
 from typing import TYPE_CHECKING, Any, Callable, Mapping
 
-from pipda import ReferenceAttr, ReferenceItem
+import numpy as np
+from pipda import Expression, ReferenceAttr, ReferenceItem, evaluate_expr
 from datar.apis.tibble import (
     tibble,
+    tibble_,
     tibble_row,
     tribble,
     as_tibble,
 )
 
 from ...common import is_scalar
-from ...contexts import Context
-from ...pandas import DataFrame, DataFrameGroupBy
+from ...contexts import ContextAutoEvalError, Context
+from ...pandas import DataFrame, DataFrameGroupBy, PandasObject
 from ...tibble import Tibble, TibbleGrouped
 
 if TYPE_CHECKING:
     from pandas._typing import Dtype
 
 
-@tibble.impl
+@tibble.register(backend="pandas")
 def _tibble(
     *args,
     _name_repair: str | Callable = "check_unique",
@@ -28,27 +30,49 @@ def _tibble(
     _index=None,
     **kwargs,
 ) -> Tibble:
-    """Constructs a data frame
+    evaled_kws = {}
+    for key, val in kwargs.items():
+        if isinstance(val, Expression):
+            try:
+                evaled_kws[key] = evaluate_expr(
+                    val,
+                    evaled_kws,
+                    Context.AUTOEVAL,
+                )
+            except ContextAutoEvalError:
+                evaled_kws[key] = val
+        else:
+            evaled_kws[key] = val
 
-    Args:
-        *args: and
-        **kwargs: A set of name-value pairs.
-        _name_repair: treatment of problematic column names:
-            - "minimal": No name repair or checks, beyond basic existence,
-            - "unique": Make sure names are unique and not empty,
-            - "check_unique": (default value), no name repair,
-                but check they are unique,
-            - "universal": Make the names unique and syntactic
-            - a function: apply custom name repair
-        _rows: Number of rows of a 0-col dataframe when args and kwargs are
-            not provided. When args or kwargs are provided, this is ignored.
-        _dtypes: The dtypes for each columns to convert to.
-        _drop_index: Whether drop the index for the final data frame
-        _index: The new index of the output frame
+    return tibble_(
+        *args,
+        _name_repair=_name_repair,
+        _rows=_rows,
+        _dtypes=_dtypes,
+        _drop_index=_drop_index,
+        _index=_index,
+        __ast_fallback="normal",
+        **evaled_kws,
+    )
 
-    Returns:
-        A constructed tibble
-    """
+
+@tibble_.register(
+    (
+        (object, np.ndarray, *PandasObject)
+        if isinstance(PandasObject, tuple)
+        else (object, np.ndarray, PandasObject)
+    ),
+    backend="pandas",
+)
+def _tibble_(
+    *args,
+    _name_repair: str | Callable = "check_unique",
+    _rows: int = None,
+    _dtypes: Dtype | Mapping[str, Dtype] = None,
+    _drop_index: bool = False,
+    _index=None,
+    **kwargs,
+) -> Tibble:
     out = Tibble.from_args(
         *args,
         **kwargs,
@@ -65,32 +89,12 @@ def _tibble(
     return out
 
 
-@tribble.impl
+@tribble.register(backend="pandas")
 def _tribble(
     *dummies: Any,
     _name_repair: str | Callable = "minimal",
     _dtypes: Dtype | Mapping[str, Dtype] = None,
 ) -> Tibble:
-    """Create dataframe using an easier to read row-by-row layout
-    Unlike original API that uses formula (`f.col`) to indicate the column
-    names, we use `f.col` to indicate them.
-
-    Args:
-        *dummies: Arguments specifying the structure of a dataframe
-            Variable names should be specified with `f.name`
-        _dtypes: The dtypes for each columns to convert to.
-
-    Examples:
-        >>> tribble(
-        >>>     f.colA, f.colB,
-        >>>     "a",    1,
-        >>>     "b",    2,
-        >>>     "c",    3,
-        >>> )
-
-    Returns:
-        A dataframe
-    """
     columns = []
     data = []
     for i, dummy in enumerate(dummies):
@@ -132,7 +136,7 @@ def _tribble(
     )
 
 
-@tibble_row.impl
+@tibble_row.register(backend="pandas")
 def _tibble_row(
     *args: Any,
     _name_repair: str | Callable = "check_unique",

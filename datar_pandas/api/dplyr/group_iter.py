@@ -51,7 +51,9 @@ def _group_map(
     _keep: bool = False,
     **kwargs: Any,
 ):
-    keys = group_keys(_data, __ast_fallback="normal") if nargs(_f) > 1 else None
+    keys = (
+        group_keys(_data, __ast_fallback="normal") if _nargs(_f) > 1 else None
+    )
     for i, chunk in enumerate(
         group_split(_data, _keep=_keep, __ast_fallback="normal")
     ):
@@ -156,7 +158,7 @@ def _group_walk(
 
 
 @group_trim.register(DataFrame, context=Context.EVAL)
-def group_trim(_data: DataFrame, _drop: bool = None) -> DataFrame:
+def _group_trim(_data: DataFrame, _drop: bool = None) -> DataFrame:
     return _data
 
 
@@ -282,7 +284,7 @@ def group_split_impl(data, _keep):
     if not _keep:
         remove = group_vars(data, __ast_fallback="normal")
         _keep = out.columns
-        _keep = setdiff(_keep, remove, __ast_fallback="normal")
+        _keep = setdiff(_keep, remove)
         out = out[_keep]
 
     for rows in indices:

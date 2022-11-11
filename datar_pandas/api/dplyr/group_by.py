@@ -64,7 +64,6 @@ def _group_by_grouped(
     gvars = union(
         group_vars(_data, __ast_fallback="normal"),
         new_cols,
-        __ast_fallback="normal",
     ) if _add else new_cols
 
     return group_by(
@@ -141,11 +140,7 @@ def _ungroup_grouped(
 
     old_groups = group_vars(x, __ast_fallback="normal")
     to_remove = vars_select(obj.columns, *cols)
-    new_groups = setdiff(
-        old_groups,
-        obj.columns[to_remove],
-        __ast_fallback="normal",
-    )
+    new_groups = setdiff(old_groups, obj.columns[to_remove])
 
     return group_by(obj, *new_groups, __ast_fallback="normal")
 
@@ -170,7 +165,7 @@ def _ungroup_groupby(
     return x.obj
 
 
-@group_by_drop_default.register(DataFrame, context=Context.EVAL)
+@group_by_drop_default.register(DataFrame, backend="pandas")
 def _group_by_drop_default(_tbl: DataFrame) -> bool:
     """Get the groupby _drop attribute of dataframe"""
     grouped = getattr(_tbl, "_datar", {}).get("grouped", None)

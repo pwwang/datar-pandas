@@ -15,24 +15,40 @@ from datar.apis.dplyr import (
 )
 
 from ... import pandas as pd
-from ...pandas import Series, SeriesGroupBy
+from ...pandas import DataFrame, Series, SeriesGroupBy
 from ...common import is_scalar
+from ...contexts import Context
 from ...factory import func_bootstrap
-from ...tibble import TibbleGrouped, TibbleRowwise
+from ...tibble import TibbleGrouped
+
+
+@between.register(object, backend="pandas")
+def _between_obj(x, left, right, inclusive: str = "both"):
+    return Series(x).between(left, right, inclusive=inclusive)
 
 
 @func_bootstrap(between, kind="transform")
-def _between(x, left, right, inclusive="both"):
+def _between(x, left, right, inclusive: str = "both"):
     return x.between(left, right, inclusive)
 
 
 # faster
-between.register(SeriesGroupBy, "between")
+between.register(SeriesGroupBy, fun="between", backend="pandas")
+
+
+@cummean.register(object, backend="pandas")
+def _cummean_obj(x):
+    return Series(x, dtype=float).expanding().mean()
 
 
 @func_bootstrap(cummean, kind="transform")
 def _cummean(x: Series):
-    return x.cumsum() / (np.arange(x.size) + 1.0)
+    return x.expanding().mean()
+
+
+@cumall.register(object, backend="pandas")
+def _cumall_obj(x, na_as: bool = False):
+    return Series(x, dtype=object).fillna(na_as).cumprod().astype(bool)
 
 
 @func_bootstrap(cumall, kind="transform")
@@ -40,15 +56,27 @@ def _cumall(x, na_as: bool = False):
     return x.fillna(na_as).cumprod().astype(bool)
 
 
+@cumany.register(object, backend="pandas")
+def _cumany_obj(x, na_as: bool = False):
+    return Series(x, dtype=object).fillna(na_as).cumsum().astype(bool)
+
+
 @func_bootstrap(cumany, kind="transform")
 def _cumany(x, na_as: bool = False):
     return x.fillna(na_as).cumsum().astype(bool)
 
 
-@func_bootstrap(coalesce, data_args={"x", "replace"})
+@func_bootstrap(coalesce, post="transform")
 def _coalesce(x, *replace):
-    for repl in replace:
-        x = x.combine_first(repl)
+    if isinstance(x, DataFrame):
+        for repl in replace:
+            if isinstance(repl, DataFrame):
+                x = x.combine_first(repl)
+            else:
+                x = x.combine_first(pd.concat([repl] * x.columns.size, axis=1))
+    else:
+        for repl in replace:
+            x = x.combine_first(repl)
 
     return x
 
@@ -68,7 +96,7 @@ def _na_if_post(__out, x, y, __args_raw=None):
     return out
 
 
-@func_bootstrap(na_if, data_args={"x", "y"}, post=_na_if_post)
+@func_bootstrap(na_if, post=_na_if_post)
 def _na_if(x, y, __args_raw=None):
     if is_scalar(x) and is_scalar(y):  # rowwise
         return np.nan if x == y else x
@@ -99,11 +127,7 @@ def _near_post(__out, a, b, __args_raw=None):
     return out
 
 
-@func_bootstrap(
-    near,
-    data_args={"a", "b"},
-    post=_near_post,
-)
+@func_bootstrap(near, post=_near_post)
 def _near(a, b, __args_raw=None):
     return np.isclose(a, b)
 
@@ -125,14 +149,14 @@ def _nth_(x, n, order_by=np.nan, default=np.nan, __args_raw=None):
         return default
 
 
-@func_bootstrap(nth, data_args={"x", "order_by"})
+@func_bootstrap(nth, exclude={"n", "default"})
 def _nth(x, n, order_by=np.nan, default=np.nan, __args_raw=None):
     return _nth_(
         x, n, order_by=order_by, default=default, __args_raw=__args_raw
     )
 
 
-@func_bootstrap(first, data_args={"x", "order_by"})
+@func_bootstrap(first, exclude="default")
 def _first(
     x,
     order_by=np.nan,
@@ -145,7 +169,7 @@ def _first(
     )
 
 
-@func_bootstrap(last, data_args={"x", "order_by"})
+@func_bootstrap(last, exclude="default")
 def _last(
     x,
     order_by=np.nan,

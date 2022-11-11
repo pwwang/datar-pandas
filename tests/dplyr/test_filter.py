@@ -1,6 +1,5 @@
 # tests grabbed from:
 # https://github.com/tidyverse/dplyr/blob/master/tests/testthat/test-filter.r
-from datar_pandas.pandas import Series, assert_frame_equal
 import pytest
 from datar import f
 from datar.data import iris, mtcars
@@ -24,6 +23,7 @@ from datar.dplyr import (
     everything,
 )
 from datar.base import c, rep, nrow, NA, min, re, is_element, letters
+from datar_pandas.pandas import Series, assert_frame_equal
 from pipda import register_func
 
 from ..conftest import assert_equal
@@ -34,7 +34,7 @@ def test_handles_passing_args():
 
     def ff(*args):
         x1 = 4
-        f1 = lambda y: y
+        f1 = lambda y: y  # noqa: E731
         return df >> filter(*args, f1(x1) > f.x)
 
     def g():
@@ -325,7 +325,7 @@ def test_errors():
     with pytest.raises(TypeError):
         mtcars >> filter(x=1)
     with pytest.raises(TypeError):
-        mtcars >> filter(f.y > 2, z=3)
+        mtcars >> filter(f.cyl > 2, z=3)
     with pytest.raises(TypeError):
         mtcars >> filter(True, x=1)
 

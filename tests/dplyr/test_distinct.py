@@ -2,7 +2,6 @@
 # https://github.com/tidyverse/dplyr/blob/master/tests/testthat/test-distinct.R
 import pytest
 from datar import f
-from datar_pandas.tibble import TibbleRowwise
 from datar.dplyr import (
     distinct,
     select,
@@ -23,6 +22,7 @@ from datar.base import (
 )
 from datar.tibble import tibble
 from datar.data import iris
+from datar_pandas.tibble import TibbleRowwise
 from datar_pandas.pandas import assert_frame_equal
 
 
@@ -177,5 +177,5 @@ def test_rowwise_df():
     out = distinct(rf)
     # ungrouped df keeps index
     exp = distinct(df).reset_index(drop=True)
-    assert out.equals(exp)
+    assert_frame_equal(out, exp)
     assert isinstance(out, TibbleRowwise)

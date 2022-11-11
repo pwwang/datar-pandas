@@ -254,7 +254,7 @@ def _recode(
     )
 
 
-@recode.register(SeriesCategorical, context=Context.EVAL)
+@recode.register(SeriesCategorical, backend="pandas")
 def _recode_cat(
     _x,
     *args,

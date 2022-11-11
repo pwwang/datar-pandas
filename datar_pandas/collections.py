@@ -12,7 +12,6 @@ from typing import (
 
 import numpy as np
 from pipda import evaluate_expr, Expression
-from pipda.function import Function
 
 from .common import is_null, is_scalar, is_integer
 

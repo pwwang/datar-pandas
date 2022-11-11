@@ -35,6 +35,7 @@ from datar.apis.tibble import tibble
 from ... import pandas as pd
 from ...pandas import (
     Categorical,
+    PandasObject,
     Series,
     SeriesGroupBy,
     is_string_dtype,
@@ -46,133 +47,69 @@ from ...pandas import (
     is_categorical_dtype,
 )
 from ...common import is_scalar
-from ...contexts import Context
 from ...factory import func_bootstrap, func_factory
 
-is_character.register(Series, context=Context.EVAL)(is_string_dtype)
-is_complex.register(Series, context=Context.EVAL)(is_complex_dtype)
-is_double.register(Series, context=Context.EVAL)(is_float_dtype)
-is_integer.register(Series, context=Context.EVAL)(is_integer_dtype)
-is_logical.register(Series, context=Context.EVAL)(is_bool_dtype)
-is_numeric.register(Series, context=Context.EVAL)(is_numeric_dtype)
-is_factor.register(object, context=Context.EVAL)(is_categorical_dtype)
+is_character.register(Series, backend="pandas")(is_string_dtype)
+is_complex.register(Series, backend="pandas")(is_complex_dtype)
+is_double.register(Series, backend="pandas")(is_float_dtype)
+is_integer.register(Series, backend="pandas")(is_integer_dtype)
+is_logical.register(Series, backend="pandas")(is_bool_dtype)
+is_numeric.register(Series, backend="pandas")(is_numeric_dtype)
+is_factor.register(object, backend="pandas")(is_categorical_dtype)
 
-is_character.register(SeriesGroupBy, context=Context.EVAL)(
+is_character.register(SeriesGroupBy, backend="pandas")(
     lambda x: x.agg(is_string_dtype)
 )
-is_complex.register(SeriesGroupBy, context=Context.EVAL)(
+is_complex.register(SeriesGroupBy, backend="pandas")(
     lambda x: x.agg(is_complex_dtype)
 )
-is_double.register(SeriesGroupBy, context=Context.EVAL)(
+is_double.register(SeriesGroupBy, backend="pandas")(
     lambda x: x.agg(is_float_dtype)
 )
-is_integer.register(SeriesGroupBy, context=Context.EVAL)(
+is_integer.register(SeriesGroupBy, backend="pandas")(
     lambda x: x.agg(is_integer_dtype)
 )
-is_logical.register(SeriesGroupBy, context=Context.EVAL)(
+is_logical.register(SeriesGroupBy, backend="pandas")(
     lambda x: x.agg(is_bool_dtype)
 )
-is_numeric.register(SeriesGroupBy, context=Context.EVAL)(
+is_numeric.register(SeriesGroupBy, backend="pandas")(
     lambda x: x.agg(is_numeric_dtype)
 )
-is_factor.register(SeriesGroupBy, context=Context.EVAL)(
+is_factor.register(SeriesGroupBy, backend="pandas")(
     lambda x: x.agg(is_categorical_dtype)
 )
 
-func_bootstrap(
-    is_atomic,
-    func=is_scalar,
-    context=Context.EVAL,
-    kind="transform",
-)
-func_bootstrap(
-    is_finite,
-    func=np.isfinite,
-    context=Context.EVAL,
-    kind="transform",
-)
-func_bootstrap(
-    is_infinite,
-    func=np.isinf,
-    context=Context.EVAL,
-    kind="transform",
-)
-func_bootstrap(
-    is_na,
-    func=pd.isna,
-    context=Context.EVAL,
-    kind="transform",
-)
-func_bootstrap(
-    is_null,
-    func=pd.isnull,
-    context=Context.EVAL,
-    kind="transform",
-)
+func_bootstrap(is_atomic, func=is_scalar, kind="transform")
+func_bootstrap(is_finite, func=np.isfinite, kind="transform")
+func_bootstrap(is_infinite, func=np.isinf, kind="transform")
+func_bootstrap(is_na, func=pd.isna, kind="transform")
+func_bootstrap(is_null, func=pd.isnull, kind="transform")
 func_bootstrap(
     is_ordered,
     func=lambda x: is_categorical_dtype(x) and x.cat.ordered,
-    context=Context.EVAL,
     kind="transform",
 )
 
-func_bootstrap(
-    as_character,
-    func=lambda x: x.astype(str),
-    context=Context.EVAL,
-    kind="transform",
-)
-func_bootstrap(
-    as_complex,
-    func=lambda x: x.astype(complex),
-    context=Context.EVAL,
-    kind="transform",
-)
-func_bootstrap(
-    as_double,
-    func=lambda x: x.astype(float),
-    context=Context.EVAL,
-    kind="transform",
-)
-func_bootstrap(
-    as_integer,
-    func=lambda x: x.astype(int),
-    context=Context.EVAL,
-    kind="transform",
-)
-func_bootstrap(
-    as_logical,
-    func=lambda x: x.astype(bool),
-    context=Context.EVAL,
-    kind="transform",
-)
-func_bootstrap(
-    as_null,
-    func=lambda x: None,
-    context=Context.EVAL,
-    kind="agg",
-)
+func_bootstrap(as_character, func=lambda x: x.astype(str), kind="transform")
+func_bootstrap(as_complex, func=lambda x: x.astype(complex), kind="transform")
+func_bootstrap(as_double, func=lambda x: x.astype(float), kind="transform")
+func_bootstrap(as_integer, func=lambda x: x.astype(int), kind="transform")
+func_bootstrap(as_logical, func=lambda x: x.astype(bool), kind="transform")
+func_bootstrap(as_null, func=lambda x: None, kind="agg")
 func_bootstrap(
     as_numeric,
-    func=as_numeric.dispatch(object),
-    context=Context.EVAL,
+    func=as_numeric.dispatch(object, backend="numpy"),
     kind="transform",
 )
-func_bootstrap(
-    as_factor,
-    func=lambda x: Categorical(x),
-    context=Context.EVAL,
-    kind="transform",
-)
+func_bootstrap(as_factor, func=lambda x: Categorical(x), kind="transform")
 func_bootstrap(
     as_ordered,
     func=lambda x: Categorical(x, ordered=True),
-    context=Context.EVAL,
     kind="transform",
 )
 
 
-@is_element.register(object, context=Context.EVAL)
+@is_element.register(PandasObject, backend="pandas")
 def _is_element(x, y):
     if isinstance(x, SeriesGroupBy) and isinstance(y, SeriesGroupBy):
         df = tibble(x=x, y=y)
@@ -213,7 +150,7 @@ def _as_date(
     origin=None,
 ):
     out = pd.to_datetime(
-        as_date.dispatch(np.ndarray)(
+        as_date.dispatch(np.ndarray, backend="numpy")(
             x.values,
             format=format,
             try_formats=try_formats,
@@ -224,6 +161,7 @@ def _as_date(
     )
     out.index = x.index
     return out
+
 
 as_pd_date = func_factory(
     kind="transform",
@@ -245,8 +183,8 @@ as_pd_date = func_factory(
 )
 
 
-func_bootstrap(is_true, func=lambda x: False, context=Context.EVAL, kind="agg")
-func_bootstrap(is_false, func=lambda x: False, context=Context.EVAL, kind="agg")
+func_bootstrap(is_true, func=lambda x: False, kind="agg")
+func_bootstrap(is_false, func=lambda x: False, kind="agg")
 
-func_bootstrap(all_, func=builtins.all, context=Context.EVAL, kind="agg")
-func_bootstrap(any_, func=builtins.any, context=Context.EVAL, kind="agg")
+func_bootstrap(all_, func=builtins.all, kind="agg")
+func_bootstrap(any_, func=builtins.any, kind="agg")

@@ -5,7 +5,6 @@ See souce code https://github.com/tidyverse/dplyr/blob/master/R/count-tally.R
 from typing import Any
 from datar import options_context
 from datar.core.defaults import f
-from datar.apis.base import sum_
 from datar.apis.dplyr import (
     n,
     group_by,
@@ -78,12 +77,7 @@ def _tally(
         out = summarise(
             x,
             __ast_fallback="normal",
-            **{
-                # name: n(__calling_env=CallingEnvs.PIPING)
-                name: n()
-                if wt is None
-                else sum_(wt, na_rm=True)
-            },
+            **{name: n() if wt is None else wt.sum()},
         )
 
     if sort:
@@ -135,12 +129,7 @@ def _add_tally(
 
     out = mutate(
         x,
-        **{
-            # name: n(__calling_env=CallingEnvs.PIPING)
-            name: n()
-            if wt is None
-            else sum_(wt, na_rm=True)
-        },
+        **{name: n() if wt is None else wt.sum()},
         __ast_fallback="normal",
     )
 

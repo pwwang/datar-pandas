@@ -11,13 +11,12 @@ from datar.apis.base import (
 )
 
 from ... import pandas as pd
-from ...contexts import Context
 from ...factory import func_bootstrap
 from ...tibble import Tibble
 
 
-@func_bootstrap(cut, context=Context.EVAL)
-def cut(
+@func_bootstrap(cut)
+def _cut(
     x,
     breaks,
     labels=None,
@@ -54,23 +53,20 @@ def _diff_sgb_post(out, x, lag=1, differences=1):
 
 func_bootstrap(
     diff,
-    func=diff.dispatch(object),
-    context=Context.EVAL,
+    func=diff.dispatch(object, backend="numpy"),
     post=_diff_sgb_post,
 )
 
 
 func_bootstrap(
     outer,
-    func=outer.dispatch(object),
-    context=Context.EVAL,
+    func=outer.dispatch(object, backend="numpy"),
     post=lambda out, *args, **kwargs: Tibble(out),
 )
 
 
 func_bootstrap(
     rank,
-    func=rank.dispatch(object),
-    context=Context.EVAL,
+    func=rank.dispatch(object, backend="numpy"),
     kind="transform",
 )

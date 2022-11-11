@@ -6,33 +6,28 @@ from datar.apis.base import (
 )
 
 from ...factory import func_bootstrap
-from ...contexts import Context
 
 
 func_bootstrap(
     bessel_i,
-    func=bessel_i.dispatch(object),
-    context=Context.EVAL,
+    func=bessel_i.dispatch(object, backend="numpy"),
     kind="transform",
 )
 
 func_bootstrap(
     bessel_j,
-    func=bessel_j.dispatch(object),
-    context=Context.EVAL,
+    func=bessel_j.dispatch(object, backend="numpy"),
     kind="transform",
 )
 
 func_bootstrap(
     bessel_k,
-    func=bessel_k.dispatch(object),
-    context=Context.EVAL,
+    func=bessel_k.dispatch(object, backend="numpy"),
     kind="transform",
 )
 
 func_bootstrap(
     bessel_y,
-    func=bessel_y.dispatch(object),
-    context=Context.EVAL,
+    func=bessel_y.dispatch(object, backend="numpy"),
     kind="transform",
 )

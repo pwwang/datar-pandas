@@ -9,19 +9,11 @@ from datar.apis.dplyr import ungroup, if_else, case_when
 from ... import pandas as pd
 from ...pandas import Series, SeriesGroupBy
 
-from ...contexts import Context
-from ...utils import PandasData
 from ...tibble import Tibble, reconstruct_tibble
 
 
-@if_else.register((object, PandasData), context=Context.EVAL)
+@if_else.register(object, backend="pandas")
 def _if_else(condition, true, false, missing=None):
-    condition = (
-        condition.data
-        if isinstance(condition, PandasData)
-        else condition
-    )
-
     if isinstance(condition, SeriesGroupBy):
         return _if_else_sgb(condition, true, false, missing)
 
@@ -87,12 +79,11 @@ def _if_else_sgb(condition, true, false, missing=None):
     )
 
 
-@case_when.register((object, PandasData), context=Context.EVAL)
+@case_when.register(object, backend="pandas")
 def _case_when(when, case, *when_cases):
     if len(when_cases) % 2 != 0:
         raise ValueError("Case-value not paired.")
 
-    when = when.data if isinstance(when, PandasData) else when
     when_cases = (when, case, *when_cases)
 
     is_series = any(

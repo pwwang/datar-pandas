@@ -20,14 +20,6 @@ NA_real_ = np.nan
 NA_compex_ = complex(NA_real_, NA_real_)
 
 
-class PandasData:
-
-    __slots__ = ("data", )
-
-    def __init__(self, data: Any) -> None:
-        self.data = data
-
-
 @singledispatch
 def name_of(value: Any) -> str:
     out = str(value)

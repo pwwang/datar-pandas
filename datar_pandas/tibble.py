@@ -1,4 +1,5 @@
-"""Provides wrapped DataFrame. Should be only used with pandas/modin backends"""
+"""Provides wrapped DataFrame. Should be only used with pandas/modin backends
+"""
 from itertools import chain
 from typing import TYPE_CHECKING, Callable, Mapping, Union, Sequence
 
@@ -98,7 +99,8 @@ class Tibble(DataFrame):
         _dtypes=None,
         **kwargs,
     ) -> "Tibble":
-        """Construct tibble by given data, more like the tibble constructor in R
+        """Construct tibble by given data, more like the tibble constructor
+        in R
 
         Args:
             *args: and
@@ -130,7 +132,7 @@ class Tibble(DataFrame):
                 raise
 
             result = Tibble(self.loc[:, subdf_cols])
-            result.columns = [col[len(key) + 1 :] for col in subdf_cols]
+            result.columns = [col[len(key) + 1:] for col in subdf_cols]
 
         return result
 
@@ -167,7 +169,13 @@ class Tibble(DataFrame):
             drop = False
 
         cols = [cols] if is_scalar(cols) else list(cols)
-        grouped = self.groupby(cols, observed=drop, sort=sort, dropna=dropna)
+        grouped = self.groupby(
+            cols,
+            observed=drop,
+            sort=sort,
+            dropna=dropna,
+            group_keys=True,
+        )
 
         return TibbleGrouped.from_groupby(grouped)
 
@@ -313,7 +321,8 @@ class TibbleGrouped(Tibble):
         return self
 
     def transform(self, *args, **kwargs):
-        """Transform brings the metadata of original df, we need to update it"""
+        """Transform brings the metadata of original df, we need to update it
+        """
         out = super().transform(*args, **kwargs)
         # pandas < 1.4, _datar not carried by transform
         return reconstruct_tibble(self, out)

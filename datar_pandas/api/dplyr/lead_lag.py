@@ -7,6 +7,7 @@ from datar.apis.dplyr import with_order, lead, lag
 
 from ...pandas import Series
 from ...common import is_scalar
+from ...contexts import Context
 from ...factory import func_bootstrap
 
 
@@ -29,6 +30,11 @@ def _shift(x, n, default=None, order_by=None):
     return out
 
 
+@lead.register(object, backend="pandas")
+def _lead_obj(x, n=1, default=np.nan, order_by=None):
+    return _shift(Series(x), n=-n, default=default, order_by=order_by)
+
+
 @func_bootstrap(lead, kind="transform")
 def _lead(x, n=1, default=np.nan, order_by=None):
     """Find next values in a vector
@@ -44,6 +50,11 @@ def _lead(x, n=1, default=np.nan, order_by=None):
         Lead or lag values with default values filled to series.
     """
     return _shift(x, n=-n, default=default, order_by=order_by)
+
+
+@lag.register(object, backend="pandas")
+def _lag_obj(x, n=1, default=np.nan, order_by=None):
+    return _shift(Series(x), n=n, default=default, order_by=order_by)
 
 
 @func_bootstrap(lag, kind="transform")

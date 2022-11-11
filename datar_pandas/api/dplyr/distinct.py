@@ -7,7 +7,6 @@ from pipda.reference import Reference
 from datar.apis.dplyr import mutate, distinct, n_distinct
 
 from ...pandas import DataFrame, Series, GroupBy, PandasObject
-from ...utils import PandasData
 from ...contexts import Context
 from ...tibble import Tibble, TibbleGrouped, reconstruct_tibble
 from ...common import union, setdiff, intersect, unique
@@ -39,11 +38,11 @@ def _distinct(
             subset = [expr._pipda_ref for expr in args]
             ucols = getattr(_data, "group_vars", [])
             ucols.extend(subset)
-            ucols = unique(ucols, __ast_fallback="normal")
-            uniq = _data.drop_duplicates(subset=subset)[ucols]
+            ucols = unique(ucols)
+            uniq = DataFrame(_data).drop_duplicates(subset=subset)[ucols]
         else:
             # keep_none_prefers_new_order
-            uniq = (
+            uniq = DataFrame(
                 mutate(
                     _data,
                     *args,
@@ -57,29 +56,22 @@ def _distinct(
             # keep original order
             out = uniq[
                 union(
-                    intersect(
-                        _data.columns,
-                        uniq.columns,
-                        __ast_fallback="normal",
-                    ),
-                    setdiff(
-                        uniq.columns,
-                        _data.columns,
-                        __ast_fallback="normal",
-                    ),
-                    __ast_fallback="normal",
+                    intersect(_data.columns, uniq.columns),
+                    setdiff(uniq.columns, _data.columns),
                 )
             ]
         else:
             out = _data.loc[uniq.index, :].copy()
             out[uniq.columns.tolist()] = uniq
 
+    if isinstance(out, TibbleGrouped):
+        out = out.reset_index(drop=True)
+
     return reconstruct_tibble(_data, Tibble(out, copy=False))
 
 
-@n_distinct.register((object, PandasData), context=Context.EVAL)
+@n_distinct.register(object, context=Context.EVAL)
 def _n_distinct(x: Any, na_rm: bool = True):
-    x = x.data if isinstance(x, PandasData) else x
     return Series(x).nunique(dropna=na_rm)
 
 

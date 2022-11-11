@@ -8,7 +8,7 @@ from datar.apis.base import (
     intersect as _intersect,
     setdiff as _setdiff,
     union as _union,
-    unique as _unique,
+    # unique as _unique,
 )
 
 from . import pandas as pd
@@ -21,7 +21,7 @@ def is_null(x: Any) -> Data[Bool]:
 
 
 def is_factor(x: Any) -> bool:
-    return _is_factor(x, __ast_fallback="normal")
+    return _is_factor(x, __backend="pandas", __ast_fallback="normal")
 
 
 def is_integer(x: Any) -> bool:

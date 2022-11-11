@@ -6,7 +6,7 @@ from functools import singledispatch
 from shutil import get_terminal_size
 from typing import Any, Mapping, Tuple
 
-from pipda import Context, Verb, evaluate_expr
+from pipda import Context, evaluate_expr
 
 from .common import is_scalar
 from .broadcast import add_to_tibble
@@ -88,7 +88,10 @@ class Across:
                 args = CurColumn.replace_args(self.args, column)
                 kwargs = CurColumn.replace_kwargs(self.kwargs, column)
 
-                if isinstance(fn, Verb) and fn.dep:
+                if (
+                    getattr(fn, "_pipda_functype", None) == "verb"
+                    and fn.dependent
+                ):
                     value = fn(
                         self.data,
                         self.data[column],

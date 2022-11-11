@@ -46,7 +46,6 @@ from datar.apis.base import (
 
 from ...typing import Data, Int, Number, Bool
 from ...common import is_null
-from ...contexts import Context
 from ...pandas import (
     DataFrame,
     Series,
@@ -58,53 +57,35 @@ from ...pandas import (
 from ...tibble import Tibble, TibbleGrouped
 from ...factory import func_bootstrap
 
-func_bootstrap(ceiling, func=np.ceil, context=Context.EVAL, kind="transform")
-func_bootstrap(floor, func=np.floor, context=Context.EVAL, kind="transform")
-func_bootstrap(mean, func=np.mean, context=Context.EVAL, kind="agg")
-func_bootstrap(median, func=np.median, context=Context.EVAL, kind="agg")
-func_bootstrap(sqrt, func=np.sqrt, context=Context.EVAL, kind="transform")
-func_bootstrap(var, func=np.var, context=Context.EVAL, kind="agg")
-func_bootstrap(min_, func=np.min, context=Context.EVAL, kind="agg")
-func_bootstrap(max_, func=np.max, context=Context.EVAL, kind="agg")
-func_bootstrap(round_, func=np.round, context=Context.EVAL, kind="transform")
-func_bootstrap(sum_, func=np.sum, context=Context.EVAL, kind="agg")
-func_bootstrap(abs_, func=np.abs, context=Context.EVAL, kind="transform")
-func_bootstrap(prod, func=np.prod, context=Context.EVAL, kind="agg")
-func_bootstrap(sign, func=np.sign, context=Context.EVAL, kind="transform")
-func_bootstrap(trunc, func=np.trunc, context=Context.EVAL, kind="transform")
-func_bootstrap(exp, func=np.exp, context=Context.EVAL, kind="transform")
-func_bootstrap(log2, func=np.log2, context=Context.EVAL, kind="transform")
-func_bootstrap(log10, func=np.log10, context=Context.EVAL, kind="transform")
-func_bootstrap(log1p, func=np.log1p, context=Context.EVAL, kind="transform")
-func_bootstrap(sd, func=np.std, context=Context.EVAL, kind="agg")
-func_bootstrap(
-    proportions,
-    func=lambda x: x / x.sum(),
-    context=Context.EVAL,
-    kind="transform",
-)
-func_bootstrap(
-    signif,
-    func=signif.dispatch(object),
-    context=Context.EVAL,
-    data_args={"x", "digits"},
-)
-func_bootstrap(
-    log,
-    func=log.dispatch(object),
-    context=Context.EVAL,
-    data_args={"x", "base"},
-)
+func_bootstrap(ceiling, func=np.ceil, kind="transform")
+func_bootstrap(floor, func=np.floor, kind="transform")
+func_bootstrap(mean, func=np.mean, kind="agg")
+func_bootstrap(median, func=np.median, kind="agg")
+func_bootstrap(sqrt, func=np.sqrt, kind="transform")
+func_bootstrap(var, func=np.var, kind="agg")
+func_bootstrap(min_, func=np.min, kind="agg")
+func_bootstrap(max_, func=np.max, kind="agg")
+func_bootstrap(round_, func=np.round, kind="transform")
+func_bootstrap(sum_, func=np.sum, kind="agg")
+func_bootstrap(abs_, func=np.abs, kind="transform")
+func_bootstrap(prod, func=np.prod, kind="agg")
+func_bootstrap(sign, func=np.sign, kind="transform")
+func_bootstrap(trunc, func=np.trunc, kind="transform")
+func_bootstrap(exp, func=np.exp, kind="transform")
+func_bootstrap(log2, func=np.log2, kind="transform")
+func_bootstrap(log10, func=np.log10, kind="transform")
+func_bootstrap(log1p, func=np.log1p, kind="transform")
+func_bootstrap(sd, func=np.std, kind="agg")
+func_bootstrap(proportions, func=lambda x: x / x.sum(), kind="transform")
+func_bootstrap(signif, func=signif.dispatch(object, backend="numpy"))
+func_bootstrap(log, func=log.dispatch(object, backend="numpy"))
 func_bootstrap(
     weighted_mean,
-    func=weighted_mean.dispatch(object),
-    context=Context.EVAL,
-    data_args={"x", "w"},
+    func=weighted_mean.dispatch(object, backend="numpy"),
 )
 func_bootstrap(
     quantile,
-    func=quantile.dispatch(object),
-    context=Context.EVAL,
+    func=quantile.dispatch(object, backend="numpy"),
 )
 
 
@@ -122,7 +103,7 @@ def _na_rm_check(__data: NDFrame, na_rm: Bool, *args: Any, **kwargs: Any):
     return __data, args, {**kwargs, "skipna": na_rm}
 
 
-@cov.register(DataFrame, context=Context.EVAL)
+@cov.register(DataFrame, backend="pandas")
 def _cov_df(x, y=None, na_rm: bool = False, ddof: int = 1):
     """Covariance of DataFrame"""
     if y is not None:
@@ -132,7 +113,7 @@ def _cov_df(x, y=None, na_rm: bool = False, ddof: int = 1):
     return x.cov(ddof=ddof)
 
 
-@cov.register(TibbleGrouped, context=Context.EVAL)
+@cov.register(TibbleGrouped, backend="pandas")
 def _cov_tibble_grouped(
     x: TibbleGrouped,
     y: Data[Number] = None,
@@ -150,7 +131,7 @@ def _cov_tibble_grouped(
         return x._datar["grouped"].cov(ddof=ddof).droplevel(-1)
 
 
-@cov.register(SeriesGroupBy, context=Context.EVAL)
+@cov.register(SeriesGroupBy, backend="pandas")
 def _cov_seriesgroupby(
     x: SeriesGroupBy,
     y: Data[Number] = None,
@@ -171,7 +152,7 @@ def _cov_seriesgroupby(
         )
 
 
-@scale.register(DataFrame, context=Context.EVAL)
+@scale.register(DataFrame, backend="pandas")
 def _scale_df(
     x: DataFrame,
     center: Bool | Data[Number] = True,
@@ -223,7 +204,7 @@ def _scale_df(
     return x
 
 
-@scale.register(Series, context=Context.EVAL)
+@scale.register(Series, backend="pandas")
 def _scale_series(
     x: Series,
     center: Bool | Data[Number] = True,
@@ -235,7 +216,7 @@ def _scale_series(
     return out
 
 
-@scale.register(SeriesGroupBy, context=Context.EVAL)
+@scale.register(SeriesGroupBy, backend="pandas")
 def _scale_seriesgroupby(
     x: SeriesGroupBy,
     center: Bool | Data[Number] | Series = True,
@@ -243,7 +224,7 @@ def _scale_seriesgroupby(
 ) -> Series:
     """Scaling on series"""
     return x.transform(
-        _scale_series.dispatch(Series),
+        _scale_series.dispatch(Series, backend="pandas"),
         center=center,
         scale_=scale_,
     ).groupby(
@@ -254,7 +235,7 @@ def _scale_seriesgroupby(
     )
 
 
-@pmin.register((Series, DataFrame), context=Context.EVAL)
+@pmin.register((Series, DataFrame), backend="pandas")
 def _pmin_ndframe(
     *x: NDFrame,
     na_rm: Bool = False,
@@ -266,7 +247,7 @@ def _pmin_ndframe(
     )
 
 
-@pmin.register((SeriesGroupBy, TibbleGrouped), context=Context.EVAL)
+@pmin.register((SeriesGroupBy, TibbleGrouped), backend="pandas")
 def _pmin_grouped(
     *x: SeriesGroupBy | TibbleGrouped,
     na_rm: Bool = False,
@@ -283,7 +264,7 @@ def _pmin_grouped(
     )
 
 
-@pmax.register((Series, DataFrame), context=Context.EVAL)
+@pmax.register((Series, DataFrame), backend="pandas")
 def _pmax_ndframe(
     *x: NDFrame,
     na_rm: Bool = False,
@@ -295,7 +276,7 @@ def _pmax_ndframe(
     )
 
 
-@pmax.register((SeriesGroupBy, TibbleGrouped), context=Context.EVAL)
+@pmax.register((SeriesGroupBy, TibbleGrouped), backend="pandas")
 def _pmax_grouped(
     *x: SeriesGroupBy | TibbleGrouped,
     na_rm: Bool = False,
@@ -312,13 +293,13 @@ def _pmax_grouped(
     )
 
 
-@col_sums.register(DataFrame, context=Context.EVAL)
+@col_sums.register(DataFrame, backend="pandas")
 def _col_sums_df(x: DataFrame, na_rm: Bool = None) -> Series:
     _check_all_numeric(x, "col_sums")
     return x.sum(skipna=bool(na_rm), numeric_only=True)
 
 
-@col_sums.register(TibbleGrouped, context=Context.EVAL)
+@col_sums.register(TibbleGrouped, backend="pandas")
 def _col_sums_tibble_grouped(x: TibbleGrouped, na_rm: Bool = None) -> Series:
     _check_all_numeric(x, "col_sums")
     _na_rm_check(x, na_rm)
@@ -326,19 +307,19 @@ def _col_sums_tibble_grouped(x: TibbleGrouped, na_rm: Bool = None) -> Series:
     return x.sum(numeric_only=True)
 
 
-@row_sums.register(DataFrame, context=Context.EVAL)
+@row_sums.register(DataFrame, backend="pandas")
 def _row_sums_df(x: DataFrame, na_rm: Bool = None) -> Series:
     _check_all_numeric(x, "row_sums")
     return x.sum(skipna=bool(na_rm), numeric_only=True, axis=1)
 
 
-@col_means.register(DataFrame, context=Context.EVAL)
+@col_means.register(DataFrame, backend="pandas")
 def _col_means_df(x: DataFrame, na_rm: Bool = None) -> Series:
     _check_all_numeric(x, "col_means")
     return x.mean(skipna=bool(na_rm), numeric_only=True)
 
 
-@col_means.register(TibbleGrouped, context=Context.EVAL)
+@col_means.register(TibbleGrouped, backend="pandas")
 def _col_means_tibble_grouped(x: TibbleGrouped, na_rm: Bool = None) -> Series:
     _check_all_numeric(x, "col_means")
     _na_rm_check(x, na_rm)
@@ -346,19 +327,19 @@ def _col_means_tibble_grouped(x: TibbleGrouped, na_rm: Bool = None) -> Series:
     return x.mean(numeric_only=True)
 
 
-@row_means.register(DataFrame, context=Context.EVAL)
+@row_means.register(DataFrame, backend="pandas")
 def _row_means_df(x: DataFrame, na_rm: Bool = None) -> Series:
     _check_all_numeric(x, "row_means")
     return x.mean(skipna=bool(na_rm), numeric_only=True, axis=1)
 
 
-@col_sds.register(DataFrame, context=Context.EVAL)
+@col_sds.register(DataFrame, backend="pandas")
 def _col_sds_df(x: DataFrame, na_rm: Bool = None, ddof: Int = 1) -> Series:
     _check_all_numeric(x, "col_sds")
     return x.std(skipna=bool(na_rm), numeric_only=True, ddof=ddof)
 
 
-@col_sds.register(TibbleGrouped, context=Context.EVAL)
+@col_sds.register(TibbleGrouped, backend="pandas")
 def _col_sds_tibble_grouped(
     x: TibbleGrouped,
     na_rm: Bool = None,
@@ -370,19 +351,19 @@ def _col_sds_tibble_grouped(
     return x.std(ddof=ddof)
 
 
-@row_sds.register(DataFrame, context=Context.EVAL)
+@row_sds.register(DataFrame, backend="pandas")
 def _row_sds_df(x: DataFrame, na_rm: Bool = None, ddof: Int = 1) -> Series:
     _check_all_numeric(x, "row_sds")
     return x.std(skipna=bool(na_rm), numeric_only=True, ddof=ddof, axis=1)
 
 
-@col_medians.register(DataFrame, context=Context.EVAL)
+@col_medians.register(DataFrame, backend="pandas")
 def _col_medians_df(x: DataFrame, na_rm: Bool = None) -> Series:
     _check_all_numeric(x, "col_medians")
     return x.median(skipna=bool(na_rm), numeric_only=True)
 
 
-@col_medians.register(TibbleGrouped, context=Context.EVAL)
+@col_medians.register(TibbleGrouped, backend="pandas")
 def _col_medians_tibble_grouped(
     x: TibbleGrouped, na_rm: Bool = None
 ) -> Series:
@@ -392,7 +373,7 @@ def _col_medians_tibble_grouped(
     return x.median(numeric_only=True)
 
 
-@row_medians.register(DataFrame, context=Context.EVAL)
+@row_medians.register(DataFrame, backend="pandas")
 def _row_medians_df(x: DataFrame, na_rm: Bool = None) -> Series:
     _check_all_numeric(x, "row_medians")
     return x.median(skipna=bool(na_rm), numeric_only=True, axis=1)

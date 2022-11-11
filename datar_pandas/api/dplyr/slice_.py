@@ -8,6 +8,7 @@ from typing import TYPE_CHECKING, Any, Iterable, Mapping, Union
 import numpy as np
 from pipda import Expression
 from datar.core.utils import logger
+from datar.apis.base import c
 from datar.apis.dplyr import (
     slice_,
     slice_head,
@@ -74,7 +75,7 @@ def _slice_head(
     prop: float = None,
 ) -> Tibble:
     n = _n_from_prop(_data.shape[0], n, prop)
-    return slice(
+    return slice_(
         _data,
         builtins.slice(None, n),
         __ast_fallback="normal",
@@ -125,7 +126,7 @@ def _slice_tail(
     prop: float = None,
 ) -> Tibble:
     n = _n_from_prop(_data.shape[0], n, prop)
-    return slice(
+    return slice_(
         _data,
         builtins.slice(-n, None),
         __ast_fallback="normal",
@@ -145,7 +146,7 @@ def _slice_tail_grouped(
     # A better way?
     indices = np.concatenate(
         [
-            grouped.grouper.indices[key][-ns[key] :]
+            grouped.grouper.indices[key][-ns[key]:]
             for key in grouped.grouper.result_index
         ]
     )
@@ -283,7 +284,7 @@ def _sanitize_rows(
 
     out = []
     if any(isinstance(row, SeriesGroupBy) for row in rows):
-        rows = Collection(*rows)
+        rows = c(*rows)
         for key in result_index:
             idx = dict_get(indices, key)
             if idx.size == 0:

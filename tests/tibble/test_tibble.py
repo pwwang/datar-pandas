@@ -4,7 +4,7 @@ import numpy as np
 from datar import f
 from datar.data import iris
 from datar.dplyr import mutate
-from datar.tibble import fibble, tibble, tribble, tibble_row, as_tibble
+from datar.tibble import tibble, tribble, tibble_row, as_tibble
 from datar.base import seq, c, rep, sum, letters, LETTERS
 from datar_pandas.pandas import Series
 from datar_pandas.tibble import TibbleGrouped
@@ -276,7 +276,7 @@ def test_dup_cols():
 
 # tibble as registered function -------------
 def test_fibble():
-    df = tibble(x=[1, 2]) >> mutate(fibble(y=f.x))
+    df = tibble(x=[1, 2]) >> mutate(tibble(y=f.x))
     assert df.equals(tibble(x=[1, 2], y=[1, 2]))
 
 

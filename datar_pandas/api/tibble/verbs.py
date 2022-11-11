@@ -17,7 +17,6 @@ from ...common import is_scalar, setdiff
 from ...contexts import Context
 from ...pandas import DataFrame, Series, RangeIndex
 
-from ...utils import PandasData
 from ...broadcast import broadcast_to
 from ...tibble import (
     TibbleGrouped,
@@ -27,7 +26,7 @@ from ...tibble import (
 )
 
 
-@enframe.register((object, PandasData), context=Context.EVAL)
+@enframe.register(object, backend="pandas")
 def _enframe(x, name="name", value="value"):
     """Converts mappings or lists to one- or two-column data frames.
 
@@ -42,7 +41,6 @@ def _enframe(x, name="name", value="value"):
         A data frame with two columns if `name` is not None (default) or
         one-column otherwise.
     """
-    x = x.data if isinstance(x, PandasData) else x
     if not value:
         raise ValueError("`value` can't be empty.")
 
@@ -144,11 +142,7 @@ def _add_row(
     return out
 
 
-@add_column.register(
-    DataFrame,
-    context=Context.EVAL,
-    extra_contexts={"_before": Context.SELECT, "_after": Context.SELECT},
-)
+@add_column.register(DataFrame, context=Context.EVAL)
 def _add_column(
     _data,
     *args,

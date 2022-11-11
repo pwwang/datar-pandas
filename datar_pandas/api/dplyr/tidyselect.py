@@ -4,7 +4,6 @@ from typing import Callable, List, Sequence
 import re
 
 import numpy as np
-from pipda import Function, Verb
 from datar_numpy.utils import make_array
 from datar.dplyr import (
     ungroup,
@@ -24,7 +23,7 @@ from datar.dplyr import (
 from ...pandas import DataFrame
 from ...contexts import Context
 from ...common import is_scalar, is_logical, setdiff, intersect
-from ...utils import PandasData, vars_select
+from ...utils import vars_select
 
 
 @where.register(DataFrame, context=Context.EVAL)
@@ -33,7 +32,7 @@ def _where(_data: DataFrame, fn: Callable) -> List[str]:
     _data = ungroup(_data, __ast_fallback="normal")
     mask = []
     for col in columns:
-        if isinstance(fn, Verb) and fn.dep:
+        if getattr(fn, "_pipda_functype", None) == "verb" and fn.dependent:
             dat = fn(_data, _data[col], __ast_fallback="normal")
             mask.append(dat)
         else:
@@ -46,7 +45,6 @@ def _where(_data: DataFrame, fn: Callable) -> List[str]:
         for flag in mask
     ]
     return np.array(columns)[mask].tolist()
-
 
 
 @everything.register(DataFrame, context=Context.EVAL)
@@ -166,14 +164,15 @@ def _any_of(
     return list(intersect(vars, make_array(vars)[x]))
 
 
-@num_range.register((str, PandasData), context=Context.EVAL)
+@num_range.register(str, backend="pandas")
 def _num_range(
-    prefix: str | PandasData,
+    prefix: str,
     range: Sequence[int],
     width: int = None,
 ) -> List[str]:
-    prefix = prefix.data if isinstance(prefix, PandasData) else prefix
-    zfill = lambda elem: (elem if not width else str(elem).zfill(width))
+    zfill = lambda elem: (  # noqa: E731
+        elem if not width else str(elem).zfill(width)
+    )
     return [f"{prefix}{zfill(elem)}" for elem in builtins.range(range)]
 
 

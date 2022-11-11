@@ -38,7 +38,7 @@ def _check_xy(x, y):
         raise ValueError("\n".join(msg))
 
 
-@intersect.register(DataFrame, context=Context.EVAL)
+@intersect.register(DataFrame, backend="pandas")
 def _intersect_df(x: DataFrame, y: DataFrame) -> DataFrame:
     """Intersect of two dataframes
 
@@ -61,7 +61,7 @@ def _intersect_df(x: DataFrame, y: DataFrame) -> DataFrame:
     return out
 
 
-@intersect.register(TibbleGrouped, context=Context.EVAL)
+@intersect.register(TibbleGrouped, backend="pandas")
 def _intersect_grouped(x, y):
     newx = ungroup(x, __ast_fallback="normal")
     newy = ungroup(y, __ast_fallback="normal")
@@ -69,7 +69,7 @@ def _intersect_grouped(x, y):
     return reconstruct_tibble(x, out)
 
 
-@union.register(DataFrame, context=Context.EVAL)
+@union.register(DataFrame, backend="pandas")
 def _union_df(x, y):
     """Union of two dataframes, ignoring grouping structure and indxes
 
@@ -93,7 +93,7 @@ def _union_df(x, y):
     return out
 
 
-@union.register(TibbleGrouped, context=Context.EVAL)
+@union.register(TibbleGrouped, backend="pandas")
 def _union_grouped(x, y):
     out = union.dispatch(DataFrame)(
         ungroup(x, __ast_fallback="normal"),
@@ -102,7 +102,7 @@ def _union_grouped(x, y):
     return reconstruct_tibble(x, out)
 
 
-@setdiff.register(DataFrame, context=Context.EVAL)
+@setdiff.register(DataFrame, backend="pandas")
 def _setdiff_df(x, y):
     """Set diff of two dataframes
 
@@ -135,7 +135,7 @@ def _setdiff_df(x, y):
     return out
 
 
-@setdiff.register(TibbleGrouped, context=Context.EVAL)
+@setdiff.register(TibbleGrouped, backend="pandas")
 def _setdiff_grouped(x, y):
     out = setdiff.dispatch(DataFrame)(
         ungroup(x, __ast_fallback="normal"),
@@ -144,7 +144,7 @@ def _setdiff_grouped(x, y):
     return reconstruct_tibble(x, out)
 
 
-@union_all.register(DataFrame, context=Context.EVAL)
+@union_all.register(DataFrame, backend="pandas")
 def _union_all(x, y):
     """Union of all rows of two dataframes
 
@@ -166,7 +166,7 @@ def _union_all(x, y):
     return out
 
 
-@union_all.register(TibbleGrouped, context=Context.EVAL)
+@union_all.register(TibbleGrouped, backend="pandas")
 def _union_all_grouped(x, y):
     out = union_all.dispatch(DataFrame)(
         ungroup(x, __ast_fallback="normal"),
@@ -175,7 +175,7 @@ def _union_all_grouped(x, y):
     return reconstruct_tibble(x, out)
 
 
-@setequal.register(DataFrame, context=Context.EVAL)
+@setequal.register(DataFrame, backend="pandas")
 def _set_equal_df(x, y, equal_na=True):
     """Check if two dataframes equal, grouping structures are ignored.
 

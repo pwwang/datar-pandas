@@ -3,12 +3,21 @@ from __future__ import annotations
 
 import inspect
 from functools import singledispatch, wraps
-from typing import TYPE_CHECKING, Any, Callable, Mapping, Set, Tuple, Type
+from typing import (
+    TYPE_CHECKING,
+    Any,
+    Callable,
+    List,
+    Mapping,
+    Sequence,
+    Set,
+    Tuple,
+)
 
-from pipda import Verb, register_verb
-from pipda.context import ContextType
+import numpy as np
+from pipda import register_func
+from datar.core.utils import arg_match
 
-from .contexts import Context
 from .utils import NO_DEFAULT
 from .pandas import DataFrame, Series, PandasObject, SeriesGroupBy
 from .tibble import Tibble, TibbleGrouped, TibbleRowwise
@@ -16,37 +25,26 @@ from .tibble import Tibble, TibbleGrouped, TibbleRowwise
 if TYPE_CHECKING:
     from inspect import Signature, BoundArguments
 
-try:
-    from functools import cached_property
-except ImportError:
-    from cached_property import cached_property
-
 
 def _preprocess_data_args(
-    data_args: Set[str],
-    signature: Signature,
-    data: Any,
     args: Tuple,
     kwargs: Mapping,
+    exclude: Set[str],
+    signature: Signature,
 ) -> Tuple[BoundArguments, Tibble]:
     """Preprocess the data arguments.
 
     Args:
-        data_args: The data arguments
-        signature: The signature of the function
-        data: The data to be processed
         args: The args to be processed
         kwargs: The kwargs to be processed
+        exclude: The data arguments
+        signature: The signature of the function
 
     Returns:
         The data, args, kwargs and args frame
     """
-    bound = signature.bind(data, *args, **kwargs)
+    bound = signature.bind(*args, **kwargs)
     bound.apply_defaults()
-
-    diff_args = data_args - set(bound.arguments)
-    if diff_args:
-        raise ValueError(f"Data argument doesn't exist: {diff_args}.")
 
     args_raw = bound.arguments.copy()
     args_df = Tibble.from_args(
@@ -57,13 +55,10 @@ def _preprocess_data_args(
                 != inspect.Parameter.VAR_POSITIONAL
                 else None
                 if len(val) == 0
-                else Tibble.from_pairs(
-                    [str(i) for i in range(len(val))],
-                    val
-                )
+                else Tibble.from_pairs([str(i) for i in range(len(val))], val)
             )
             for key, val in bound.arguments.items()
-            if key in data_args
+            if key not in exclude
         }
     )
 
@@ -73,10 +68,7 @@ def _preprocess_data_args(
             bound.arguments[arg] = args_df
         elif arg == "__args_raw":
             bound.arguments[arg] = args_raw
-        elif (
-            arg in args_df
-            or args_df.columns.str.startswith(f"{arg}$").any()
-        ):
+        elif arg in args_df or args_df.columns.str.startswith(f"{arg}$").any():
             if (
                 bound.signature.parameters[arg].kind
                 != inspect.Parameter.VAR_POSITIONAL
@@ -95,17 +87,17 @@ def _preprocess_data_args(
 def _with_hooks(
     func: Callable = None,
     pre: Callable = None,
-    post: Callable = None,
+    post: str | Callable = None,
 ) -> Callable:
     """Apply hooks to a function
 
     Args:
         func: The function to be wrapped
-        pre: The pre hook, takes the `__data` and `*args`, `**kwargs`. If it
+        pre: The pre hook, takes the `*args`, `**kwargs`. If it
             returns None, the original `*args` and `**kwargs` will be used.
-            Otherwise, it should return a tuple of `__data`, `args` and `kwargs`
-        post: The post hook, takes the `out`, `__data` and `*args`, `**kwargs`.
-            It should return the modified `out`.
+            Otherwise, it should return a tuple of `args` and `kwargs`
+        post: The post hook, takes the `__out`, and `*args`, `**kwargs`.
+            It should return the modified `__out`.
 
     Returns:
         The wrapped function
@@ -114,415 +106,216 @@ def _with_hooks(
         return lambda fun: _with_hooks(fun, pre, post)
 
     @wraps(func)
-    def wrapper(__data, *args, **kwargs):
+    def wrapper(*args, **kwargs):
         if pre:
-            arguments = pre(__data, *args, **kwargs)
+            arguments = pre(*args, **kwargs)
             if arguments is not None:
-                __data, args, kwargs = arguments
-        out = func(__data, *args, **kwargs)
-        if post:
-            out = post(out, __data, *args, **kwargs)
+                args, kwargs = arguments
+        out = func(*args, **kwargs)
+        if post == "transform":
+            grouped = [
+                arg for arg in args
+                if isinstance(arg, (SeriesGroupBy, TibbleGrouped))
+            ]
+            if not grouped:
+                return out
+            grouped = grouped[0]
+            is_rowwise = False
+            if isinstance(grouped, TibbleGrouped):
+                if isinstance(grouped, TibbleRowwise):
+                    is_rowwise = True
+                grouped = grouped._datar["grouped"]
+                if getattr(grouped, "is_rowwise", False):
+                    is_rowwise = True
+
+            out = out.groupby(
+                grouped.grouper,
+                sort=grouped.sort,
+                observed=grouped.observed,
+                dropna=grouped.dropna,
+            )
+            if is_rowwise:
+                out.is_rowwise = True
+
+        elif callable(post):
+            out = post(out, *args, **kwargs)
         return out
 
     return wrapper
 
 
-class BootstrappableVerb(Verb):
+def _deconstruct_df(df: DataFrame) -> List[DataFrame | Series]:
+    """Deconstruct a dataframe into a list of series and dataframes
 
-    @classmethod
-    def from_verb(
-        cls: Type[BootstrappableVerb],
-        verb: Verb,
-    ) -> BootstrappableVerb:
-        """Create a BootstrappableVerb from a Verb"""
-        inst = cls(
-            verb._generic,
-            None,
-            None,
-            None,
-            None,
-            None,
-            None,
-            None,
-            None,
-            verb.dep,
-            verb.ast_fallback,
-        )
-        inst.contexts = verb.contexts
-        inst.extra_contexts = verb.extra_contexts
-        inst._generic = verb._generic
-        inst.func = verb.func
-        inst.registry = verb.registry
-        inst.dispatch = verb.dispatch
-        inst._signature = verb._signature
-        inst.fact_pre = None
-        inst.fact_post = None
-        inst.fact_func = verb._generic
-        return inst
-
-    @cached_property
-    def kind_apply(self) -> Callable:
-        """The frame apply function"""
-        @singledispatch
-        def _df_apply(
-            data: PandasObject,
-            bound: BoundArguments,
-            data_args: Set[str],
-            func: Callable = None,
-        ) -> Any:
-            """Apply a function to a dataframe"""
-            for arg in data_args:
-                if (
-                    bound.signature.parameters[arg].kind
-                    == inspect.Parameter.VAR_POSITIONAL
-                ):
-                    # nest frames?
-                    bound.arguments[arg] = data[arg].to_dict("series").values()
-                else:
-                    bound.arguments[arg] = data[arg]
-
-            return func(*bound.args, **bound.kwargs)
-
-        @_df_apply.register(TibbleGrouped)
-        def _(
-            data: TibbleGrouped,
-            bound: BoundArguments,
-            data_args: Set[str],
-            func: Callable = None,
-        ) -> Any:
-            """Apply a function to a grouped dataframe"""
-            def to_apply(subdf):
-                for arg in data_args:
-                    # copy the bound arguments for parallel processing?
-                    if (
-                        bound.signature.parameters[arg].kind
-                        == inspect.Parameter.VAR_POSITIONAL
-                    ):
-                        bound.arguments[arg] = (
-                            subdf[arg].to_dict("series").values()
-                        )
-                    else:
-                        bound.arguments[arg] = subdf[arg]
-
-                if "__args_frame" in bound.arguments:
-                    bound.arguments["__args_frame"] = subdf
-
-                return func(*bound.args, **bound.kwargs)
-
-            return data._datar["grouped"].apply(to_apply)
-
-        return _df_apply
-
-    def _bootstrap_pandas_agg(
-        self,
-        func: str | Callable,
-        context: ContextType,
-        extra_contexts: Mapping[str, ContextType],
-        pre: Callable,
-        post: Callable,
-        # no extra arguments for agg
-    ) -> BootstrappableVerb:
-        """Register a function for pandas agg"""
-
-        @self.register(Series, context, extra_contexts)
-        @_with_hooks(pre=pre, post=post)
-        def _(__data, *args, **kwargs):
-            if isinstance(func, str) and hasattr(__data, func):
-                return getattr(__data, func)(*args, **kwargs)
-            return func(__data, *args, **kwargs)
-
-        @self.register(DataFrame, context, extra_contexts)
-        @_with_hooks(pre=pre, post=post)
-        def _(__data, *args, **kwargs):
-            return __data.agg(func, 0, *args, **kwargs).to_frame().T
-
-        @self.register(SeriesGroupBy, context, extra_contexts)
-        @_with_hooks(pre=pre, post=post)
-        def _(__data, *args, **kwargs):
-            return __data.agg(func, *args, **kwargs)
-
-        @self.register(TibbleGrouped, context, extra_contexts)
-        @_with_hooks(pre=pre, post=post)
-        def _(__data, *args, **kwargs):
-            return Tibble(
-                __data._datar["grouped"].agg(func, *args, **kwargs),
-                copy=False,
-            )
-
-        @self.register(TibbleRowwise, context, extra_contexts)
-        @_with_hooks(pre=pre, post=post)
-        def _(__data, *args, **kwargs):
-            return __data.agg(func, 1, *args, **kwargs)
-
-        return self
-
-    def _bootstrap_pandas_transform(
-        self,
-        func: str | Callable,
-        context: ContextType,
-        extra_contexts: Mapping[str, ContextType],
-        pre: Callable,
-        post: Callable,
-    ) -> BootstrappableVerb:
-        """Register a function for pandas agg"""
-
-        @self.register(Series, context, extra_contexts)
-        @_with_hooks(pre=pre, post=post)
-        def _(__data, *args, **kwargs):
-            if isinstance(func, str) and hasattr(__data, func):
-                out = getattr(__data, func)(*args, **kwargs)
-            else:
-                out = func(__data, *args, **kwargs)
-            if not isinstance(out, Series):
-                out = Series(out, index=__data.index)
-            return out
-
-        @self.register(DataFrame, context, extra_contexts)
-        @_with_hooks(pre=pre, post=post)
-        def _(__data, *args, **kwargs):
-            return __data.transform(func, 0, *args, **kwargs)
-
-        @self.register(SeriesGroupBy, context, extra_contexts)
-        @_with_hooks(pre=pre, post=post)
-        def _(__data, *args, **kwargs):
-            out = __data.transform(func, *args, **kwargs)
-            grouper = __data.grouper
-            return out.groupby(
-                grouper,
-                sort=__data.sort,
-                dropna=__data.dropna,
-                observed=__data.observed,
-            )
-
-        @self.register(TibbleGrouped, context, extra_contexts)
-        @_with_hooks(pre=pre, post=post)
-        def _(__data, *args, **kwargs):
-            return __data._datar["grouped"].transform(func, *args, **kwargs)
-
-        @self.register(TibbleRowwise, context, extra_contexts)
-        @_with_hooks(pre=pre, post=post)
-        def _(__data, *args, **kwargs):
-            return __data.transform(func, 1, *args, **kwargs)
-
-        return self
-
-    def _bootstrap_pandas_apply(
-        self,
-        func: str | Callable,
-        context: ContextType,
-        extra_contexts: Mapping[str, ContextType],
-        pre: Callable,
-        post: Callable,
-        data_args: str | Set[str] = None,
-        signature: Signature = None,
-    ) -> BootstrappableVerb:
-        """Register a function for pandas apply"""
-
-        if not signature:
-            if func is self.fact_func:
-                signature = self.signature
-            else:
-                try:
-                    signature = inspect.signature(func)
-                except (ValueError, TypeError):
-                    signature = self.signature
-
-        data_args = data_args or {list(signature.parameters)[0]}
-        if isinstance(data_args, str):
-            data_args = {data_args}
-
-        @self.register(object, context, extra_contexts)
-        @_with_hooks(pre=pre, post=post)
-        def _(__data, *args, **kwargs):
-            bound, args_frame = _preprocess_data_args(
-                data_args,
-                signature,
-                __data,
-                args,
-                kwargs,
-            )
-
-            return self.kind_apply(args_frame, bound, data_args, func)
-
-        return self
-
-    def bootstrap(
-        self,
-        func: str | Callable = None,
-        *,
-        kind: str = "apply",
-        context: ContextType = NO_DEFAULT,
-        extra_contexts: Mapping[str, ContextType] = NO_DEFAULT,
-        pre: Callable = NO_DEFAULT,
-        post: Callable = NO_DEFAULT,
-        **kwargs: Any,
-    ) -> BootstrappableVerb:
-        """Bootstrap a verb for new types, including Series, DataFrame, etc.
-
-        Args:
-            func: The function to register. If not provided, use the function
-                of the same name in the current module.
-                If it is `NO_DEFAULT`, the function registered by
-                `func_factory()` or `func_generic()` will be used.
-            kind: The kind of the function, can be "apply", "agg", "transform".
-            context: The context to use for the function.
-            extra_contexts: The extra contexts to use for the function.
-            pre: A function to be called before the function.
-            post: A function to be called after the function.
-            **kwargs: kind-specific arguments.
-
-        Returns:
-            The decorator to register the function.
-        """
-        if func is None:
-            return lambda fun: self.bootstrap(
-                fun,
-                kind=kind,
-                context=context,
-                extra_contexts=extra_contexts,
-                pre=pre,
-                post=post,
-                **kwargs,
-            )
-
-        if func is NO_DEFAULT:
-            func = self.fact_func
-
-        if context is NO_DEFAULT:
-            context = self.contexts["_"]
-
-        if extra_contexts is NO_DEFAULT:
-            extra_contexts = self.extra_contexts["_"]
-
-        if pre is NO_DEFAULT:
-            pre = self.fact_pre
-
-        if post is NO_DEFAULT:
-            post = self.fact_post
-
-        if kind == "agg":
-            return self._bootstrap_pandas_agg(
-                func,
-                context=context,
-                extra_contexts=extra_contexts,
-                pre=pre,
-                post=post,
-                **kwargs,
-            )
-
-        if kind == "transform":
-            return self._bootstrap_pandas_transform(
-                func,
-                context=context,
-                extra_contexts=extra_contexts,
-                pre=pre,
-                post=post,
-                **kwargs,
-            )
-
-        return self._bootstrap_pandas_apply(
-            func,
-            context=context,
-            extra_contexts=extra_contexts,
-            pre=pre,
-            post=post,
-            **kwargs,
-        )
-
-
-def func_generic(
-    func: str | Callable = None,
-    *,
-    context: ContextType = Context.EVAL,
-    extra_contexts: Mapping[str, ContextType] = None,
-    dep: bool = False,
-    ast_fallback: str = "normal_warning",
-    name: str = None,
-    qualname: str = None,
-    doc: str = None,
-    module: str = None,
-    signature: Signature = None,
-    pre: Callable = None,
-    post: Callable = None,
-) -> BootstrappableVerb:
-    """Register a generic function to handle basic data types,
-    without bootstrapping.
+    Examples:
+        >>> _deconstruct_df(tibble(a=1, b=2))
+        >>> # [Series([1], name="a"), Series([2], name="b")]
+        >>> _deconstruct_df(tibble(a=tibble(x=1, y=2), c=3))
+        >>> # [DataFrame({"x": [1], "y": [2]}), Series([3], name="c")]
 
     Args:
-        func: The focal function to apply to the data. If not provided, the
-            function will be used as the focal function.
-        context: The context to register the function.
-        extra_contexts: Extra contexts to register the function.
-        dep: Whether the function is dependent. Dependent functions should not
-            have the data argument passed in explicitly.
-        name: The name of the function.
-        qualname: The qualified name of the function.
-        doc: The docstring of the function.
-        module: The module of the function.
-        signature: The signature of the function.
-        pre: The pre hook, takes the `__data` and `*args`, `**kwargs`. If it
-            returns None, the original `*args` and `**kwargs` will be used.
-            Otherwise, it should return a tuple of `__data`, `args` and `kwargs`
-        post: The post hook, takes the `out`, `__data` and `*args`, `**kwargs`.
-            It should return the modified `out`.
+        df: The dataframe to be deconstructed
 
     Returns:
-        The decorator to register the function if `func` is not provided.
-        Otherwise, the registered function.
+        The deconstructed list
     """
-    if func is None:
-        return lambda fun: func_generic(
-            fun,
-            context=context,
-            extra_contexts=extra_contexts,
-            dep=dep,
-            ast_fallback=ast_fallback,
-            name=name,
-            qualname=qualname,
-            doc=doc,
-            module=module,
-            signature=signature,
-            pre=pre,
-            post=post,
+    cnames = [col.split("$", 1)[0] for col in df.columns]
+    unames, idx = np.unique(cnames, return_index=True)
+    return [df[unames[ix]] for ix in np.argsort(idx)]
+
+
+def _bootstrap_agg_func(
+    registered: Callable,
+    func: Callable,
+    pre: Callable,
+    post: Callable,
+) -> Callable:
+
+    @registered.register(Series, backend="pandas")
+    @_with_hooks(pre=pre, post=post)
+    def _series_agg(*args, **kwargs):
+        if isinstance(func, str) and hasattr(args[0], func):
+            return getattr(args[0], func)(*args, **kwargs)
+        return func(*args, **kwargs)
+
+    @registered.register(DataFrame, backend="pandas")
+    @_with_hooks(pre=pre, post=post)
+    def _df_agg(*args, **kwargs):
+        return args[0].agg(func, 0, *args[1:], **kwargs).to_frame().T
+
+    @registered.register(SeriesGroupBy, backend="pandas")
+    @_with_hooks(pre=pre, post=post)
+    def _seriesgroupby_agg(*args, **kwargs):
+        return args[0].agg(func, *args[1:], **kwargs)
+
+    @registered.register(TibbleGrouped, backend="pandas")
+    @_with_hooks(pre=pre, post=post)
+    def _tibblegrouped_agg(*args, **kwargs):
+        return Tibble(
+            args[0]._datar["grouped"].agg(func, *args[1:], **kwargs),
+            copy=False,
         )
 
-    verb = BootstrappableVerb(
-        _with_hooks(func, pre, post) if pre or post else func,
-        types=[object],
-        context=context,
-        extra_contexts=extra_contexts or {},
-        name=name,
-        qualname=qualname,
-        doc=doc,
-        module=module,
-        signature=signature,
-        dep=dep,
-        ast_fallback=ast_fallback,
-    )
-    # for bootstrapping
-    verb.fact_pre = pre
-    verb.fact_post = post
-    verb.fact_func = func
-    return verb
+    @registered.register(TibbleRowwise, backend="pandas")
+    @_with_hooks(pre=pre, post=post)
+    def _tibblerowwise_agg(*args, **kwargs):
+        return args[0].agg(func, 1, *args[1:], **kwargs)
+
+    return registered
+
+
+def _bootstrap_transform_func(
+    registered: Callable,
+    func: Callable,
+    pre: Callable,
+    post: Callable,
+) -> Callable:
+
+    @registered.register(Series, backend="pandas")
+    @_with_hooks(pre=pre, post=post)
+    def _series_transform(*args, **kwargs):
+        if isinstance(func, str) and hasattr(args[0], func):
+            out = getattr(args[0], func)(*args[1:], **kwargs)
+        else:
+            out = func(*args, **kwargs)
+        if not isinstance(out, Series):
+            out = Series(out, index=args[0].index)
+        return out
+
+    @registered.register(DataFrame, backend="pandas")
+    @_with_hooks(pre=pre, post=post)
+    def _df_transform(*args, **kwargs):
+        return args[0].transform(func, 0, *args[1:], **kwargs)
+
+    @registered.register(SeriesGroupBy, backend="pandas")
+    @_with_hooks(pre=pre, post=post)
+    def _seriesgroupby_transform(*args, **kwargs):
+        return args[0].transform(func, *args[1:], **kwargs)
+
+    @registered.register(TibbleGrouped, backend="pandas")
+    @_with_hooks(pre=pre, post=post)
+    def _tibblegrouped_transform(*args, **kwargs):
+        return args[0]._datar["grouped"].transform(func, *args[1:], **kwargs)
+
+    @registered.register(TibbleRowwise, backend="pandas")
+    @_with_hooks(pre=pre, post=post)
+    def _tibblerowwise_transform(*args, **kwargs):
+        return args[0].transform(func, 1, *args[1:], **kwargs)
+
+    return registered
+
+
+def _bootstrap_apply_func(
+    registered: Callable,
+    func: Callable,
+    pre: Callable,
+    post: Callable,
+    exclude: str | Sequence[str] = (),
+    signature: inspect.Signature = None,
+) -> Callable:
+
+    if exclude:
+        signature = signature or inspect.signature(func)
+
+    if isinstance(exclude, str):
+        exclude = {exclude}
+    else:
+        exclude = set(exclude)
+
+    @singledispatch
+    def apply_df(data, bound, exclude, func):
+        """The frame apply function"""
+        for key in bound.arguments:
+            if key in exclude:
+                continue
+            dt = data[key]
+            if (
+                bound.signature.parameters[key].kind
+                == inspect.Parameter.VAR_POSITIONAL
+            ):
+                dt = _deconstruct_df(dt)
+            bound.arguments[key] = dt
+
+        return func(*bound.args, **bound.kwargs)
+
+    @apply_df.register(TibbleGrouped)
+    def _apply_df_grouped(data, bound, exclude, func):
+        return data._datar["grouped"].apply(
+            apply_df.dispatch(object),
+            bound=bound,
+            exclude=exclude,
+            func=func,
+        )
+
+    @registered.register(PandasObject, backend="pandas")
+    @_with_hooks(pre=pre, post=post)
+    def _pandasobject_apply(*args, **kwargs):
+        bound, args_frame = _preprocess_data_args(
+            args,
+            kwargs,
+            signature,
+            exclude,
+        )
+        return registered.apply_df(args_frame, bound, exclude, func)
+
+    registered.apply_df = apply_df
+    return registered
 
 
 def func_factory(
-    func: str | Callable = None,
+    func: Callable = None,
     *,
     kind: str = "apply",
-    context: ContextType = Context.EVAL,
-    extra_contexts: Mapping[str, ContextType] = None,
-    dep: bool = False,
-    ast_fallback: str = "normal_warning",
     name: str = None,
     qualname: str = None,
     doc: str = None,
     module: str = None,
-    signature: Signature = None,
+    pipeable: bool = False,
+    ast_fallback: str = "normal_warning",
     pre: Callable = None,
     post: Callable = None,
     **kwargs,  # Other kind-specific arguments.
-) -> BootstrappableVerb:
+) -> Callable:
     """A factory to register functions.
 
     The function applies same function `func` on different data types. For
@@ -533,26 +326,24 @@ def func_factory(
             If not provided, this function will return a decorator.
         kind: The kind of the focal function. Can be one of "agg", "transform",
             "apply".
-        context: The context to register the function.
-        extra_contexts: Extra contexts to register the function.
-        dep: Whether the verb is dependent. If True, the data argument will not
-            be passed in explicitly.
-        ast_fallback: The AST fallback mode. Can be one of `normal`,
-            `normal_warning`, `piping`, `piping_warning` and `raise`.
-            See also `help(pipda.register_verb)`.
         name: The name of the function, used to overwrite `func`'s name.
         qualname: The qualified name of the function, used to overwrite
             `func`'s qualname.
-        module: The module of the function, used to overwrite `func`'s module.
         doc: The docstring of the function, used to overwrite `func`'s doc.
-        signature: The signature of the function. Only needed when
-            signature is not available for the function (e.g. `np.sqrt`); and
-            `extra_contexts` is provided or `kind` is `apply`
-        pre: The pre hook, takes the `__data` and `*args`, `**kwargs`. If it
+        module: The module of the function, used to overwrite `func`'s module.
+        pipeable: Whether the function is pipeable.
+        ast_fallback: The AST fallback mode. Can be one of `normal`,
+            `normal_warning`, `piping`, `piping_warning` and `raise`.
+            See also `help(pipda.register_func)`.
+        pre: The pre hook, takes the `*args`, `**kwargs`. If it
             returns None, the original `*args` and `**kwargs` will be used.
-            Otherwise, it should return a tuple of `__data`, `args` and `kwargs`
-        post: The post hook, takes the `out`, `__data` and `*args`, `**kwargs`.
+            Otherwise, it should return a tuple of `args` and `kwargs`
+        post: The post hook, takes the `out`, `*args`, `**kwargs`.
             It should return the modified `out`.
+            For "apply" kind, it could also be `transform` indicating that the
+            output should be a transformation that has the same shape as the
+            input.
+            For "transform" kind, it is "transform" by default.
         **kwargs: Other kind-specific arguments.
 
     Returns:
@@ -563,104 +354,103 @@ def func_factory(
         return lambda fun: func_factory(
             fun,
             kind=kind,
-            context=context,
-            extra_contexts=extra_contexts,
-            dep=dep,
-            ast_fallback=ast_fallback,
             name=name,
             qualname=qualname,
             doc=doc,
             module=module,
-            signature=signature,
+            pipeable=pipeable,
+            ast_fallback=ast_fallback,
             pre=pre,
             post=post,
             **kwargs,
         )
 
-    verb = func_generic(
+    registered = register_func(
         func,
-        context=context,
-        extra_contexts=extra_contexts,
-        dep=dep,
-        ast_fallback=ast_fallback,
         name=name,
         qualname=qualname,
         doc=doc,
         module=module,
-        signature=signature,
-        pre=pre,
-        post=post,
+        pipeable=pipeable,
+        ast_fallback=ast_fallback,
     )
+    registered.init_pre = pre
+    registered.init_post = post
+    registered.init_func = func
 
-    return verb.bootstrap(func, kind=kind, **kwargs)
-
-
-def func_dispatched(
-    func: Callable,
-    context: ContextType = Context.EVAL,
-    extra_contexts: Mapping[str, ContextType] = None
-) -> Verb:
-    """Register an already-dispatched function
-
-    Args:
-        func: The dispatched function
-        context: The context to register the function.
-        extra_contexts: Extra contexts to register the function.
-
-    Returns:
-        The registered function.
-    """
-    verb = register_verb(
-        None,
-        context=context,
-        extra_contexts=extra_contexts,
-        name=func.__name__,
-        qualname=func.__qualname__,
-        doc=func.__doc__,
-        module=func.__module__,
-        func="none",
-    )
-    for type_, method in func.registry.items():
-        verb.register(type_)(method)
-    return verb
+    return func_bootstrap(registered, func=func, kind=kind, **kwargs)
 
 
 def func_bootstrap(
-    verb: Verb,
+    registered: Callable,
     *,
     func: Callable = None,
     kind: str = "apply",
-    context: ContextType = NO_DEFAULT,
-    extra_contexts: Mapping[str, ContextType] = NO_DEFAULT,
     pre: Callable = NO_DEFAULT,
     post: Callable = NO_DEFAULT,
     **kwargs: Any,
-) -> BootstrappableVerb:
-    """Bootstrap a verb"""
-    if not isinstance(verb, Verb):
-        raise TypeError("`verb` must be a pipda Verb")
+) -> Callable:
+    """Bootstrap a function
+
+    When kind is "agg" or "transform", the type of the first argument will be
+    used for dispatching. When kind is "apply", the types of all arguments
+    except `exclude` will be used for dispatching.
+
+    Args:
+        registered: The registered function.
+        func: The implementations for all types.
+        kind: The kind of the focal function. Can be one of "agg", "transform",
+            "apply".
+        pre: The pre hook, takes the `*args`, `**kwargs`. If it
+            returns None, the original `*args` and `**kwargs` will be used.
+            Otherwise, it should return a tuple of `args` and `kwargs`
+        post: The post hook, takes the `__out`, `*args`, `**kwargs`.
+            It should return the modified `__out`.
+            For "apply" kind, it could also be `transform` indicating that the
+            output should be a transformation that has the same shape as the
+            input.
+            For "transform" kind, it is "transform" by default.
+        **kwargs: Other kind-specific arguments.
+            For "apply", `exclude` is used to exclude arguments for
+            broadcasting and dispatching. `signature` might be needed to bind
+            the arguments if `inspect.signature()` cannot get the signature.
+
+    Returns:
+        The bootstrapped function.
+    """
+    if not getattr(registered, "_pipda_functype", False):
+        raise TypeError("Can only bootstrap a registered function")
 
     if func is None:
         return lambda fun: func_bootstrap(
-            verb,
+            registered,
             func=fun,
             kind=kind,
-            context=context,
-            extra_contexts=extra_contexts,
             pre=pre,
             post=post,
             **kwargs,
         )
 
-    if not isinstance(verb, BootstrappableVerb):
-        verb = BootstrappableVerb.from_verb(verb)
+    kind = arg_match( kind, "kind",["apply", "transform", "agg", "aggregation"])
 
-    return verb.bootstrap(
-        func,
-        kind=kind,
-        context=context,
-        extra_contexts=extra_contexts,
-        pre=pre,
-        post=post,
-        **kwargs,
+    if func is NO_DEFAULT:
+        func = registered.init_func
+
+    if pre is NO_DEFAULT:
+        pre = getattr(registered, "init_pre", None)
+
+    if post is NO_DEFAULT:
+        post = getattr(registered, "init_post", None)
+
+    if kind == "transform" and post is None:
+        post = "transform"
+
+    bsfunc = (
+        _bootstrap_agg_func
+        if kind in ("agg", "aggregation")
+        else _bootstrap_transform_func
+        if kind == "transform"
+        else _bootstrap_apply_func
     )
+
+    return bsfunc(registered, func, pre, post, **kwargs)

@@ -190,7 +190,7 @@ def test_used_separately():
 def test_with_group_id():
     df = tibble(g=[1, 2], a=[1, 2], b=[3, 4]) >> group_by(f.g)
 
-    @register_verb(DataFrame, dep=True, context=None)
+    @register_verb(DataFrame, dependent=True, context=None)
     def switcher(data, group_id, across_a, across_b):
         return group_id.apply(
             lambda x: across_a.a.obj[0] if x == 0 else across_b.b.obj[1]

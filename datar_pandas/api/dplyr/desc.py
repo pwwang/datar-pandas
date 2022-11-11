@@ -3,12 +3,11 @@ import numpy as np
 from datar.apis.dplyr import desc
 
 from ...pandas import Categorical, Series
-from ...contexts import Context
 from ...tibble import SeriesCategorical
 from ...factory import func_bootstrap
 
 
-@func_bootstrap(desc, kind="transform", context=Context.EVAL)
+@func_bootstrap(desc, kind="transform")
 def _desc(x):
     try:
         out = -x
@@ -21,7 +20,7 @@ def _desc(x):
     return out
 
 
-@desc.register(SeriesCategorical, context=Context.EVAL)
+@desc.register(SeriesCategorical)
 def _desc_cat(x):
     cat = x.values
     code = cat.codes.astype(float)

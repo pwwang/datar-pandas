@@ -72,22 +72,14 @@ def _cur_data_all_grouped(_data: TibbleGrouped) -> Series:
 @cur_data.register(DataFrame, context=Context.EVAL)
 def _cur_data(_data: DataFrame) -> Series:
     _data = getattr(_data, "_datar", {}).get("summarise_source", _data)
-    cols = setdiff(
-        _data.columns,
-        _data.group_vars or [],
-        __ast_fallback="normal",
-    )
+    cols = setdiff(_data.columns, _data.group_vars or [])
     return Series([_data[cols]], dtype=object)
 
 
 @cur_data.register(TibbleGrouped, context=Context.EVAL)
 def _cur_data_grouped(_data: TibbleGrouped) -> Series:
     _data = _data._datar.get("summarise_source", _data)
-    cols = setdiff(
-        _data.columns,
-        _data.group_vars or [],
-        __ast_fallback="normal",
-    )
+    cols = setdiff(_data.columns, _data.group_vars or [])
     return (
         _data._datar["grouped"].apply(lambda g: Series([g[cols]])).iloc[:, 0]
     )
@@ -131,6 +123,6 @@ def _cur_group_rows(_data: DataFrame) -> np.ndarray:
     return gdata["_rows"]
 
 
-@cur_column.impl
+@cur_column.register(backend="pandas")
 def _cur_column() -> CurColumn:
     return CurColumn()

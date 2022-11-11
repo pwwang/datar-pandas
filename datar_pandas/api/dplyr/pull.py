@@ -12,11 +12,7 @@ from ...tibble import Tibble, TibbleGrouped
 from ...contexts import Context
 
 
-@pull.register(
-    DataFrame,
-    context=Context.SELECT,
-    extra_contexts={"name": Context.EVAL},
-)
+@pull.register(DataFrame, context=Context.SELECT)
 def _pull(_data, var=-1, name=None, to=None):
     # make sure pull(df, 'x') pulls a dataframe for columns
     # x$a, x$b in df

@@ -17,7 +17,7 @@ from ...factory import func_bootstrap
 from ...pandas import Series, PandasObject
 
 
-@order_by.impl
+@order_by.register(backend="pandas")
 def _order_by(order: Sequence, call: FunctionCall):
     order = order_fun(order)
     if not isinstance(call, FunctionCall) or len(call._pipda_args) < 1:
@@ -61,7 +61,7 @@ def _with_order_post(__out, order, func, x, *args, __args_raw=None, **kwargs):
     return __out
 
 
-@func_bootstrap(with_order, data_args={'order', 'x'}, post=_with_order_post)
+@func_bootstrap(with_order, exclude={"func", "args", "kwargs"}, post=_with_order_post)
 def _with_order(
     order: Any,
     func: Callable,
@@ -70,7 +70,6 @@ def _with_order(
     __args_raw: Mapping[str, Any] = None,
     **kwargs: Any,
 ) -> Sequence:
-    order = order.data if isinstance(order, PandasData) else order
     order = order_fun(order, __ast_fallback="normal")
 
     x = _with_order(x, order)

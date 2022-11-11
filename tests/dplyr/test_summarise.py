@@ -47,7 +47,7 @@ def test_input_recycled():
     assert_frame_equal(df1, df2)
 
     df1 = gf >> summarise(x=seq_len(f.a), y=1)
-    df2 = tibble(a=c(1, 2, 2), x=c(1, 1, 2), y=1) >> group_by(f.a)
+    df2 = tibble(a=c(1, 2), x=[[1], [1, 2]], y=1)
     # assert df1.equals(df2)
     assert_frame_equal(df1, df2)
 
@@ -285,7 +285,8 @@ def test_errors(caplog):
         (
             tibble(z=c(1, 3))
             >> group_by(f.z)
-            >> summarise(x=seq_len(f.z), y=[1, 2])
+            # >> summarise(x=seq_len(f.z), y=[1, 2])
+            >> summarise(x=[1, 2, 3], y=[1, 2])
         )
 
     # Missing variable

@@ -1,6 +1,5 @@
 # tests grabbed from:
 # https://github.com/tidyverse/dplyr/blob/master/tests/testthat/test-slice.r
-from datar_pandas.pandas import Categorical, Series, assert_frame_equal
 import pytest
 from datar import f
 from datar.data import mtcars
@@ -27,6 +26,7 @@ from datar.dplyr import (
 )
 from datar_pandas.tibble import TibbleRowwise
 from datar_pandas.api.dplyr.slice_ import _n_from_prop
+from datar_pandas.pandas import Categorical, Series, assert_frame_equal
 
 from ..conftest import assert_iterable_equal, assert_equal
 
@@ -95,7 +95,9 @@ def test_slice_works_with_grouped_data():
     out = gf >> slice(0)
     assert out.shape[0] == 2
 
-    out = gf >> slice(Series([1, 0, 0]).groupby(gf._datar["grouped"].grouper.result_index))
+    out = gf >> slice(
+        Series([1, 0, 0]).groupby(gf._datar["grouped"].grouper.result_index)
+    )
     assert_iterable_equal(out.x.obj, [2, 3])
 
 

@@ -1,4 +1,3 @@
-import warnings
 
 import pytest
 
@@ -6,7 +5,7 @@ import pytest
 def pytest_sessionstart(session):
     from datar import options
 
-    options(import_names_conflict="silent")
+    options(import_names_conflict="silent", backends=["numpy", "pandas"])
     # set_seed(8888)
 
 

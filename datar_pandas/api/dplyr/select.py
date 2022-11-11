@@ -36,7 +36,7 @@ def _select(
         out.rename(columns=new_names, inplace=True)
         if (
             isinstance(out, TibbleGrouped)
-            and len(intersect(gvars, new_names, __ast_fallback="normal")) > 0
+            and len(intersect(gvars, new_names)) > 0
         ):
             out._datar["group_vars"] = [
                 new_names.get(gvar, gvar) for gvar in gvars

@@ -20,11 +20,7 @@ from ...tibble import reconstruct_tibble
 from ...common import setdiff, union, intersect
 
 
-@mutate.register(
-    DataFrame,
-    context=Context.PENDING,
-    extra_contexts={"_before": Context.SELECT, "_after": Context.SELECT},
-)
+@mutate.register(DataFrame, context=Context.PENDING)
 def _mutate(
     _data,
     *args,

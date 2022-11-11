@@ -12,7 +12,6 @@ from datar.apis.dplyr import (
 )
 
 from ...contexts import Context
-from ...utils import PandasData
 from ._rank import (
     _row_number,
     _ntile,
@@ -23,37 +22,31 @@ from ._rank import (
 
 
 
-@row_number_.register((object, PandasData), context=Context.EVAL)
+@row_number_.register(object, backend="pandas")
 def _row_number_registered(x):
-    x = x.data if isinstance(x, PandasData) else x
     return _row_number(x)
 
 
-@ntile_.register((object, PandasData), context=Context.EVAL)
+@ntile_.register(object, backend="pandas")
 def _ntile_registered(x, *, n=None):
-    x = x.data if isinstance(x, PandasData) else x
     return _ntile(x, n)
 
 
-@min_rank_.register((object, PandasData), context=Context.EVAL)
+@min_rank_.register(object, backend="pandas")
 def _min_rank_registered(x, *, na_last="keep"):
-    x = x.data if isinstance(x, PandasData) else x
     return _rank(x, na_last=na_last, method="min")
 
 
-@dense_rank_.register((object, PandasData), context=Context.EVAL)
+@dense_rank_.register(object, backend="pandas")
 def _dense_rank_registered(x, *, na_last="keep"):
-    x = x.data if isinstance(x, PandasData) else x
     return _rank(x, na_last=na_last, method="dense")
 
 
-@percent_rank_.register((object, PandasData), context=Context.EVAL)
+@percent_rank_.register(object, backend="pandas")
 def _percent_rank_registered(x, *, na_last="keep"):
-    x = x.data if isinstance(x, PandasData) else x
     return _percent_rank(x, na_last)
 
 
-@cume_dist_.register((object, PandasData), context=Context.EVAL)
+@cume_dist_.register(object, backend="pandas")
 def _cume_dist_registered(x, *, na_last="keep"):
-    x = x.data if isinstance(x, PandasData) else x
     return _cume_dist(x, na_last)

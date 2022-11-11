@@ -8,7 +8,6 @@
 # testing functions in datar.dplyr.funs
 import pytest
 
-from datar_pandas import pandas as pd
 from datar.dplyr import (
     between,
     lead,
@@ -39,6 +38,7 @@ from datar.base import (
     letters,
 )
 from datar.tibble import tibble
+from datar_pandas import pandas as pd
 
 from ..conftest import assert_iterable_equal
 
@@ -65,14 +65,16 @@ def test_clearly_errors_that_not_vectorized():
         between(1, [1, 2], 1)
 
 
-# In python: a <= x <= b not working as expected when x is iterable (Series or ndarray).
+# In python: a <= x <= b not working as expected when x is iterable
+# (Series or ndarray).
 # test_that("compatible with base R", {
 #   x <- runif(1e3)
 #   expect_equal(between(x, 0.25, 0.5), x >= 0.25 & x <= 0.5)
 # })
 
 # test_that("warns when called on S3 object", {
-#   expect_warning(between(structure(c(1, 5), class = "foo"), 1, 3), "numeric vector with S3 class")
+#   expect_warning(between(structure(c(1, 5), class = "foo"), 1, 3),
+# "numeric vector with S3 class")
 #   expect_warning(between(factor("x"), 1, 2), "S3 class")
 # })
 
@@ -156,8 +158,8 @@ def test_cummean_is_consistent_with_cumsum_and_seq_along():
     assert out == pytest.approx([1.0, 1.5, 2.0, 2.5, 3.0])
 
     # seq_along is 0-based
-    assert out == pytest.approx(cumsum(x) / seq_along(x))
-    assert cummean([]).tolist() == []
+    assert_iterable_equal(out, cumsum(x) / seq_along(x), approx=True)
+    assert_iterable_equal(cummean([]).tolist(), [])
 
 
 def test_order_by_returns_correct_value():

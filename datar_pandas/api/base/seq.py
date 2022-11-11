@@ -1,7 +1,7 @@
 import numpy as np
 from datar_numpy.utils import make_array
 from datar.apis.base import (
-    c,
+    c_,
     length,
     lengths,
     match,
@@ -11,7 +11,7 @@ from datar.apis.base import (
     sample,
     # seq,
     # seq_along,
-    # seq_len,
+    seq_len,
     sort,
 )
 from datar.apis.tibble import tibble
@@ -20,31 +20,27 @@ from ... import pandas as pd
 from ...broadcast import _grouper_compatible
 from ...collections import Collection
 from ...common import is_integer, is_scalar
-from ...contexts import Context
 from ...factory import func_bootstrap
-from ...pandas import DataFrame, Series, SeriesGroupBy
+from ...pandas import DataFrame, PandasObject, Series, SeriesGroupBy
 from ...tibble import TibbleGrouped, reconstruct_tibble
 
 func_bootstrap(
     length,
     func=lambda x: x.shape[0],
-    context=Context.EVAL,
-    kind="agg",
+    kind="agg"
 )
 func_bootstrap(
     lengths,
     func=lambda x: x.transform(lambda y: 1 if is_scalar(y) else len(y)),
-    context=Context.EVAL,
     kind="agg",
 )
 func_bootstrap(
     sample,
-    func=sample.dispatch(object),
-    context=Context.EVAL,
+    func=sample.dispatch(object, backend="numpy"),
 )
 
 
-@match.register(object, context=Context.EVAL)
+@match.register(PandasObject, backend="pandas")
 def match(x, table, nomatch=-1):
     def match_dummy(xx, tab):
         sorter = np.argsort(tab)
@@ -138,9 +134,8 @@ def _order_post(out, x, descending, na_last):
 
 @func_bootstrap(
     order,
-    context=Context.EVAL,
     kind="transform",
-    post=_order_post,
+    post=_order_post
 )
 def _order(x: Series, decreasing=False, na_last=True):
     if not na_last or decreasing:
@@ -155,10 +150,8 @@ def _order(x: Series, decreasing=False, na_last=True):
     return out
 
 
-@rep.register(SeriesGroupBy, context=Context.EVAL)
+@rep.register(SeriesGroupBy, backend="pandas")
 def _rep_sgb(x, times, length, each):
-    from ..tibble import tibble
-
     df = tibble(x=x)
     times_sgb = isinstance(times, SeriesGroupBy)
     length_sgb = isinstance(length, SeriesGroupBy)
@@ -193,7 +186,7 @@ def _rep_sgb(x, times, length, each):
     )
 
 
-@rep.register(DataFrame, context=Context.EVAL)
+@rep.register(DataFrame, backend="pandas")
 def _rep_df(x, times, length, each):
     if not is_integer(each) or each != 1:
         raise ValueError("`each` has to be 1 to replicate a data frame.")
@@ -205,19 +198,17 @@ def _rep_df(x, times, length, each):
     return out
 
 
-@rep.register(TibbleGrouped, context=Context.EVAL)
+@rep.register(TibbleGrouped, backend="pandas")
 def _rep_grouped(x, times, length, each):
     out = rep.dispatch(DataFrame)(x, times, length, each)
     return reconstruct_tibble(x, out)
 
 
-@c.register(object, context=Context.EVAL)
+@c_.register(PandasObject, backend="pandas")
 def _c(x, *args):
     elems = (x, *args)
     if not any(isinstance(elem, SeriesGroupBy) for elem in elems):
         return Collection(*elems)
-
-    from ..tibble import tibble
 
     values = []
     for elem in elems:
@@ -246,7 +237,7 @@ def _c(x, *args):
     return out
 
 
-@func_bootstrap(rev, kind="transform", context=Context.EVAL)
+@func_bootstrap(rev, kind="transform")
 def _rev(x, __args_raw=None):
     rawx = __args_raw["x"]
     if isinstance(rawx, (Series, SeriesGroupBy)):  # groupby from transform()
@@ -260,7 +251,7 @@ def _rev(x, __args_raw=None):
     return rawx[::-1]
 
 
-@func_bootstrap(sort, kind="transform", context=Context.EVAL)
+@func_bootstrap(sort, kind="transform")
 def _sort(
     x,
     decreasing=False,
@@ -270,3 +261,6 @@ def _sort(
     out = x.iloc[idx]
     out.index = x.index
     return out
+
+
+func_bootstrap(seq_len, func=seq_len.dispatch(object, backend="numpy"))

@@ -13,8 +13,6 @@ from datar.apis.base import (
 )
 
 from ...common import is_scalar
-from ...contexts import Context
-from ...utils import PandasData
 from ...factory import func_bootstrap
 from ...pandas import Categorical, Series, SeriesGroupBy, is_categorical_dtype
 
@@ -24,7 +22,7 @@ def _droplevels_bootsstrap(x):
     return x.cat.remove_unused_categories()
 
 
-@droplevels.register(Categorical, context=Context.EVAL)
+@droplevels.register(Categorical, backend="pandas")
 def _droplevels_cat(x):
     return x.remove_unused_categories()
 
@@ -37,7 +35,7 @@ def _levels(x):
     return x.cat.categories.values.copy()
 
 
-@levels.register(Categorical, context=Context.EVAL)
+@levels.register(Categorical, backend="pandas")
 def _levels_cat(x):
     return x.categories
 
@@ -48,14 +46,13 @@ def _nlevels_bootstrap(x) -> int:
     return 0 if lvls is None else len(lvls)
 
 
-@nlevels.register(Categorical, context=Context.EVAL)
+@nlevels.register(Categorical, backend="pandas")
 def _nlevels_cat(x):
     return nlevels.dispatch(Series)(x)
 
 
-@factor.register((object, PandasData), context=Context.EVAL)
+@factor.register(object, backend="pandas")
 def _factor(x, levels=None, exclude=np.nan, ordered=False):
-    x = x.data if isinstance(x, PandasData) else x
     if isinstance(x, SeriesGroupBy):
         out = factor(
             x.obj,
@@ -93,7 +90,6 @@ def _factor(x, levels=None, exclude=np.nan, ordered=False):
     return ret.remove_categories(exclude)
 
 
-@ordered.register((object, PandasData), context=Context.EVAL)
+@ordered.register(object, backend="pandas")
 def _ordered(x, levels=None):
-    x = x.data if isinstance(x, PandasData) else x
     return factor(x, levels=levels).as_ordered()

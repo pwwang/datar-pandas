@@ -15,7 +15,7 @@ from ...contexts import Context
 from .tidyselect import everything
 
 
-@across.register(DataFrame, context=Context.PENDING)
+@across.register(DataFrame, backend="pandas", context=Context.PENDING)
 def _across(
     _data: DataFrame,
     *args: Any,
@@ -42,7 +42,7 @@ def _across(
     ).evaluate(_fn_context)
 
 
-@c_across.register(DataFrame, context=Context.SELECT)
+@c_across.register(DataFrame, backend="pandas", context=Context.SELECT)
 def _c_across(_data: DataFrame, _cols: Sequence[str] = None) -> DataFrame:
     _data = getattr(_data, "_datar", {}).get("summarise_source", _data)
 
@@ -53,7 +53,7 @@ def _c_across(_data: DataFrame, _cols: Sequence[str] = None) -> DataFrame:
     return reconstruct_tibble(_data, _data.iloc[:, _cols])
 
 
-@if_any.register(DataFrame, extra_contexts={"args": Context.SELECT})
+@if_any.register(DataFrame, backend="pandas")
 def _if_any(
     _data: DataFrame,
     *args: Any,
@@ -78,7 +78,7 @@ def _if_any(
     ).evaluate(_context)
 
 
-@if_all.register(DataFrame, extra_contexts={"args": Context.SELECT})
+@if_all.register(DataFrame, backend="pandas")
 def _if_all(
     _data: DataFrame,
     # _cols: Iterable[str] = None,

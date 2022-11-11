@@ -8,11 +8,10 @@ from datar.apis.base import (
     conj,
 )
 
-from ...contexts import Context
 from ...factory import func_bootstrap
 
-func_bootstrap(re_, func=np.real, context=Context.EVAL, kind="transform")
-func_bootstrap(im, func=np.imag, context=Context.EVAL, kind="transform")
-func_bootstrap(mod, func=np.abs, context=Context.EVAL, kind="transform")
-func_bootstrap(arg, func=np.angle, context=Context.EVAL, kind="transform")
-func_bootstrap(conj, func=np.conj, context=Context.EVAL, kind="transform")
+func_bootstrap(re_, func=np.real, kind="transform")
+func_bootstrap(im, func=np.imag, kind="transform")
+func_bootstrap(mod, func=np.abs, kind="transform")
+func_bootstrap(arg, func=np.angle, kind="transform")
+func_bootstrap(conj, func=np.conj, kind="transform")

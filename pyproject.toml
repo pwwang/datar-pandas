@@ -24,8 +24,8 @@ requires = ["poetry-core"]
 build-backend = "poetry.core.masonry.api"
 
 [tool.pytest.ini_options]
-# addopts = "-vv --assert=plain -p no:asyncio --tb=short -n auto --cov-config=.coveragerc --cov=datar_pandas --cov-report xml:cov.xml --cov-report term-missing"
-addopts = "-vv --assert=plain -p no:asyncio --tb=short -n 0"
+addopts = "-vv --assert=plain -p no:asyncio --tb=short -n auto --cov-config=.coveragerc --cov=datar_pandas --cov-report xml:cov.xml --cov-report term-missing"
+# addopts = "-vv --assert=plain -p no:asyncio --tb=short -n 0"
 filterwarnings = [
     # "ignore::UserWarning",
     # "ignore::RuntimeWarning",

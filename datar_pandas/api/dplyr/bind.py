@@ -11,7 +11,6 @@ from datar.apis.dplyr import bind_rows, bind_cols
 
 from ... import pandas as pd
 from ...pandas import DataFrame, Categorical, union_categoricals
-from ...utils import PandasData
 from ...common import is_factor, is_scalar, is_null
 from ...contexts import Context
 from ...tibble import Tibble, TibbleGrouped, reconstruct_tibble
@@ -28,13 +27,9 @@ def _construct_tibble(data):
     return Tibble(data, copy=False)
 
 
-@bind_rows.register(
-    (DataFrame, list, dict, type(None), PandasData),
-    context=Context.EVAL,
-)
+@bind_rows.register((DataFrame, list, dict, type(None)), backend="pandas")
 def _bind_rows(
-    _data: DataFrame | list | dict | None | PandasData,
-    *datas: Any,
+    *datas: DataFrame | list | dict | None,
     _id: str = None,
     _copy: bool = True,
     **kwargs: Any,
@@ -42,7 +37,10 @@ def _bind_rows(
     if _id is not None and not isinstance(_id, str):
         raise ValueError("`_id` must be a scalar string.")
 
-    _data = _data.data if isinstance(_data, PandasData) else _data
+    if not datas:
+        _data = None
+    else:
+        _data, datas = datas[0], datas[1:]
 
     key_data = {}
     if isinstance(_data, list):
@@ -115,40 +113,33 @@ def _bind_rows(
     return pd.concat(to_concat, copy=_copy).reset_index(drop=True)
 
 
-@bind_rows.register(TibbleGrouped, context=Context.PENDING)
+@bind_rows.register(TibbleGrouped, backend="pandas")
 def _bind_rows_grouped(
-    _data: TibbleGrouped,
     *datas: Any,
     _id: str = None,
     **kwargs: Any,
 ) -> TibbleGrouped:
-    data = bind_rows.dispatch(DataFrame)(_data, *datas, _id=_id, **kwargs)
-    return reconstruct_tibble(_data, data)
+    grouped = [data for data in datas if isinstance(data, TibbleGrouped)]
+    grouped = grouped[0]
+    out = _bind_rows.dispatch(DataFrame, backend="pandas")(
+        *datas,
+        _id=_id,
+        **kwargs,
+    )
+    return reconstruct_tibble(grouped, out)
 
 
-@bind_cols.register((DataFrame, dict, type(None)), context=Context.EVAL)
+@bind_cols.register((DataFrame, dict, type(None)), backend="pandas")
 def _bind_cols(
-    _data: DataFrame | dict | None,
-    *datas: Any,
+    *datas: DataFrame | dict | None,
     _name_repair: str | Callable = "unique",
     _copy=True,
 ) -> DataFrame:
-    if isinstance(_data, dict):
-        _data = Tibble.from_args(**_data)
+    ds = [Tibble.from_args(**d) if isinstance(dict) else d for d in datas]
 
-    more_data = []
-    for data in datas:
-        if isinstance(data, dict):
-            more_data.append(Tibble.from_args(**data))
-        else:
-            more_data.append(data)
-
-    if _data is not None:
-        more_data.insert(0, _data)
-
-    if not more_data:
+    if not ds:
         return Tibble()
 
-    ret = pd.concat(more_data, axis=1, copy=_copy)
+    ret = pd.concat(ds, axis=1, copy=_copy)
     ret.columns = repair_names(ret.columns.tolist(), repair=_name_repair)
     return ret

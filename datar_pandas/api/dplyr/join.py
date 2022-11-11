@@ -12,7 +12,7 @@ from datar.apis.dplyr import (
 
 from ... import pandas as pd
 from ...typing import Data, Str
-from ...pandas import Categorical, DataFrame
+from ...pandas import Categorical, DataFrame, SeriesGroupBy
 from ...common import is_factor, is_scalar, intersect, setdiff, union
 from ...contexts import Context
 from ...tibble import reconstruct_tibble
@@ -49,12 +49,12 @@ def _join(
             suffixes=suffix,
         )
         if not keep:
-            to_drop = setdiff(right_on, left_on, __ast_fallback="normal")
+            to_drop = setdiff(right_on, left_on)
             ret.drop(columns=to_drop, inplace=True)
 
     elif keep:
         if by is None:
-            by = intersect(newx.columns, y.columns, __ast_fallback="normal")
+            by = intersect(newx.columns, y.columns)
         # on=... doesn't keep both by columns in left and right
         left_on = [f"{col}{suffix[0]}" for col in by]
         right_on = [f"{col}{suffix[1]}" for col in by]
@@ -72,30 +72,31 @@ def _join(
 
     else:
         if by is None:
-            by = intersect(newx.columns, y.columns, __ast_fallback="normal")
+            by = intersect(newx.columns, y.columns)
 
         by = [by] if is_scalar(by) else list(by)
         ret = pd.merge(newx, y, on=by, how=how, copy=copy, suffixes=suffix)
         for col in by:
             # try recovering factor columns
-            if is_factor(x[col]) and is_factor(y[col]):
+            xcol = x[col]
+            ycol = y[col]
+            if isinstance(xcol, SeriesGroupBy):
+                xcol = xcol.obj
+            if isinstance(ycol, SeriesGroupBy):
+                ycol = ycol.obj
+            if is_factor(xcol) and is_factor(ycol):
                 ret[col] = Categorical(
                     ret[col],
                     categories=union(
-                        x[col].cat.categories,
-                        y[col].cat.categories,
-                        __ast_fallback="normal",
+                        xcol.cat.categories,
+                        ycol.cat.categories,
                     ),
                 )
 
     return reconstruct_tibble(x, ret)
 
 
-@inner_join.register(
-    DataFrame,
-    context=Context.EVAL,
-    extra_contexts={"by": Context.SELECT},
-)
+@inner_join.register(DataFrame, context=Context.EVAL)
 def _inner_join(
     x: DataFrame,
     y: DataFrame,
@@ -115,11 +116,7 @@ def _inner_join(
     )
 
 
-@left_join.register(
-    DataFrame,
-    context=Context.EVAL,
-    extra_contexts={"by": Context.SELECT},
-)
+@left_join.register(DataFrame, context=Context.EVAL)
 def _left_join(
     x: DataFrame,
     y: DataFrame,
@@ -139,11 +136,7 @@ def _left_join(
     )
 
 
-@right_join.register(
-    DataFrame,
-    context=Context.EVAL,
-    extra_contexts={"by": Context.SELECT},
-)
+@right_join.register(DataFrame, context=Context.EVAL)
 def _right_join(
     x: DataFrame,
     y: DataFrame,
@@ -163,11 +156,7 @@ def _right_join(
     )
 
 
-@full_join.register(
-    DataFrame,
-    context=Context.EVAL,
-    extra_contexts={"by": Context.SELECT},
-)
+@full_join.register(DataFrame, context=Context.EVAL)
 def _full_join(
     x: DataFrame,
     y: DataFrame,
@@ -187,11 +176,7 @@ def _full_join(
     )
 
 
-@semi_join.register(
-    DataFrame,
-    context=Context.EVAL,
-    extra_contexts={"by": Context.SELECT},
-)
+@semi_join.register(DataFrame, context=Context.EVAL)
 def _semi_join(
     x: DataFrame,
     y: DataFrame,
@@ -215,11 +200,7 @@ def _semi_join(
     return reconstruct_tibble(x, ret)
 
 
-@anti_join.register(
-    DataFrame,
-    context=Context.EVAL,
-    extra_contexts={"by": Context.SELECT},
-)
+@anti_join.register(DataFrame, context=Context.EVAL)
 def anti_join(
     x: DataFrame,
     y: DataFrame,
@@ -239,11 +220,7 @@ def anti_join(
     return reconstruct_tibble(x, ret)
 
 
-@nest_join.register(
-    DataFrame,
-    context=Context.EVAL,
-    extra_contexts={"by": Context.SELECT},
-)
+@nest_join.register(DataFrame, context=Context.EVAL)
 def _nest_join(
     x: DataFrame,
     y: DataFrame,
@@ -258,11 +235,7 @@ def _nest_join(
     if isinstance(by, (list, tuple, set)):
         on = dict(zip(by, by))
     elif by is None:
-        common_cols = intersect(
-            newx.columns,
-            y.columns,
-            __ast_fallback="normal",
-        )
+        common_cols = intersect(newx.columns, y.columns)
         on = dict(zip(common_cols, common_cols))
     elif not isinstance(by, dict):
         on = {by: by}
@@ -280,9 +253,7 @@ def _nest_join(
                 condition = condition & (y[on[key]] == row[key])
         df = filter_(y, condition, __ast_fallback="normal")
         if not keep:
-            df = df[
-                setdiff(df.columns, list(on.values()), __ast_fallback="normal")
-            ]
+            df = df[setdiff(df.columns, list(on.values()))]
 
         return df
 
