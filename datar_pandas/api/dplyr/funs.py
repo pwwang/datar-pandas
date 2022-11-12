@@ -17,7 +17,6 @@ from datar.apis.dplyr import (
 from ... import pandas as pd
 from ...pandas import DataFrame, Series, SeriesGroupBy
 from ...common import is_scalar
-from ...contexts import Context
 from ...factory import func_bootstrap
 from ...tibble import TibbleGrouped
 
@@ -33,7 +32,7 @@ def _between(x, left, right, inclusive: str = "both"):
 
 
 # faster
-between.register(SeriesGroupBy, fun="between", backend="pandas")
+between.register(SeriesGroupBy, func="between", backend="pandas")
 
 
 @cummean.register(object, backend="pandas")

@@ -279,6 +279,9 @@ def test_fibble():
     df = tibble(x=[1, 2]) >> mutate(tibble(y=f.x))
     assert df.equals(tibble(x=[1, 2], y=[1, 2]))
 
+    df = tibble(x=[1, 2]) >> mutate(tibble(f.x))
+    assert df.equals(tibble(x=[1, 2]))
+
 
 # tibble_row ---------------------------------------
 def test_tibble_row():
@@ -296,6 +299,7 @@ def test_tibble_row():
 
     df = tibble_row()
     assert df.shape == (1, 0)
+
 
 # tibble with index
 def test_tibble_index():

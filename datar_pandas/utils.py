@@ -1,14 +1,18 @@
 from __future__ import annotations
 
 import textwrap
-from typing import Any, Hashable, Iterable, Mapping
+from typing import TYPE_CHECKING, Any, Hashable, Iterable, Mapping
 from functools import singledispatch
 
 import numpy as np
+from pipda import Expression, evaluate_expr
 
 from .common import is_null, unique
 from .collections import Collection
 from .pandas import DataFrame, Series, SeriesGroupBy
+
+if TYPE_CHECKING:
+    from pipda import ContextType
 
 # Specify a "no default" value so that None can be used as a default value
 NO_DEFAULT = object()
@@ -18,6 +22,21 @@ NA_character_ = "<NA>"
 NA_integer_ = np.random.randint(np.iinfo(np.int32).max)
 NA_real_ = np.nan
 NA_compex_ = complex(NA_real_, NA_real_)
+
+
+class ExpressionWrapper:
+    """A wrapper around an expression to bypass evaluation"""
+
+    __slots__ = ("expr",)
+
+    def __init__(self, expr: Expression) -> None:
+        self.expr = expr
+
+    def __str__(self) -> str:
+        return str(self.expr)
+
+    def _pipda_eval(self, data: Any, context: ContextType = None) -> Any:
+        return evaluate_expr(self.expr, data, context)
 
 
 @singledispatch

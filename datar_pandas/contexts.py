@@ -12,10 +12,6 @@ from .pandas import DataFrame
 from .tibble import Tibble
 
 
-class ContextAutoEvalError(Exception):
-    """Raised when auto evaluation fails"""
-
-
 class ContextEval(ContextEvalPipda):
     """Evaluation context"""
 
@@ -38,41 +34,10 @@ class ContextEval(ContextEvalPipda):
 
     def getattr(self, parent, ref, level):
         """Evaluate f.a"""
-
-        self._save_used_ref(parent, ref, level)
-        if isinstance(parent, DataFrame):
-            return parent[ref]
-
-        return super().getattr(parent, ref, level)
-
-    @property
-    def ref(self) -> ContextBase:
-        """Defines how `item` in `f[item]` is evaluated.
-
-        This function should return a `ContextBase` object."""
-        return Context.SELECT
-
-
-class ContextAutoEval(ContextEvalPipda):
-    """Auto-evaluation of expressions inside a function so that
-    `data >> mutate(x=f.col, y=f.x * 2)` can be first evaluated as
-    `data >> mutate(x=f.col, y=f.col * 2)`
-    """
-
-    def getitem(self, parent, ref, level):
-        """Interpret f[ref]"""
-        # parent must be a dict
-        if level == 1 and ref not in parent:
-            raise ContextAutoEvalError(str(ref))
-
-        return super().getitem(parent, ref, level)
-
-    def getattr(self, parent, ref, level):
-        """Evaluate f.a"""
-
-        if level == 1:
+        if isinstance(parent, (dict, DataFrame)):
             return self.getitem(parent, ref, level)
 
+        self._save_used_ref(parent, ref, level)
         return super().getattr(parent, ref, level)
 
     @property
@@ -89,4 +54,3 @@ class Context(Enum):
     PENDING = ContextPending()
     SELECT = ContextSelect()
     EVAL = ContextEval()
-    AUTOEVAL = ContextAutoEval()

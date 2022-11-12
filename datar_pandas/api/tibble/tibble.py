@@ -12,7 +12,8 @@ from datar.apis.tibble import (
 )
 
 from ...common import is_scalar
-from ...contexts import ContextAutoEvalError, Context
+from ...contexts import Context
+from ...utils import ExpressionWrapper, name_of
 from ...pandas import DataFrame, DataFrameGroupBy, PandasObject
 from ...tibble import Tibble, TibbleGrouped
 
@@ -30,22 +31,52 @@ def _tibble(
     _index=None,
     **kwargs,
 ) -> Tibble:
+    """Constructs a data frame, and make sure the references to external data
+    and self work
+
+    >>> df = DataFrame({"a": [1, 2, 3], "b": [4, 5, 6]})
+    >>> df >> mutate(c=f.a, d=f.c)
+    """
+    # Scan the args, kwargs see if we have any reference to self (f.c above)
+    eval_data = {}
+    evaled_args = []
     evaled_kws = {}
+    for val in args:
+        key = name_of(val)
+        if isinstance(val, Expression):
+            try:
+                # Check if any refers to self (args, kwargs)
+                evaluate_expr(val, eval_data, Context.EVAL)
+            except KeyError:
+                # If not, it refers to external data
+                evaled_args.append(val)
+            else:
+                # Otherwise, wrap it so that it gets bypass the evaluation
+                evaled_args.append(ExpressionWrapper(val))
+        else:
+            evaled_args.append(val)
+
+        if isinstance(val, DataFrame):
+            for col in val.columns:
+                eval_data[col] = 1
+        else:
+            eval_data[key] = 1
+
     for key, val in kwargs.items():
         if isinstance(val, Expression):
             try:
-                evaled_kws[key] = evaluate_expr(
-                    val,
-                    evaled_kws,
-                    Context.AUTOEVAL,
-                )
-            except ContextAutoEvalError:
+                evaluate_expr(val, eval_data, Context.EVAL)
+            except KeyError:
                 evaled_kws[key] = val
+            else:
+                evaled_kws[key] = ExpressionWrapper(val)
         else:
             evaled_kws[key] = val
 
+        eval_data[key] = 1
+
     return tibble_(
-        *args,
+        *evaled_args,
         _name_repair=_name_repair,
         _rows=_rows,
         _dtypes=_dtypes,

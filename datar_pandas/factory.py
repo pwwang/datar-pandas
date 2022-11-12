@@ -431,7 +431,7 @@ def func_bootstrap(
             **kwargs,
         )
 
-    kind = arg_match( kind, "kind",["apply", "transform", "agg", "aggregation"])
+    kind = arg_match(kind, "kind", ["apply", "transform", "agg", "aggregation"])
 
     if func is NO_DEFAULT:
         func = registered.init_func
