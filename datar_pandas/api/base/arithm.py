@@ -77,7 +77,7 @@ func_bootstrap(log10, func=np.log10, kind="transform")
 func_bootstrap(log1p, func=np.log1p, kind="transform")
 func_bootstrap(sd, func=np.std, kind="agg")
 func_bootstrap(proportions, func=lambda x: x / x.sum(), kind="transform")
-func_bootstrap(signif, func=signif.dispatch(object, backend="numpy"))
+# func_bootstrap(signif, func=signif.dispatch(object, backend="numpy"))
 func_bootstrap(log, func=log.dispatch(object, backend="numpy"))
 func_bootstrap(
     weighted_mean,

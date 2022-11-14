@@ -64,7 +64,7 @@ def _if_else_sgb(condition, true, false, missing=None):
     )
     # use obj so df.x won't get a SeriesGroupBy
     grouped = df._datar["grouped"]
-    print(grouped.obj)
+    # print(grouped.obj)
     out = if_else(
         grouped.obj.iloc[:, 0],
         grouped.obj.iloc[:, 1],

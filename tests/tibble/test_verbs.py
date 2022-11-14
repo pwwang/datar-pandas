@@ -9,37 +9,36 @@ from datar.base import (
     c,
     factor,
     letters,
+    ncol,
     nrow,
     rep,
     rev,
     rownames,
     seq,
     seq_along,
-    seq_len,
-    ncol,
+    seq_len
 )
 from datar.core.names import NameNonUniqueError
 from datar.data import iris, mtcars
-from datar.dplyr import group_by, rowwise, group_vars
+from datar.dplyr import group_by, group_vars, rowwise
 from datar.tibble import (
-    tibble,
-    enframe,
-    deframe,
-    add_row,
     add_column,
+    add_row,
+    column_to_rownames,
+    deframe,
+    enframe,
+    has_rownames,
     remove_rownames,
     rowid_to_column,
     rownames_to_column,
-    column_to_rownames,
-    has_rownames,
+    tibble
 )
+
 from datar_pandas import pandas as pd
 from datar_pandas.pandas import assert_frame_equal
 from datar_pandas.tibble import TibbleGrouped, TibbleRowwise
 
-from ..conftest import assert_iterable_equal
-
-has_rownames.ast_fallback = "normal"
+from ..conftest import assert_, assert_equal, assert_iterable_equal, assert_not
 
 # enframe ------------------------------------------
 
@@ -122,7 +121,7 @@ df_all = tibble(
 def test_can_add_row():
     df_all_new = add_row(df_all, a=4, b=3)
     assert df_all_new.columns.tolist() == df_all.columns.tolist()
-    assert nrow(df_all_new) == nrow(df_all) + 1
+    assert_equal(nrow(df_all_new), nrow(df_all) + 1)
     assert_iterable_equal(df_all_new.a, [1.0, 2.5, NA, 4])
     assert_iterable_equal(df_all_new.b, [1.0, 2.0, NA, 3.0])
     assert_iterable_equal(df_all_new.c, [True, False, NA, NA])
@@ -130,7 +129,7 @@ def test_can_add_row():
 
 def test_add_empty_row_if_no_arguments():
     iris1 = add_row(iris)
-    assert nrow(iris1) == nrow(iris) + 1
+    assert_equal(nrow(iris1), nrow(iris) + 1)
     new_iris_row = iris1.iloc[-1, :]
     assert all(pd.isna(new_iris_row))
 
@@ -145,7 +144,7 @@ def test_error_if_adding_row_with_unknown_variables():
 
 def test_add_rows_to_nondf():
     with pytest.raises(NotImplementedError):
-        out = add_row(1)
+        add_row(1)
 
 
 def test_can_add_multiple_rows():
@@ -187,15 +186,15 @@ def test_can_safely_add_to_factor_columns_everywhere():
     # test_that("can safely add to factor columns everywhere (#296)", {
     df = tibble(a=factor(letters[:3]))
     out = add_row(df)
-    exp = tibble(a=factor(c(letters[:3], NA)))
+    exp = tibble(a=factor(c(letters[:3], None)))
     assert_frame_equal(out, exp)
 
     out = add_row(df, _before=0)
-    exp = tibble(a=factor(c(NA, letters[:3])))
+    exp = tibble(a=factor(c(None, letters[:3])))
     assert_frame_equal(out, exp)
 
     out = add_row(df, _before=1)
-    exp = tibble(a=factor(c("a", NA, letters[1:3])))
+    exp = tibble(a=factor(c("a", None, letters[1:3])))
     assert_frame_equal(out, exp)
 
     out = add_row(df, a="d")
@@ -378,7 +377,7 @@ def test_can_add_column_inbetween():
 
 def test_can_add_column_relative_to_named_column():
     df = tibble(a=seq(1, 3), c=seq(4, 6))
-    df_new = add_column(df, b=seq(-1, 1), _before=f.c)
+    df_new = add_column(df, b=seq(-1, 1), _before="c")
     assert_frame_equal(df_new, tibble(a=[1, 2, 3], b=seq(-1, 1), c=[4, 5, 6]))
 
 
@@ -407,13 +406,13 @@ def test_error_if_column_named_by_before_or_after_not_found():
 
 
 def test_missing_row_names_stay_missing_when_adding_column():
-    assert not has_rownames(iris)
-    assert not has_rownames(iris >> add_column(x=seq(1, 150), _after=0))
-    assert (
-        not has_rownames(iris >> add_column(x=seq(1, 150), _after=ncol(iris)-1))
+    assert_not(has_rownames(iris))
+    assert_not(has_rownames(iris >> add_column(x=seq(1, 150), _after=0)))
+    assert_not(
+        has_rownames(iris >> add_column(x=seq(1, 150), _after=ncol(iris) - 1))
     )
-    assert (
-        not has_rownames(iris >> add_column(x=seq(1, 150), _before=1))
+    assert_not(
+        has_rownames(iris >> add_column(x=seq(1, 150), _before=1))
     )
 
 
@@ -469,13 +468,13 @@ def test_has_rownames_and_remove_rownames():
 # test_that("rownames_to_column keeps the tbl classes (#882)", {
 def test_rownames_to_column():
     res = rownames_to_column(mtcars)
-    assert not has_rownames(res)
+    assert_not(has_rownames(res))
     assert_iterable_equal(res.rowname, rownames(mtcars))
     with pytest.raises(ValueError, match="duplicated"):
         rownames_to_column(mtcars, f.wt)
 
     res1 = rownames_to_column(mtcars, "MakeModel")
-    assert not has_rownames(res1)
+    assert_not(has_rownames(res1))
     assert_iterable_equal(res1.MakeModel, rownames(mtcars))
     with pytest.raises(ValueError, match="duplicated"):
         rownames_to_column(res1, f.wt)
@@ -484,13 +483,13 @@ def test_rownames_to_column():
 def test_rowid_to_column():
     # test_that("rowid_to_column keeps the tbl classes", {
     res = rowid_to_column(mtcars)
-    assert not has_rownames(res)
+    assert_not(has_rownames(res))
     assert_iterable_equal(res.rowid, seq_len(nrow(mtcars)) - 1)
     with pytest.raises(ValueError, match="duplicated"):
         rowid_to_column(mtcars, f.wt)
 
     res1 = rowid_to_column(mtcars, "row_id")
-    assert not has_rownames(res1)
+    assert_not(has_rownames(res1))
     assert_iterable_equal(res1.row_id, seq_len(nrow(mtcars)) - 1)
     with pytest.raises(ValueError, match="duplicated"):
         rowid_to_column(res1, f.wt)
@@ -498,11 +497,11 @@ def test_rowid_to_column():
 
 def test_column_to_rownames(caplog):
     var = "var"
-    assert has_rownames(mtcars)
+    assert_(has_rownames(mtcars))
     res0 = rownames_to_column(mtcars, var)
     res = column_to_rownames(res0, var)
     assert caplog.text == ""
-    assert has_rownames(res)
+    assert_(has_rownames(res))
     assert_iterable_equal(rownames(res), rownames(mtcars))
     assert_frame_equal(res, mtcars)
     # has_name is not a public API
@@ -513,7 +512,7 @@ def test_column_to_rownames(caplog):
     res0 = rownames_to_column(mtcars1)
     res = column_to_rownames(res0, var="num")
     assert caplog.text == ""
-    assert has_rownames(res)
+    assert_(has_rownames(res))
     assert_iterable_equal(rownames(res), as_character(mtcars1.num))
     with pytest.raises(ValueError):
         column_to_rownames(res)
@@ -554,4 +553,4 @@ def test_add_column_for_rowwise_df():
     df = tibble(x=[1, 2, 3]) >> group_by(f.x)
     df2 = add_column(df, y=[3, 2, 1])
     assert isinstance(df2, TibbleGrouped)
-    assert group_vars(df2) == ["x"]
+    assert_equal(group_vars(df2), ["x"])

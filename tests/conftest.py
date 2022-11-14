@@ -35,6 +35,10 @@ def assert_(x):
     assert x
 
 
+def assert_not(x):
+    assert not x
+
+
 # pytest modifies node for assert
 def assert_equal(x, y, approx=False):
     if approx is True:

@@ -12,7 +12,6 @@ from datar.apis.dplyr import bind_rows, bind_cols
 from ... import pandas as pd
 from ...pandas import DataFrame, Categorical, union_categoricals
 from ...common import is_factor, is_scalar, is_null
-from ...contexts import Context
 from ...tibble import Tibble, TibbleGrouped, reconstruct_tibble
 
 
@@ -121,7 +120,7 @@ def _bind_rows_grouped(
 ) -> TibbleGrouped:
     grouped = [data for data in datas if isinstance(data, TibbleGrouped)]
     grouped = grouped[0]
-    out = _bind_rows.dispatch(DataFrame, backend="pandas")(
+    out = bind_rows.dispatch(DataFrame, backend="pandas")[0](
         *datas,
         _id=_id,
         **kwargs,
@@ -135,7 +134,7 @@ def _bind_cols(
     _name_repair: str | Callable = "unique",
     _copy=True,
 ) -> DataFrame:
-    ds = [Tibble.from_args(**d) if isinstance(dict) else d for d in datas]
+    ds = [Tibble.from_args(**d) if isinstance(d, dict) else d for d in datas]
 
     if not ds:
         return Tibble()
