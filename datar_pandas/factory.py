@@ -266,10 +266,13 @@ def _bootstrap_apply_func(
         """The frame apply function"""
         for key in bound.arguments:
             # When key is not in data, that means the value is None
-            if key in exclude or key not in data:
+            if key in exclude:
                 continue
 
-            dt = data[key]
+            try:
+                dt = data[key]
+            except KeyError:
+                continue
             if (
                 bound.signature.parameters[key].kind
                 == inspect.Parameter.VAR_POSITIONAL
@@ -283,9 +286,9 @@ def _bootstrap_apply_func(
     def _apply_df_grouped(data, bound, exclude, func):
         return data._datar["grouped"].apply(
             apply_df.dispatch(object),
-            bound=bound,
-            exclude=exclude,
-            func=func,
+            bound,
+            exclude,
+            func,
         )
 
     @registered.register(PandasObject, backend="pandas")
@@ -297,7 +300,7 @@ def _bootstrap_apply_func(
             exclude,
             signature,
         )
-        return registered.apply_df(args_frame, bound, exclude, func)
+        return apply_df(args_frame, bound, exclude, func)
 
     registered.apply_df = apply_df
     return registered

@@ -18,7 +18,7 @@ from ... import pandas as pd
 from ...pandas import DataFrame, Series, SeriesGroupBy
 from ...common import is_scalar
 from ...factory import func_bootstrap
-from ...tibble import TibbleGrouped
+from ...tibble import Tibble, TibbleGrouped
 
 
 @between.register(object, backend="pandas")
@@ -63,6 +63,15 @@ def _cumany_obj(x, na_as: bool = False):
 @func_bootstrap(cumany, kind="transform")
 def _cumany(x, na_as: bool = False):
     return x.fillna(na_as).cumsum().astype(bool)
+
+
+@coalesce.register(object, backend="pandas")
+def _coalesce_obj(x, *replace):
+    df = Tibble.from_args(x, *replace)
+    x = df.iloc[:, 0]
+    for col in df.columns[1:]:
+        x = x.combine_first(df[col])
+    return x
 
 
 @func_bootstrap(coalesce, post="transform")
