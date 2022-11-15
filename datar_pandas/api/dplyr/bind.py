@@ -134,7 +134,13 @@ def _bind_cols(
     _name_repair: str | Callable = "unique",
     _copy=True,
 ) -> DataFrame:
-    ds = [Tibble.from_args(**d) if isinstance(d, dict) else d for d in datas]
+    ds = [
+        Tibble.from_args(**d)
+        if isinstance(d, dict)
+        else d
+        for d in datas
+        if d is not None
+    ]
 
     if not ds:
         return Tibble()

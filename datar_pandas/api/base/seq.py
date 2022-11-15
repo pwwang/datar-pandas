@@ -37,6 +37,7 @@ func_bootstrap(
 func_bootstrap(
     sample,
     func=sample.dispatch(object, backend="numpy"),
+    exclude={"size", "replace", "prob"},
 )
 
 

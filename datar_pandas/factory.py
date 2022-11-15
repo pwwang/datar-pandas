@@ -254,8 +254,7 @@ def _bootstrap_apply_func(
     signature: inspect.Signature = None,
 ) -> Callable:
 
-    if exclude:
-        signature = signature or inspect.signature(func)
+    signature = signature or inspect.signature(func)
 
     if isinstance(exclude, str):
         exclude = {exclude}
@@ -266,8 +265,10 @@ def _bootstrap_apply_func(
     def apply_df(data, bound, exclude, func):
         """The frame apply function"""
         for key in bound.arguments:
-            if key in exclude:
+            # When key is not in data, that means the value is None
+            if key in exclude or key not in data:
                 continue
+
             dt = data[key]
             if (
                 bound.signature.parameters[key].kind
@@ -293,8 +294,8 @@ def _bootstrap_apply_func(
         bound, args_frame = _preprocess_data_args(
             args,
             kwargs,
-            signature,
             exclude,
+            signature,
         )
         return registered.apply_df(args_frame, bound, exclude, func)
 

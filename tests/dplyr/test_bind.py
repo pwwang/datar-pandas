@@ -1,7 +1,6 @@
 # https://github.com/tidyverse/dplyr/blob/master/tests/testthat/test-bind.R
 import pytest
 
-from datar_pandas.pandas import assert_frame_equal
 from datar import f
 from datar.base import (
     NULL,
@@ -25,6 +24,7 @@ from datar.dplyr import (
     bind_rows,
     group_by,
 )
+from datar_pandas.pandas import assert_frame_equal
 from ..conftest import assert_iterable_equal, assert_equal
 
 
@@ -211,7 +211,7 @@ def test_create_id_col():
     out = bind_rows([df1, df2], _id="col")
     assert out.col.tolist() == [0, 0, 0, 1, 1]
 
-    out = bind_rows(None, one=df1, two=df2, _id="col")
+    out = bind_rows(one=df1, two=df2, _id="col")
     assert out.col.tolist() == ["one"] * 3 + ["two"] * 2
 
 
