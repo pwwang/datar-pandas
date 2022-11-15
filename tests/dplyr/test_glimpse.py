@@ -1,4 +1,4 @@
-import pytest
+import pytest  # noqa
 
 from datar.all import (
     c,

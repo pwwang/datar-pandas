@@ -16,8 +16,8 @@ from ...tibble import Tibble, TibbleGrouped, reconstruct_tibble
 from ...operators import _binop
 
 
-@filter_.register(DataFrame, context=Context.EVAL)
-def filter(
+@filter_.register(DataFrame, context=Context.EVAL, backend="pandas")
+def _filter(
     _data: DataFrame,
     *conditions: Data[Bool],
     _preserve: bool = False,

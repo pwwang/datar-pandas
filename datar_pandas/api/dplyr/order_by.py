@@ -4,7 +4,7 @@ https://github.com/tidyverse/dplyr/blob/master/R/order-by.R
 """
 from __future__ import annotations
 
-from typing import Any, Callable, Mapping, Sequence
+from typing import Any, Callable
 from functools import singledispatch
 
 import numpy as np
@@ -14,12 +14,12 @@ from datar.apis.dplyr import order_by, with_order
 
 from ..other import itemgetter
 from ...factory import func_bootstrap
-from ...pandas import Series, PandasObject
+from ...pandas import Series
 
 
 @order_by.register(backend="pandas")
-def _order_by(order: Sequence, call: FunctionCall):
-    order = order_fun(order)
+def _order_by(order, call: FunctionCall):
+    order = order_fun(order, __ast_fallback="normal")
     if not isinstance(call, FunctionCall) or len(call._pipda_args) < 1:
         raise ValueError(
             "In `order_by()`: `call` must be a registered "
@@ -50,26 +50,31 @@ def _(seq, order):
     return out
 
 
-def _with_order_post(__out, order, func, x, *args, __args_raw=None, **kwargs):
-    """Keep the raw values if input is not Series-alike"""
-    if (
-        not isinstance(__args_raw["x"], PandasObject)
-        and isinstance(__out, Series)
-    ):
-        return __out.values
-
-    return __out
-
-
-@func_bootstrap(with_order, exclude={"func", "args", "kwargs"}, post=_with_order_post)
-def _with_order(
+@with_order.register(object, backend="pandas")
+def _with_order_obj(
     order: Any,
     func: Callable,
     x: Any,
     *args: Any,
-    __args_raw: Mapping[str, Any] = None,
     **kwargs: Any,
-) -> Sequence:
+):
+    order = order_fun(order, __ast_fallback="normal")
+
+    x = _with_order(x, order)
+    out = func(x, *args, **kwargs)
+    out = _with_order(out, order)
+
+    return out
+
+
+@func_bootstrap(with_order, exclude={"func", "args", "kwargs"})
+def _with_order_bootstrap(
+    order: Any,
+    func: Callable,
+    x: Any,
+    *args: Any,
+    **kwargs: Any,
+):
     order = order_fun(order, __ast_fallback="normal")
 
     x = _with_order(x, order)

@@ -190,7 +190,7 @@ def test_order_by_returns_correct_value():
 
 def test_order_by_errors():
     # with_order(NULL, 1)
-    with pytest.raises(AttributeError):
+    with pytest.raises(ValueError):
         order_by(NULL, 1)
 
 

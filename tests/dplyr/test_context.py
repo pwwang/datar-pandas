@@ -1,8 +1,7 @@
 # https://github.com/tidyverse/dplyr/blob/master/tests/testthat/test-context.R
-import pytest
+import pytest  # noqa: F401s
 
 import numpy as np
-from datar_pandas.pandas import assert_frame_equal
 from datar import f
 from datar.base import (
     c,
@@ -25,6 +24,7 @@ from datar.dplyr import (
     pull,
 )
 from pipda import VerbCall
+from datar_pandas.pandas import assert_frame_equal
 from ..conftest import assert_iterable_equal
 
 

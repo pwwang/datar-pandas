@@ -23,7 +23,7 @@ from ...common import setdiff, union
 from .group_data import group_vars
 
 
-@group_by.register(DataFrame, context=Context.PENDING)
+@group_by.register(DataFrame, context=Context.PENDING, backend="pandas")
 def _group_by(
     _data: DataFrame,
     *args: Any,
@@ -46,7 +46,7 @@ def _group_by(
     return _data.group_by(new_cols, drop=_drop, sort=_sort, dropna=_dropna)
 
 
-@group_by.register(TibbleGrouped, context=Context.PENDING)
+@group_by.register(TibbleGrouped, context=Context.PENDING, backend="pandas")
 def _group_by_grouped(
     _data: TibbleGrouped,
     *args: Any,
@@ -76,7 +76,7 @@ def _group_by_grouped(
     )
 
 
-@rowwise.register(DataFrame, context=Context.SELECT)
+@rowwise.register(DataFrame, context=Context.SELECT, backend="pandas")
 def _rowwise(
     _data: DataFrame,
     *cols: Union[str, int],
@@ -93,7 +93,7 @@ def _rowwise(
     ).rowwise(gvars)
 
 
-@rowwise.register(TibbleGrouped, context=Context.SELECT)
+@rowwise.register(TibbleGrouped, context=Context.SELECT, backend="pandas")
 def _rowwise_grouped(
     _data: TibbleGrouped,
     *cols: Union[str, int],
@@ -109,7 +109,7 @@ def _rowwise_grouped(
     return rowwise(_data._datar["grouped"].obj, *cols, __ast_fallback="normal")
 
 
-@rowwise.register(TibbleRowwise, context=Context.SELECT)
+@rowwise.register(TibbleRowwise, context=Context.SELECT, backend="pandas")
 def _rowwise_rowwise(
     _data: TibbleRowwise,
     *cols: Union[str, int],
@@ -119,7 +119,7 @@ def _rowwise_rowwise(
     return _data.rowwise(gvars)
 
 
-@ungroup.register(object, context=Context.SELECT)
+@ungroup.register(object, context=Context.SELECT, backend="pandas")
 def _ungroup(
     x: Any,
     *cols: Union[str, int],
@@ -129,7 +129,7 @@ def _ungroup(
     return x
 
 
-@ungroup.register(TibbleGrouped, context=Context.SELECT)
+@ungroup.register(TibbleGrouped, context=Context.SELECT, backend="pandas")
 def _ungroup_grouped(
     x: TibbleGrouped,
     *cols: Union[str, int],
@@ -145,7 +145,7 @@ def _ungroup_grouped(
     return group_by(obj, *new_groups, __ast_fallback="normal")
 
 
-@ungroup.register(TibbleRowwise, context=Context.SELECT)
+@ungroup.register(TibbleRowwise, context=Context.SELECT, backend="pandas")
 def _ungroup_rowwise(
     x: TibbleRowwise,
     *cols: Union[str, int],
@@ -155,7 +155,7 @@ def _ungroup_rowwise(
     return Tibble(x)
 
 
-@ungroup.register(GroupBy, context=Context.SELECT)
+@ungroup.register(GroupBy, context=Context.SELECT, backend="pandas")
 def _ungroup_groupby(
     x: GroupBy,
     *cols: Union[str, int],

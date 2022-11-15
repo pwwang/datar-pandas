@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import textwrap
+import warnings
 from typing import TYPE_CHECKING, Any, Hashable, Iterable, Mapping
 from functools import singledispatch
 
@@ -139,3 +140,19 @@ def vars_select(
         raise KeyError(f"Columns `{selected.unmatched}` do not exist.")
 
     return unique(selected).astype(int)
+
+
+def as_series(x: Any) -> Series:
+    """Convert to a series.
+
+    To avoid Seris([]) to raise a warning about dtype
+
+    Args:
+        x: The input to convert
+
+    Returns:
+        The converted series
+    """
+    with warnings.catch_warnings():
+        warnings.simplefilter("ignore", category=FutureWarning)
+        return Series(x)

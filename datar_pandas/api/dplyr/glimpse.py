@@ -7,7 +7,7 @@ from ...contexts import Context
 from ...middlewares import glimpse_formatter, Glimpse
 
 
-@glimpse.register(DataFrame, context=Context.EVAL)
+@glimpse.register(DataFrame, context=Context.EVAL, backend="pandas")
 def glimpse(
     x: DataFrame,
     width: int = None,

@@ -13,7 +13,7 @@ from ...common import union, setdiff, intersect, unique
 from ...factory import func_bootstrap
 
 
-@distinct.register(DataFrame, context=Context.PENDING)
+@distinct.register(DataFrame, context=Context.PENDING, backend="pandas")
 def _distinct(
     _data: DataFrame,
     *args: Any,
@@ -70,7 +70,7 @@ def _distinct(
     return reconstruct_tibble(_data, Tibble(out, copy=False))
 
 
-@n_distinct.register(object, context=Context.EVAL)
+@n_distinct.register(object, context=Context.EVAL, backend="pandas")
 def _n_distinct(x: Any, na_rm: bool = True):
     return Series(x).nunique(dropna=na_rm)
 
@@ -81,11 +81,11 @@ def _n_distinct_bootstrap(x: PandasObject, na_rm: bool = True):
     return x.nunique(dropna=na_rm)
 
 
-@n_distinct.register(TibbleGrouped, context=Context.EVAL)
+@n_distinct.register(TibbleGrouped, context=Context.EVAL, backend="pandas")
 def _n_distinct_grouped(x: Any, na_rm: bool = True):
     return x._datar["grouped"].agg("nunique", dropna=na_rm)
 
 
-@n_distinct.register(GroupBy, context=Context.EVAL)
+@n_distinct.register(GroupBy, context=Context.EVAL, backend="pandas")
 def _n_distinct_groupby(x: Any, na_rm: bool = True):
     return x.agg("nunique", dropna=na_rm)

@@ -1,7 +1,6 @@
 # https://github.com/tidyverse/dplyr/blob/master/tests/testthat/test-group-by.r
 # https://github.com/tidyverse/dplyr/blob/master/tests/testthat/test-rowwise.r
 
-from datar_pandas.pandas import Series
 import pytest
 
 import numpy
@@ -55,6 +54,7 @@ from datar.base import (
     sqrt,
 )
 from datar.base import runif
+from datar_pandas.pandas import Series
 from ..conftest import assert_iterable_equal, assert_equal
 
 
@@ -116,11 +116,15 @@ def test_mutate_does_not_loose_variables():
 
 
 def test_orders_by_groups():
-    df = tibble(a=sample(range(1, 11), 3000, replace=True)) >> group_by(f.a, _sort=True)
+    df = tibble(a=sample(range(1, 11), 3000, replace=True)) >> group_by(
+        f.a, _sort=True
+    )
     out = df >> count()
     assert_iterable_equal(out.a.obj, range(1, 11))
 
-    df = tibble(a=sample(letters[:10], 3000, replace=True)) >> group_by(f.a, _sort=True)
+    df = tibble(a=sample(letters[:10], 3000, replace=True)) >> group_by(
+        f.a, _sort=True
+    )
     out = df >> count()
     assert_iterable_equal(out.a.obj, letters[:10])
 
@@ -134,16 +138,13 @@ def test_orders_by_groups():
 
 
 def test_by_tuple_values():
-    df = (
-        tibble(
-            x=[1, 2, 3],
-            # https://github.com/pandas-dev/pandas/issues/21340
-            # y=[(1,2), (1,2,3), (1,2)],
-            y=[1, 2, 1],
-            _dtypes={"y": object},
-        )
-        >> group_by(f.y)
-    )
+    df = tibble(
+        x=[1, 2, 3],
+        # https://github.com/pandas-dev/pandas/issues/21340
+        # y=[(1,2), (1,2,3), (1,2)],
+        y=[1, 2, 1],
+        _dtypes={"y": object},
+    ) >> group_by(f.y)
     out = df >> count()
     # assert out.y.tolist() == [(1,2), (1,2,3)]
     assert out.y.obj.tolist() == [1, 2]
@@ -381,10 +382,12 @@ def test_na_last():
     )
 
     x = res.x.fillna("")
-    assert x.tolist() == ["apple", "banana", ""]
+    # assert x.tolist() == ["apple", "banana", ""]
+    assert x.tolist() == ["apple", "", "banana"]
 
     out = res
-    assert_iterable_equal(out._rows, [[0], [2], [1]])
+    # assert_iterable_equal(out._rows, [[0], [2], [1]])
+    assert_iterable_equal(out._rows, [[0], [1], [2]])
 
 
 def test_auto_splicing():
@@ -567,12 +570,9 @@ def test_compound_ungroup():
 
 # GH63
 def test_group_by_keeps_the_right_order_of_subdfs():
-    df = (
-        tibble(
-            g1=["a", "b", "c", "a", "b", "c", "a", "b", "c"],
-            g2=["a", "b", "c", "a", "b", "c", "a", "b", "b"],
-        )
-        >> mutate(x=range(9))
-    )
+    df = tibble(
+        g1=["a", "b", "c", "a", "b", "c", "a", "b", "c"],
+        g2=["a", "b", "c", "a", "b", "c", "a", "b", "b"],
+    ) >> mutate(x=range(9))
     out = df >> group_by(f.g1, f.g2) >> mutate(x=f.x)
     assert_iterable_equal(out.x.obj, range(9))

@@ -28,7 +28,7 @@ from ...contexts import Context
 from ...tibble import reconstruct_tibble
 
 
-@count.register(DataFrame, context=Context.PENDING)
+@count.register(DataFrame, context=Context.PENDING, backend="pandas")
 def _count(
     x: DataFrame,
     *args: Any,
@@ -64,7 +64,7 @@ def _count(
     return reconstruct_tibble(x, out)
 
 
-@tally.register(DataFrame, context=Context.PENDING)
+@tally.register(DataFrame, context=Context.PENDING, backend="pandas")
 def _tally(
     x: DataFrame,
     wt: Data[Number] = None,
@@ -94,7 +94,7 @@ def _tally(
     return out
 
 
-@add_count.register(DataFrame, context=Context.PENDING)
+@add_count.register(DataFrame, context=Context.PENDING, backend="pandas")
 def _add_count(
     x: DataFrame,
     *args: Any,
@@ -118,7 +118,7 @@ def _add_count(
     return out
 
 
-@add_tally.register(DataFrame, context=Context.PENDING)
+@add_tally.register(DataFrame, context=Context.PENDING, backend="pandas")
 def _add_tally(
     x: DataFrame,
     wt: Data[Number] = None,

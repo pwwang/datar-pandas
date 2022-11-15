@@ -1,8 +1,6 @@
 # https://github.com/tidyverse/dplyr/blob/master/tests/testthat/test-count-tally.r
 import pytest
 
-from datar_pandas.pandas import assert_frame_equal
-
 from datar import f
 from datar.tibble import tibble
 from datar.base import (
@@ -22,6 +20,7 @@ from datar.dplyr import (
     add_count,
     add_tally,
 )
+from datar_pandas.pandas import assert_frame_equal
 from ..conftest import assert_equal
 
 

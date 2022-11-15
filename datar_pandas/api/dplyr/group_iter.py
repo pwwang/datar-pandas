@@ -43,7 +43,7 @@ def _nargs(fun):
     return len(inspect.signature(fun).parameters)
 
 
-@group_map.register(DataFrame, context=Context.EVAL)
+@group_map.register(DataFrame, context=Context.EVAL, backend="pandas")
 def _group_map(
     _data: DataFrame,
     _f: Callable,
@@ -83,12 +83,14 @@ def _group_map_list(
     )
 
 
-group_map.list = register_verb(DataFrame, context=Context.PENDING)(
-    _group_map_list
+group_map.list = register_verb(
+    DataFrame,
+    func=_group_map_list,
+    context=Context.PENDING,
 )
 
 
-@group_modify.register(DataFrame, context=Context.EVAL)
+@group_modify.register(DataFrame, context=Context.EVAL, backend="pandas")
 def _group_modify(
     _data: DataFrame,
     _f: Callable,
@@ -99,7 +101,7 @@ def _group_modify(
     return _f(_data, *args, **kwargs)
 
 
-@group_modify.register(TibbleGrouped, context=Context.EVAL)
+@group_modify.register(TibbleGrouped, context=Context.EVAL, backend="pandas")
 def _group_modify_grouped(
     _data: DataFrame,
     _f: Callable,
@@ -114,7 +116,7 @@ def _group_modify_grouped(
         res = func(df, keys, *args, **kwargs)
         if not isinstance(res, DataFrame):
             raise ValueError("The result of `_f` should be a data frame.")
-        bad = intersect(res.columns, gvars, __ast_fallback="normal")
+        bad = intersect(res.columns, gvars)
         if len(bad) > 0:
             raise ValueError(
                 "The returned data frame cannot contain the original grouping "
@@ -135,7 +137,7 @@ def _group_modify_grouped(
     return reconstruct_tibble(_data, out)
 
 
-@group_walk.register(DataFrame, context=Context.EVAL)
+@group_walk.register(DataFrame, context=Context.EVAL, backend="pandas")
 def _group_walk(
     _data: DataFrame,
     _f: Callable,
@@ -157,12 +159,12 @@ def _group_walk(
     )
 
 
-@group_trim.register(DataFrame, context=Context.EVAL)
+@group_trim.register(DataFrame, context=Context.EVAL, backend="pandas")
 def _group_trim(_data: DataFrame, _drop: bool = None) -> DataFrame:
     return _data
 
 
-@group_trim.register(TibbleGrouped, context=Context.EVAL)
+@group_trim.register(TibbleGrouped, context=Context.EVAL, backend="pandas")
 def _group_trim_grouped(
     _data: TibbleGrouped,
     _drop: bool = None,
@@ -186,7 +188,7 @@ def _group_trim_grouped(
     return reconstruct_tibble(_data, dropped, drop=_drop)
 
 
-@with_groups.register(DataFrame, context=Context.PENDING)
+@with_groups.register(DataFrame, context=Context.PENDING, backend="pandas")
 def _with_groups(
     _data: DataFrame,
     _groups: Data[Int | Str],
@@ -205,7 +207,7 @@ def _with_groups(
     return _func(grouped, *args, **kwargs)
 
 
-@group_split.register(DataFrame, context=Context.EVAL)
+@group_split.register(DataFrame, context=Context.EVAL, backend="pandas")
 def _group_split(
     _data: DataFrame,
     *args: Any,
@@ -216,7 +218,7 @@ def _group_split(
     yield from group_split_impl(data, _keep=_keep)
 
 
-@group_split.register(TibbleGrouped, context=Context.EVAL)
+@group_split.register(TibbleGrouped, context=Context.EVAL, backend="pandas")
 def _group_split_grouped(
     _data: DataFrame,
     *args: Any,
@@ -233,7 +235,7 @@ def _group_split_grouped(
     return group_split_impl(_data, _keep=_keep)
 
 
-@group_split.register(TibbleRowwise, context=Context.EVAL)
+@group_split.register(TibbleRowwise, context=Context.EVAL, backend="pandas")
 def _group_split_rowwise(
     _data: DataFrame,
     *args: Any,
@@ -271,8 +273,10 @@ def _group_split_list(
     )
 
 
-group_split.list = register_verb(DataFrame, context=Context.PENDING)(
-    _group_split_list
+group_split.list = register_verb(
+    DataFrame,
+    func=_group_split_list,
+    context=Context.PENDING,
 )
 
 

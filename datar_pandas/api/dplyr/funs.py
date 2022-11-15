@@ -13,12 +13,14 @@ from datar.apis.dplyr import (
     first,
     last,
 )
+from datar_numpy.utils import make_array
 
 from ... import pandas as pd
 from ...pandas import DataFrame, Series, SeriesGroupBy
+from ...utils import as_series
 from ...common import is_scalar
 from ...factory import func_bootstrap
-from ...tibble import Tibble, TibbleGrouped
+from ...tibble import Tibble
 
 
 @between.register(object, backend="pandas")
@@ -89,22 +91,29 @@ def _coalesce(x, *replace):
     return x
 
 
-def _na_if_post(__out, x, y, __args_raw=None):
-    if not isinstance(__out, TibbleGrouped):
-        return __out
-    rawx = __args_raw["x"]
-    out = __out.groupby(
-        rawx.grouper,
-        sort=rawx.sort,
-        dropna=rawx.dropna,
-        observed=rawx.observed,
-    )
-    if getattr(rawx, "is_rowwise", False):
-        out.is_rowwise = True
-    return out
+@na_if.register(object, backend="pandas")
+def _na_if_obj(x, y):
+    if is_scalar(x) and is_scalar(y):
+        return np.nan if x == y else x
+
+    x = make_array(x)
+    y = make_array(y)
+    if x.size < y.size:
+        raise ValueError(
+            f"`y` must be length {x.size} (same as `x`), not {y.size}."
+        )
+    eqs = np.equal(x, y)
+    if eqs.any():
+        if np.issubdtype(x.dtype, np.int_):
+            x = x.astype(float)
+        elif not np.issubdtype(x.dtype, np.float_):
+            x = x.astype(object)
+        x[eqs] = np.nan
+
+    return x
 
 
-@func_bootstrap(na_if, post=_na_if_post)
+@func_bootstrap(na_if, post="transform")
 def _na_if(x, y, __args_raw=None):
     if is_scalar(x) and is_scalar(y):  # rowwise
         return np.nan if x == y else x
@@ -119,24 +128,13 @@ def _na_if(x, y, __args_raw=None):
     return x
 
 
-def _near_post(__out, a, b, __args_raw=None):
-    if not isinstance(__out, TibbleGrouped):
-        return __out
-
-    rawx = __args_raw["a"]
-    out = __out.groupby(
-        rawx.grouper,
-        sort=rawx.sort,
-        dropna=rawx.dropna,
-        observed=rawx.observed,
-    )
-    if getattr(rawx, "is_rowwise", False):
-        out.is_rowwise = True
-    return out
+@near.register(object, backend="pandas")
+def _near_obj(a, b):
+    return np.isclose(a, b)
 
 
-@func_bootstrap(near, post=_near_post)
-def _near(a, b, __args_raw=None):
+@func_bootstrap(near, post="transform")
+def _near(a, b):
     return np.isclose(a, b)
 
 
@@ -144,12 +142,16 @@ def _nth_(x, n, order_by=np.nan, default=np.nan, __args_raw=None):
     if not isinstance(n, int):
         raise TypeError("`nth` expects `n` to be an integer")
 
-    order_by_null = pd.isnull(__args_raw["order_by"])
+    if __args_raw is None:
+        order_by_null = pd.isnull(order_by)
+    else:
+        order_by_null = pd.isnull(__args_raw["order_by"])
+
     if is_scalar(order_by_null):
         order_by_null = np.array([order_by_null], dtype=bool)
 
     if not order_by_null.all():
-        x = x.iloc[order_by.argsort().values]
+        x = x.iloc[as_series(order_by).argsort().values]
 
     try:
         return x.iloc[n]
@@ -157,10 +159,36 @@ def _nth_(x, n, order_by=np.nan, default=np.nan, __args_raw=None):
         return default
 
 
+@nth.register(object, backend="pandas")
+def _nth_obj(x, n, order_by=np.nan, default=np.nan, __args_raw=None):
+    return _nth_(
+        as_series(x),
+        n,
+        order_by=order_by,
+        default=default,
+        __args_raw=__args_raw,
+    )
+
+
 @func_bootstrap(nth, exclude={"n", "default"})
 def _nth(x, n, order_by=np.nan, default=np.nan, __args_raw=None):
     return _nth_(
-        x, n, order_by=order_by, default=default, __args_raw=__args_raw
+        x,
+        n,
+        order_by=order_by,
+        default=default,
+        __args_raw=__args_raw,
+    )
+
+
+@first.register(object, backend="pandas")
+def _first_obj(x, order_by=np.nan, default=np.nan, __args_raw=None):
+    return _nth_(
+        as_series(x),
+        0,
+        order_by=order_by,
+        default=default,
+        __args_raw=__args_raw,
     )
 
 
@@ -173,7 +201,22 @@ def _first(
 ):
     """Get the first element of x"""
     return _nth_(
-        x, 0, order_by=order_by, default=default, __args_raw=__args_raw
+        x,
+        0,
+        order_by=order_by,
+        default=default,
+        __args_raw=__args_raw,
+    )
+
+
+@last.register(object, backend="pandas")
+def _last_obj(x, order_by=np.nan, default=np.nan, __args_raw=None):
+    return _nth_(
+        as_series(x),
+        -1,
+        order_by=order_by,
+        default=default,
+        __args_raw=__args_raw,
     )
 
 
@@ -186,5 +229,9 @@ def _last(
 ):
     """Get the last element of x"""
     return _nth_(
-        x, -1, order_by=order_by, default=default, __args_raw=__args_raw
+        x,
+        -1,
+        order_by=order_by,
+        default=default,
+        __args_raw=__args_raw,
     )

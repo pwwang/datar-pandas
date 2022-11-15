@@ -27,7 +27,7 @@ def _droplevels_cat(x):
     return x.remove_unused_categories()
 
 
-@func_bootstrap(levels, kind="transform")
+@func_bootstrap(levels)
 def _levels(x):
     if not is_categorical_dtype(x):
         return None

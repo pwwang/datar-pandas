@@ -7,9 +7,7 @@ https://github.com/tidyverse/dplyr/blob/master/tests/testthat/test-group_trim.R
 https://github.com/tidyverse/dplyr/blob/master/tests/testthat/test-groups-with.R
 """
 import pytest
-from datar_pandas.pandas import DataFrame, assert_frame_equal
 from datar import f
-from datar_pandas.tibble import TibbleGrouped
 from datar.tibble import tibble
 from datar.base import sd
 from datar.base import (
@@ -49,6 +47,8 @@ from datar.dplyr import (
     group_walk,
     tally,
 )
+from datar_pandas.pandas import DataFrame, assert_frame_equal
+from datar_pandas.tibble import TibbleGrouped
 from datar.data import mtcars, iris
 from ..conftest import assert_equal
 
@@ -450,10 +450,11 @@ def test_group_split_works_with_subclasses_implementing_group_by_ungroup():
     class TibbleGrouped1(TibbleGrouped):
         ...
 
-    df = TibbleGrouped1.from_groupby(
-        DataFrame(dict(x=[1, 2, 2])).groupby("x")
+    df = DataFrame(dict(x=[1, 2, 2]))
+    gf = TibbleGrouped1.from_groupby(
+        df.groupby("x")
     )
-    out = group_split.list(df, f.x)
+    out = group_split.list(gf, f.x)
     assert len(out) == 2
     assert out[0].equals(df.iloc[[0], :])
     assert out[1].equals(df.iloc[[1, 2], :].reset_index(drop=True))
