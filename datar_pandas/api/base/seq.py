@@ -21,7 +21,7 @@ from ...broadcast import _grouper_compatible
 from ...collections import Collection
 from ...common import is_integer, is_scalar
 from ...factory import func_bootstrap
-from ...pandas import DataFrame, PandasObject, Series, SeriesGroupBy
+from ...pandas import DataFrame, PandasObject, Series, SeriesGroupBy, NDFrame
 from ...tibble import TibbleGrouped, reconstruct_tibble
 
 func_bootstrap(
@@ -204,14 +204,10 @@ def _rep_grouped(x, times, length, each):
     return reconstruct_tibble(x, out)
 
 
-@c_.register(PandasObject, backend="pandas")
-def _c(x, *args):
-    elems = (x, *args)
-    if not any(isinstance(elem, SeriesGroupBy) for elem in elems):
-        return Collection(*elems)
-
+@c_.register(SeriesGroupBy, backend="pandas")
+def _c_sgb(*args):
     values = []
-    for elem in elems:
+    for elem in args:
         if isinstance(elem, SeriesGroupBy):
             values.append(elem.agg(list))
         elif is_scalar(elem):
@@ -235,6 +231,17 @@ def _c(x, *args):
     # TODO: check observed, sort and dropna?
     out = out.reset_index(drop=True).groupby(out.index)
     return out
+
+
+# Define different function so that it has higher priority
+@c_.register(NDFrame, backend="pandas")
+def _c_ndframe(*args):
+    return Collection(*args)
+
+
+@c_.register(object, backend="pandas", favored=True)
+def _c(*args):
+    return Collection(*args)
 
 
 @func_bootstrap(rev, kind="transform")

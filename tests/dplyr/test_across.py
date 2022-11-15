@@ -1,48 +1,49 @@
 """Grabbed from
 https://github.com/tidyverse/dplyr/blob/master/tests/testthat/test-across.R"""
 import numpy
-from pipda import register_func, register_verb, VerbCall
 import pytest
-
 from datar import f
-from datar.tibble import tibble, fibble
 from datar.base import (
-    mean,
-    sum,
-    max,
-    is_numeric,
-    c,
     NA,
     as_factor,
+    c,
+    duplicated,
+    identity,
+    is_double,
+    is_numeric,
+    max,
+    mean,
     median,
     ncol,
-    rep,
     nrow,
-    is_double,
-    identity,
+    rep,
     round,
-    duplicated,
+    runif,
+    sd,
+    sum
 )
 from datar.dplyr import (
-    mutate,
     across,
-    group_by,
-    summarise,
-    everything,
-    where,
+    all_of,
     c_across,
     cur_group_id,
+    everything,
+    filter,
+    group_by,
     if_all,
     if_any,
-    all_of,
+    mutate,
     rowwise,
-    filter,
+    summarise,
+    where
 )
-from datar.base import runif, sd
+from datar.tibble import tibble
+from pipda import VerbCall, register_func, register_verb
+
 from datar_pandas.pandas import DataFrame, Series, assert_frame_equal
 from datar_pandas.tibble import TibbleRowwise
 
-from ..conftest import assert_iterable_equal, assert_equal
+from ..conftest import assert_equal, assert_iterable_equal
 
 
 def test_on_one_column():
@@ -204,7 +205,7 @@ def test_cache_key():
     df = tibble(g=rep([1, 2], each=2), a=range(1, 5)) >> group_by(f.g)
 
     out = df >> mutate(
-        fibble(
+        tibble(
             x=across(where(is_numeric), mean).a,
             y=across(where(is_numeric), max).a,
         )
@@ -264,7 +265,7 @@ def test_empty_df():
 def test_mutate_cols_inside_func():
     df = tibble(x=2, y=4, z=8)
 
-    @register_func(context=None)
+    @register_func()
     def data_frame(**kwargs):
         return tibble(**kwargs)
 
@@ -277,7 +278,7 @@ def test_mutate_cols_inside_func():
 def test_summarise_cols_inside_func():
     df = tibble(x=2, y=4, z=8)
 
-    @register_func(context=None)
+    @register_func()
     def data_frame(**kwargs):
         return tibble(**kwargs)
 

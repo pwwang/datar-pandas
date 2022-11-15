@@ -120,7 +120,7 @@ def _bind_rows_grouped(
 ) -> TibbleGrouped:
     grouped = [data for data in datas if isinstance(data, TibbleGrouped)]
     grouped = grouped[0]
-    out = bind_rows.dispatch(DataFrame, backend="pandas")[0](
+    out = bind_rows.dispatch(DataFrame, backend="pandas")(
         *datas,
         _id=_id,
         **kwargs,

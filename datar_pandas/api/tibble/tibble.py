@@ -47,7 +47,7 @@ def _tibble(
             try:
                 # Check if any refers to self (args, kwargs)
                 evaluate_expr(val, eval_data, Context.EVAL)
-            except KeyError:
+            except (KeyError, NotImplementedError):
                 # If not, it refers to external data
                 evaled_args.append(val)
             else:
@@ -66,7 +66,7 @@ def _tibble(
         if isinstance(val, Expression):
             try:
                 evaluate_expr(val, eval_data, Context.EVAL)
-            except KeyError:
+            except (KeyError, NotImplementedError):
                 evaled_kws[key] = val
             else:
                 evaled_kws[key] = ExpressionWrapper(val)

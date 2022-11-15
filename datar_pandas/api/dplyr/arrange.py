@@ -14,7 +14,7 @@ from ...common import union
 from ...tibble import TibbleGrouped
 
 
-@arrange.register(DataFrame, context=Context.PENDING)
+@arrange.register(DataFrame, context=Context.PENDING, backend="pandas")
 def _arrange(
     _data: DataFrame,
     *args: Any,

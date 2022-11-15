@@ -53,7 +53,7 @@ def _c_across(_data: DataFrame, _cols: Sequence[str] = None) -> DataFrame:
     return reconstruct_tibble(_data, _data.iloc[:, _cols])
 
 
-@if_any.register(DataFrame, backend="pandas")
+@if_any.register(DataFrame, backend="pandas", context=Context.SELECT)
 def _if_any(
     _data: DataFrame,
     *args: Any,
@@ -78,7 +78,7 @@ def _if_any(
     ).evaluate(_context)
 
 
-@if_all.register(DataFrame, backend="pandas")
+@if_all.register(DataFrame, backend="pandas", context=Context.SELECT)
 def _if_all(
     _data: DataFrame,
     # _cols: Iterable[str] = None,
