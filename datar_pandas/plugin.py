@@ -89,6 +89,11 @@ def tibble_api():
 
 
 @plugin.impl
+def tidyr_api():
+    from .api.tidyr import chop, drop_na, nest, pack
+
+
+@plugin.impl
 def other_api():
     from .api.other import (
         itemgetter,
