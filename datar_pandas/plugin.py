@@ -110,6 +110,18 @@ def tidyr_api():
 
 
 @plugin.impl
+def forcats_api():
+    from .api.forcats import (
+        fct_multi,
+        lvl_addrm,
+        lvl_order,
+        lvl_value,
+        lvls,
+        misc,
+    )
+
+
+@plugin.impl
 def other_api():
     from .api.other import (
         itemgetter,

@@ -8,7 +8,7 @@ from typing import Any, List, Tuple, Union
 
 import numpy as np
 from datar.core.utils import logger
-from datar.apis.dplyr import mutate, ungroup, group_vars
+from datar.apis.dplyr import mutate, ungroup
 from datar.apis.tidyr import unchop, separate, separate_rows
 
 from ... import pandas as pd
