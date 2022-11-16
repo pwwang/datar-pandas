@@ -3,6 +3,7 @@
 https://github.com/tidyverse/tidyr/blob/HEAD/R/drop-na.R
 """
 from datar.core.utils import arg_match
+from datar.dplyr import ungroup
 from datar.apis.tidyr import drop_na
 
 from ...pandas import DataFrame
@@ -34,11 +35,12 @@ def _drop_na(
     """
     arg_match(how_, "how_", ["any", "all"])
     all_columns = _data.columns
+    data = ungroup(_data, __ast_fallback="normal")
     if columns:
         columns = vars_select(all_columns, *columns)
         columns = all_columns[columns]
-        out = _data.dropna(subset=columns, how=how_).reset_index(drop=True)
+        out = data.dropna(subset=columns, how=how_).reset_index(drop=True)
     else:
-        out = _data.dropna(how=how_).reset_index(drop=True)
+        out = data.dropna(how=how_).reset_index(drop=True)
 
     return reconstruct_tibble(_data, out)

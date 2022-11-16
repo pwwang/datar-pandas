@@ -90,7 +90,23 @@ def tibble_api():
 
 @plugin.impl
 def tidyr_api():
-    from .api.tidyr import chop, drop_na, nest, pack
+    from .api.tidyr import (
+        chop,
+        complete,
+        drop_na,
+        expand,
+        extract,
+        fill,
+        funs,
+        nest,
+        pack,
+        pivot_long,
+        pivot_wide,
+        replace_na,
+        separate,
+        uncount,
+        unite,
+    )
 
 
 @plugin.impl

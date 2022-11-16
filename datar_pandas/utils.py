@@ -24,6 +24,8 @@ NA_integer_ = np.random.randint(np.iinfo(np.int32).max)
 NA_real_ = np.nan
 NA_compex_ = complex(NA_real_, NA_real_)
 
+DEFAULT_COLUMN_PREFIX = "_VAR_"
+
 
 class ExpressionWrapper:
     """A wrapper around an expression to bypass evaluation"""

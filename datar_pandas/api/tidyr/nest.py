@@ -119,7 +119,7 @@ def _nest_grouped(
     return reconstruct_tibble(_data, out)
 
 
-@unnest.register(DataFrame, context=Context.SELECT)
+@unnest.register(DataFrame, context=Context.SELECT, backend="pandas")
 def _unnest(
     data: DataFrame,
     *cols: Union[str, int],

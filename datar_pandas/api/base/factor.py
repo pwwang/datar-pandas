@@ -3,7 +3,6 @@
 The huge difference:
 R's factors support NAs in levels but Categorical cannot have NAs in categories.
 """
-import numpy as np
 from datar.apis.base import (
     factor,
     ordered,
@@ -52,7 +51,15 @@ def _nlevels_cat(x):
 
 
 @factor.register(object, backend="pandas")
-def _factor(x, levels=None, exclude=np.nan, ordered=False):
+def _factor(
+    x=None,
+    *,
+    levels=None,
+    labels=None,
+    exclude=None,
+    ordered=False,
+    nmax=None,
+):
     if isinstance(x, SeriesGroupBy):
         out = factor(
             x.obj,
