@@ -39,6 +39,7 @@ def base_api():
         seq,
         special,
         string,
+        table,
         trig,
         verbs,
         which,

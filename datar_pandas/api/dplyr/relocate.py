@@ -1,13 +1,13 @@
 """Relocate columns"""
 from typing import Any, Union
 
-from datar.apis.tibble import as_tibble
 from datar.apis.dplyr import group_vars, relocate
 
 from ...pandas import DataFrame
 from ...contexts import Context
 from ...tibble import Tibble, TibbleGrouped
 from ...common import setdiff, union, intersect
+from ..tibble.tibble import as_tibble
 from .select import _eval_select
 
 

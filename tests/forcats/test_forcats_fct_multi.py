@@ -1,8 +1,9 @@
 import pytest
 
-from datar.all import *
+from datar.base import c, factor, as_factor, levels, TRUE, NA, is_na
+from datar.forcats import fct_c, fct_cross, fct_relevel
 
-from ..conftest import assert_iterable_equal, assert_factor_equal
+from ..conftest import assert_iterable_equal, assert_factor_equal, assert_equal
 
 
 # fct_c
@@ -46,7 +47,7 @@ def test_gives_correct_levels():
 
 
 def test_recycle_inputs():
-    assert len(fct_cross(["a"], c("a", "b", "c"), "d")) == 3
+    assert_equal(len(fct_cross(["a"], c("a", "b", "c"), "d")), 3)
     with pytest.raises(ValueError):
         fct_cross(c("a", "b", "c"), c("a", "b"))
 

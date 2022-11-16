@@ -3,17 +3,6 @@ from typing import Any, Callable, Iterable, List, Mapping
 
 import numpy as np
 from datar.core.utils import logger
-from datar.apis.base import (
-    levels,
-    match,
-    nlevels,
-    paste0,
-    sample,
-    table,
-    order,
-    rank,
-)
-from datar.apis.dplyr import recode_factor, if_else
 from datar.apis.forcats import (
     lvls_reorder,
     lvls_revalue,
@@ -33,6 +22,13 @@ from datar.apis.forcats import (
 from ... import pandas as pd
 from ...pandas import Categorical, DataFrame
 from ...contexts import Context
+from ..base.factor import levels, nlevels
+from ..base.funs import rank
+from ..base.seq import match, sample, order
+from ..base.string import paste0
+from ..base.table import table
+from ..dplyr.recode import recode_factor
+from ..dplyr.if_else import if_else
 from .utils import check_factor, ForcatsRegType
 
 

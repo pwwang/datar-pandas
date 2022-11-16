@@ -4,6 +4,7 @@ import warnings
 from typing import Any
 
 import numpy as np
+import datar_numpy.api.arithm  # noqa: F401
 from datar_numpy.utils import make_array
 from datar.apis.base import (
     ceiling,

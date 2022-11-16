@@ -3,20 +3,6 @@ from typing import Any, Callable, Iterable, Sequence
 
 import numpy as np
 from datar.core.utils import logger
-from datar.apis.base import (
-    append,
-    as_integer,
-    duplicated,
-    levels,
-    match,
-    median,
-    nlevels,
-    order,
-    rev,
-    sample,
-    seq_len,
-    table,
-)
 from datar.apis.forcats import (
     lvls_reorder,
     fct_relevel,
@@ -37,6 +23,12 @@ from ...pandas import Categorical, DataFrame, Series, SeriesGroupBy
 from ...common import is_scalar, intersect, setdiff
 from ...collections import Collection
 from ...contexts import Context
+from ..base.arithm import median
+from ..base.asis import as_integer
+from ..base.factor import levels, nlevels
+from ..base.seq import seq_len, sample, rev, match, append, order
+from ..base.table import table
+from ..base.verbs import duplicated
 from .utils import check_factor, ForcatsRegType
 from .lvls import lvls_seq
 
@@ -108,7 +100,7 @@ def _fct_inorder(_f, ordered: bool = None) -> Categorical:
 
     _f1 = check_factor(_f1)
     dups = duplicated(_f1, __ast_fallback="normal")
-    idx = as_integer(_f1, __ast_fallbacck="normal")[~dups]
+    idx = as_integer(_f1, __ast_fallback="normal")[~dups]
     idx = idx[~pd.isnull(_f1[~dups])]
     out = lvls_reorder(_f1, idx, ordered=ordered, __ast_fallback="normal")
 
@@ -337,7 +329,7 @@ def _fct_shuffle(_f) -> Categorical:
 
     return lvls_reorder(
         _f,
-        sample(lvls_seq(_f, __ast_fallback="normal"), __ast_fallback="normal"),
+        sample(lvls_seq(_f), __ast_fallback="normal"),
         __ast_fallback="normal",
     )
 
@@ -356,7 +348,7 @@ def _fct_rev(_f) -> Categorical:
 
     return lvls_reorder(
         _f,
-        rev(lvls_seq(_f, __ast_fallback="normal"), __ast_fallback="normal"),
+        rev(lvls_seq(_f), __ast_fallback="normal"),
         __ast_fallback="normal",
     )
 

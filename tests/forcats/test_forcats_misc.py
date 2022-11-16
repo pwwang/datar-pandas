@@ -31,7 +31,11 @@ from ..conftest import assert_iterable_equal, assert_factor_equal
 # fct_as_factor
 def test_equivalent_to_fct_inorder():
     x = c("a", "z", "g")
-    assert_factor_equal(as_factor(x), fct_inorder(x))
+    # assert_factor_equal(as_factor(x), fct_inorder(x))
+    # as_factor doesn't keep order
+    assert_factor_equal(as_factor(x), factor(x))
+    # but fct_inorder does
+    assert_factor_equal(fct_inorder(x), factor(x, levels=c("a", "z", "g")))
 
 
 def test_leaves_factors_as_is():
@@ -48,7 +52,11 @@ def test_leaves_factors_as_is():
 
 def test_supports_NA_89():
     x = c("a", "z", "g", NA)
-    assert_factor_equal(as_factor(x), fct_inorder(x))
+    # assert_factor_equal(as_factor(x), fct_inorder(x))
+    # as_factor doesn't keep order
+    assert_factor_equal(as_factor(x), factor(x))
+    # but fct_inorder does
+    assert_factor_equal(fct_inorder(x), factor(x, levels=c("a", "z", "g")))
 
 
 # fct_count

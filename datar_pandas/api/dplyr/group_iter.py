@@ -11,7 +11,6 @@ from typing import Any, Callable
 
 from pipda import register_verb
 from datar.core.utils import logger
-from datar.apis.base import is_factor, droplevels
 from datar.apis.dplyr import (
     group_keys,
     group_rows,
@@ -36,6 +35,8 @@ from ...pandas import DataFrame
 from ...contexts import Context
 from ...tibble import TibbleGrouped, TibbleRowwise, reconstruct_tibble
 from ...common import setdiff, intersect
+from ..base.asis import is_factor
+from ..base.factor import droplevels
 
 
 def _nargs(fun):

@@ -3,13 +3,13 @@
 https://github.com/tidyverse/dplyr/blob/master/R/pull.R
 """
 from datar.core.utils import arg_match
-from datar.apis.tibble import as_tibble
 from datar.apis.dplyr import pull
 
 from ...pandas import DataFrame, Series
 from ...common import is_scalar
 # from ...tibble import Tibble, TibbleGrouped
 from ...contexts import Context
+from ..tibble.tibble import as_tibble
 
 
 @pull.register(

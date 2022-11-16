@@ -3,14 +3,6 @@ from typing import Any, Iterable
 
 import numpy as np
 from datar import f
-from datar.apis.base import (
-    factor,
-    tabulate,
-    proportions,
-    nlevels,
-    levels,
-    is_ordered,
-)
 from datar.apis.dplyr import arrange, desc, mutate
 from datar.apis.forcats import fct_inorder, fct_count, fct_match, fct_unique
 
@@ -18,6 +10,10 @@ from ... import pandas as pd
 from ...common import is_scalar, setdiff
 from ...pandas import Categorical, DataFrame
 from ...contexts import Context
+from ..base.arithm import proportions
+from ..base.asis import is_ordered
+from ..base.factor import levels, nlevels, factor
+from ..base.table import tabulate
 from .utils import check_factor, ForcatsRegType
 
 

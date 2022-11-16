@@ -368,6 +368,7 @@ def _recode_factor_bootstrap(
             [] if _missing is None else _missing,
         )
     )
+    all_levels = all_levels[pd.notnull(all_levels)]
 
     recoded_levels = (
         recoded.categories

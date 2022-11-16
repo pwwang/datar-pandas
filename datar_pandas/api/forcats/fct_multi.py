@@ -1,11 +1,13 @@
 """Provides functions for multiple factors"""
 import itertools
 
-from datar.apis.base import factor, paste, levels, expand_grid
 from datar.apis.forcats import fct_c, fct_cross, lvls_union
 
 from ...pandas import Categorical
-from ...common import intersect
+from ...common import intersect, is_null
+from ..base import expand_grid
+from ..base.factor import factor, levels
+from ..base.string import paste
 from .utils import check_factor
 
 
@@ -26,8 +28,8 @@ def _fct_c(*fs) -> Categorical:
         return factor(__ast_fallback="normal")
 
     levs = lvls_union(fs, __ast_fallback="normal")
-    allvals = itertools.chain(*fs)
-    return factor(allvals, levels=levs, exclude=None, __ast_fallback="normal")
+    allvals = list(itertools.chain(*fs))
+    return factor(allvals, levels=levs, __ast_fallback="normal")
 
 
 @fct_cross.register(object, backend="pandas")
@@ -49,13 +51,13 @@ def _fct_cross(
     Returns:
         The new factor
     """
-    if not fs:
+    if not fs or (len(fs) == 1 and len(check_factor(fs[0])) == 0):
         return factor(__ast_fallback="normal")
 
     fs = [check_factor(fct) for fct in fs]
     newf = paste(*fs, sep=sep, __ast_fallback="normal")
 
-    old_levels = (levels(fct, __ast_fallbacck="normal") for fct in fs)
+    old_levels = (levels(fct, __ast_fallback="normal") for fct in fs)
     grid = expand_grid(*old_levels, __ast_fallback="normal")
     new_levels = paste(
         *(grid[col] for col in grid),
@@ -64,6 +66,6 @@ def _fct_cross(
     )
 
     if not keep_empty:
-        new_levels = intersect(new_levels, newf)
+        new_levels = intersect(new_levels, newf[~is_null(newf)])
 
     return factor(newf, levels=new_levels, __ast_fallback="normal")

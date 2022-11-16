@@ -5,7 +5,6 @@ See source https://github.com/tidyverse/dplyr/blob/master/R/group-by.r
 from typing import Any, Union
 
 from datar.core.names import NameNonUniqueError
-from datar.apis.tibble import as_tibble
 from datar.apis.dplyr import (
     mutate,
     group_by,
@@ -19,7 +18,7 @@ from ...tibble import Tibble, TibbleGrouped, TibbleRowwise
 from ...contexts import Context
 from ...utils import vars_select
 from ...common import setdiff, union
-
+from ..tibble.tibble import as_tibble
 from .group_data import group_vars
 
 

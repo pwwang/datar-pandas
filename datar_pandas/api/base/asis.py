@@ -1,5 +1,8 @@
 import builtins
+
 import numpy as np
+# load numpy implementation of datar
+import datar_numpy.api.asis  # noqa: F401
 from datar.apis.base import (
     is_atomic,
     is_character,
@@ -30,7 +33,6 @@ from datar.apis.base import (
     all_,
     any_,
 )
-from datar.apis.tibble import tibble
 
 from ... import pandas as pd
 from ...pandas import (
@@ -48,6 +50,7 @@ from ...pandas import (
 )
 from ...common import is_scalar
 from ...factory import func_bootstrap, func_factory
+from ...tibble import Tibble
 
 is_character.register(Series, backend="pandas")(is_string_dtype)
 is_complex.register(Series, backend="pandas")(is_complex_dtype)
@@ -79,6 +82,17 @@ is_factor.register(SeriesGroupBy, backend="pandas")(
     lambda x: x.agg(is_categorical_dtype)
 )
 
+
+@is_ordered.register(object, backend="pandas")
+def _is_ordered(x):
+    return False
+
+
+@is_ordered.register(Categorical, backend="pandas")
+def _is_ordered_cat(x):
+    return x.ordered
+
+
 func_bootstrap(is_atomic, func=is_scalar, kind="transform")
 func_bootstrap(is_finite, func=np.isfinite, kind="transform")
 func_bootstrap(is_infinite, func=np.isinf, kind="transform")
@@ -87,8 +101,9 @@ func_bootstrap(is_null, func=pd.isnull, kind="transform")
 func_bootstrap(
     is_ordered,
     func=lambda x: is_categorical_dtype(x) and x.cat.ordered,
-    kind="transform",
+    kind="agg",
 )
+
 
 func_bootstrap(as_character, func=lambda x: x.astype(str), kind="transform")
 func_bootstrap(as_complex, func=lambda x: x.astype(complex), kind="transform")
@@ -109,10 +124,27 @@ func_bootstrap(
 )
 
 
+@as_factor.register(object, backend="pandas")
+def _as_integer_obj(x):
+    return Categorical(x)
+
+
+@as_integer.register(Categorical, backend="pandas")
+def _as_integer_cat(x):
+    return x.codes
+
+
+@as_integer.register(Series, backend="pandas")
+def _as_integer_ser(x):
+    if is_categorical_dtype(x):
+        return x.cat.codes
+    return x.astype(int)
+
+
 @is_element.register(PandasObject, backend="pandas")
 def _is_element(x, y):
     if isinstance(x, SeriesGroupBy) and isinstance(y, SeriesGroupBy):
-        df = tibble(x=x, y=y)
+        df = Tibble.from_args(x=x, y=y)
         return (
             df._datar["grouped"]
             .apply(lambda g: np.isin(g.x, g.y))

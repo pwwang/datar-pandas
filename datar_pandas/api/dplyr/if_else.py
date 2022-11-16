@@ -4,12 +4,12 @@ https://github.com/tidyverse/dplyr/blob/master/R/if_else.R
 https://github.com/tidyverse/dplyr/blob/master/R/case_when.R
 """
 import numpy as np
-from datar.apis.dplyr import ungroup, if_else, case_when
+from datar.apis.dplyr import if_else, case_when
 
 from ... import pandas as pd
 from ...pandas import Series, SeriesGroupBy
-
 from ...tibble import Tibble, reconstruct_tibble
+from ..dplyr.group_by import ungroup
 
 
 @if_else.register(object, backend="pandas")

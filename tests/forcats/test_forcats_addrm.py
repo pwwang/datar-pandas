@@ -1,8 +1,27 @@
 import pytest  # noqa
 
-from datar.all import *
+from datar.base import (
+    factor,
+    levels,
+    sample,
+    letters,
+    is_ordered,
+    TRUE,
+    NA,
+    NULL,
+    c,
+    ordered,
+)
+from datar.forcats import (
+    fct_expand,
+    fct_explicit_na,
+    fct_drop,
+    fct_inorder,
+    fct_unify,
+)
 
 from ..conftest import assert_iterable_equal, assert_factor_equal
+
 
 # fct_expand
 def test_fct_expand():

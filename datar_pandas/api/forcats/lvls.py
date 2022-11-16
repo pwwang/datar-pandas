@@ -2,18 +2,6 @@
 from typing import Iterable, List
 
 import numpy as np
-from datar.apis.base import (
-    as_character,
-    as_integer,
-    setequal,
-    seq_along,
-    factor,
-    levels,
-    match,
-    nlevels,
-    is_ordered,
-)
-from datar.apis.dplyr import recode_factor
 from datar.apis.forcats import (
     lvls_reorder,
     lvls_revalue,
@@ -24,6 +12,11 @@ from datar.apis.forcats import (
 from ...pandas import Categorical
 from ...contexts import Context
 from ...common import is_integer, setdiff, union, unique
+from ..base.asis import as_character, as_integer, is_ordered
+from ..base.factor import levels, nlevels, factor
+from ..base.seq import match, seq_along
+from ..dplyr.recode import recode_factor
+from ..dplyr.sets import setequal
 from .utils import check_factor, ForcatsRegType
 
 

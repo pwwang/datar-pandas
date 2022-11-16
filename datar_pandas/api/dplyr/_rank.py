@@ -5,7 +5,12 @@ import numpy as np
 
 from ... import pandas as pd
 from ...pandas import (
-    Categorical, DataFrame, Series, GroupBy, SeriesGroupBy, NDFrame,
+    Categorical,
+    DataFrame,
+    Series,
+    GroupBy,
+    SeriesGroupBy,
+    NDFrame,
 )
 from ...common import is_scalar
 from ...tibble import TibbleGrouped

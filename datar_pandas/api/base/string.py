@@ -1,5 +1,6 @@
 from datar.apis.base import (
     paste,
+    paste0,
     sprintf,
     substr,
     startswith,

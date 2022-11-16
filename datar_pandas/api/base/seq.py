@@ -1,6 +1,8 @@
 import numpy as np
 from datar_numpy.utils import make_array
-from datar.apis.base import (
+import datar_numpy.api.seq  # noqa: F401
+from datar.apis.base import (  # noqa: F401
+    append,
     c_,
     length,
     lengths,
@@ -9,8 +11,8 @@ from datar.apis.base import (
     rep,
     rev,
     sample,
-    # seq,
-    # seq_along,
+    seq,
+    seq_along,
     seq_len,
     sort,
 )
@@ -41,7 +43,7 @@ func_bootstrap(
 
 
 @match.register(PandasObject, backend="pandas")
-def match(x, table, nomatch=-1):
+def _match(x, table, nomatch=-1):
     def match_dummy(xx, tab):
         sorter = np.argsort(tab)
         if isinstance(sorter, Series):

@@ -78,7 +78,7 @@ def test_can_reorder_by_2d_summary():
     assert_iterable_equal(levels(f2), c("a", "b"))
 
 
-def test_can_reorder_by_2d_summary():
+def test_can_reorder_by_2d_summary2():
     df = tribble(
         f.g,
         f.x,
@@ -146,9 +146,9 @@ def test_fct_inseq_gives_error_for_non_numericlevels():
 
 
 def test_fct_inorder():
-    f = factor(c("c", "a", "a", "b"), c("a", "b", "c"))
+    f = factor(c("c", "a", "a", "b"), levels=c("a", "b", "c"))
     f1 = fct_inorder(f)
-    f2 = factor(c("c", "a", "a", "b"), c("c", "a", "b"))
+    f2 = factor(c("c", "a", "a", "b"), levels=c("c", "a", "b"))
     assert_iterable_equal(f1, f2)
     assert_iterable_equal(levels(f1), levels(f2))
 

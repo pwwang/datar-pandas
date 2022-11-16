@@ -9,12 +9,12 @@ from functools import singledispatch
 
 import numpy as np
 from pipda import FunctionCall
-from datar.apis.base import order as order_fun
 from datar.apis.dplyr import order_by, with_order
 
-from ..other import itemgetter
 from ...factory import func_bootstrap
 from ...pandas import Series
+from ..base.seq import order as order_fun
+from ..other import itemgetter
 
 
 @order_by.register(backend="pandas")

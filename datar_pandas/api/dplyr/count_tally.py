@@ -5,6 +5,7 @@ See souce code https://github.com/tidyverse/dplyr/blob/master/R/count-tally.R
 from typing import Any
 from datar import options_context
 from datar.core.defaults import f
+from datar.core.utils import logger
 from datar.apis.dplyr import (
     n,
     group_by,
@@ -20,7 +21,6 @@ from datar.apis.dplyr import (
     tally,
     add_tally,
 )
-from datar.core.utils import logger
 
 from ...typing import Data, Number
 from ...pandas import DataFrame

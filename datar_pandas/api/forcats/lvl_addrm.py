@@ -1,7 +1,6 @@
 """Provides functions to add or remove levels"""
 from typing import Any, Iterable, List
 
-from datar.base import levels, table
 from datar.apis.forcats import (
     lvls_expand,
     lvls_union,
@@ -15,7 +14,8 @@ from ... import pandas as pd
 from ...pandas import Categorical
 from ...common import is_scalar, union, intersect, setdiff
 from ...contexts import Context
-
+from ..base.factor import levels
+from ..base.table import table
 from .lvls import refactor
 from .utils import check_factor, ForcatsRegType
 

@@ -4,7 +4,6 @@ https://github.com/tidyverse/dplyr/blob/master/R/rows.R
 """
 import numpy as np
 from datar.core.utils import logger
-from datar.apis.tibble import rownames_to_column
 from datar.apis.dplyr import (
     bind_rows,
     left_join,
@@ -20,6 +19,7 @@ from ... import pandas as pd
 from ...pandas import DataFrame
 from ...common import is_scalar, setdiff
 from ...contexts import Context
+from ..tibble.verbs import rownames_to_column
 
 
 @rows_insert.register(DataFrame, context=Context.EVAL, backend="pandas")

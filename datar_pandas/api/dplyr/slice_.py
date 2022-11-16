@@ -8,7 +8,6 @@ from typing import TYPE_CHECKING, Any, Iterable, Mapping, Union
 import numpy as np
 from pipda import Expression
 from datar.core.utils import logger
-from datar.apis.base import c
 from datar.apis.dplyr import (
     slice_,
     slice_head,
@@ -20,13 +19,13 @@ from datar.apis.dplyr import (
 
 from ... import pandas as pd
 from ...pandas import DataFrame, SeriesGroupBy
-
 from ...common import is_integer, is_scalar
 from ...collections import Collection
 from ...broadcast import _ungroup
 from ...contexts import Context
 from ...utils import dict_get
 from ...tibble import Tibble, TibbleGrouped, TibbleRowwise
+from ..base.seq import c_
 
 if TYPE_CHECKING:
     from ...pandas import Index
@@ -284,7 +283,7 @@ def _sanitize_rows(
 
     out = []
     if any(isinstance(row, SeriesGroupBy) for row in rows):
-        rows = c(*rows)
+        rows = c_(*rows)
         for key in result_index:
             idx = dict_get(indices, key)
             if idx.size == 0:

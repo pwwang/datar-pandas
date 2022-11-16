@@ -9,7 +9,6 @@ from pipda import evaluate_expr, ReferenceAttr, ReferenceItem
 
 from datar.core.utils import arg_match
 from datar.dplyr import mutate, transmute, group_vars, relocate
-from datar.tibble import as_tibble
 
 from ...contexts import Context
 from ...collections import Collection
@@ -18,6 +17,7 @@ from ...pandas import DataFrame
 from ...broadcast import add_to_tibble
 from ...tibble import reconstruct_tibble
 from ...common import setdiff, union, intersect
+from ..tibble.tibble import as_tibble
 
 
 @mutate.register(DataFrame, context=Context.PENDING, backend="pandas")

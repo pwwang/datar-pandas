@@ -36,18 +36,18 @@ def _levels(x):
 
 @levels.register(Categorical, backend="pandas")
 def _levels_cat(x):
-    return x.categories
+    return x.categories.values.copy()
 
 
-@func_bootstrap(nlevels, kind="transform")
+@func_bootstrap(nlevels, kind="agg")
 def _nlevels_bootstrap(x) -> int:
-    lvls = levels(x)
+    lvls = levels(x, __ast_fallback="normal")
     return 0 if lvls is None else len(lvls)
 
 
 @nlevels.register(Categorical, backend="pandas")
 def _nlevels_cat(x):
-    return nlevels.dispatch(Series)(x)
+    return x.categories.size
 
 
 @factor.register(object, backend="pandas")
