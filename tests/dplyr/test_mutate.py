@@ -2,45 +2,46 @@
 # https://github.com/tidyverse/dplyr/blob/master/tests/testthat/test-mutate.r
 import pytest
 from datar import f
-from datar.other import itemgetter
-from datar.data import iris, mtcars
-from datar.tibble import tibble, fibble
 from datar.base import (
     NA,
-    letters,
-    nrow,
-    ncol,
     c,
-    max,
-    sum,
-    is_numeric,
     identity,
+    is_numeric,
     lengths,
-    sample,
+    letters,
+    max,
+    ncol,
+    nrow,
     rep,
+    sample,
+    sum
 )
+from datar.data import iris, mtcars
 from datar.dplyr import (
-    n,
-    group_by,
-    mutate,
-    transmute,
-    group_vars,
-    group_rows,
-    rowwise,
-    group_data,
-    select,
-    if_else,
-    cur_group_id,
-    ungroup,
     across,
-    where,
     cur_data_all,
+    cur_group_id,
+    group_by,
+    group_data,
+    group_rows,
+    group_vars,
+    if_else,
+    mutate,
+    # n,
     pull,
+    rowwise,
+    select,
+    transmute,
+    ungroup,
+    where
 )
-from datar_pandas.tibble import TibbleRowwise, TibbleGrouped
-from datar_pandas.pandas import assert_frame_equal, Series, DataFrame
+from datar.other import itemgetter
+from datar.tibble import tibble
 
-from ..conftest import assert_iterable_equal, assert_equal
+from datar_pandas.pandas import DataFrame, Series, assert_frame_equal
+from datar_pandas.tibble import TibbleGrouped, TibbleRowwise
+
+from ..conftest import assert_equal, assert_iterable_equal
 
 
 def test_empty_mutate_returns_input():
@@ -144,11 +145,11 @@ def test_handles_data_frame_columns():
     res = mutate(df, new_col=tibble(x=[1, 2, 3]))
     assert_frame_equal(res["new_col"], tibble(x=[1, 2, 3]))
 
-    res = mutate(group_by(df, f.a), new_col=fibble(x=f.a))
+    res = mutate(group_by(df, f.a), new_col=tibble(x=f.a))
     assert_iterable_equal(res["new_col"].x.obj, [1, 2, 3])
 
     rf = rowwise(df, f.a)
-    res = mutate(rf, new_col=fibble(x=f.a))
+    res = mutate(rf, new_col=tibble(x=f.a))
     assert_frame_equal(res["new_col"], tibble(x=[1, 2, 3]) >> rowwise())
 
 
@@ -226,17 +227,15 @@ def test_rowwise_mutate_as_expected():
 
 
 # grouped mutate does not drop grouping attributes
+# need sophosicated itemgetter to work with SeriesGropBy
+def test_rowwise_list_data():
+    test = rowwise(tibble(x=[1, 2]))
+    out = test >> mutate(a=[[3, 4]]) >> mutate(
+        b=itemgetter(f.a.obj[0], cur_group_id())
+    )
+    exp = test >> mutate(a=[[3, 4]]) >> ungroup() >> mutate(b=[3, 4])
 
-
-## need sophosicated itemgetter to work with SeriesGropBy
-# def test_rowwise_list_data():
-#     test = rowwise(tibble(x=[1, 2]))
-#     out = test >> mutate(a=[[3, 4]]) >> mutate(
-#       b=itemgetter(f.a.obj[0], cur_group_id())
-#     )
-#     exp = test >> mutate(a=[[3, 4]]) >> ungroup() >> mutate(b=[3, 4])
-
-#     assert out.equals(exp)
+    assert out.equals(exp)
 
 
 # .before, .after, .keep ------------------------------------------------------
@@ -332,11 +331,14 @@ def test_mutate_None_preserves_correct_all_vars():
     assert_frame_equal(df[0], exp)
 
 
-# # Cannot vectorize tibble in if_else
-# def test_mutate_casts_data_frame_results_to_common_type():
-#     df = tibble(x=[1, 2], g=[1, 2]) >> group_by(f.g)
-#     res = df >> mutate(if_else(f.g == 1, tibble(y=1), tibble(y=1, z=2)))
-#     assert res.z.fillna(0.0).tolist() == [0.0, 2.0]
+# Cannot vectorize tibble in if_else
+def test_mutate_casts_data_frame_results_to_common_type():
+    df = tibble(x=[1, 2], g=[1, 2]) >> group_by(f.g)
+
+    with pytest.raises(ValueError):
+        # res = df >> mutate(if_else(f.g == 1, tibble(y=1), tibble(y=1, z=2)))
+        df >> mutate(if_else(f.g == 1, tibble(y=1), tibble(y=1, z=2)))
+        # assert res.z.fillna(0.0).tolist() == [0.0, 2.0]
 
 
 def test_rowwise_empty_list_columns():
@@ -438,7 +440,7 @@ def test_transmute_doesnot_warn_when_var_removed(caplog):
 
 
 def test_transmute_can_handle_auto_splicing():
-    out = iris >> transmute(fibble(f.Sepal_Length, f.Sepal_Width))
+    out = iris >> transmute(tibble(f.Sepal_Length, f.Sepal_Width))
     exp = iris >> select(f.Sepal_Length, f.Sepal_Width)
     assert out.equals(exp)
 
@@ -482,7 +484,7 @@ def test_complex_expression_as_value():
     out = dat >> mutate(
         # mulitple size not supported yet
         # login=sample(f[1 : ], size=n(), replace=True)
-        login=sample(c[1 : ], size=1, replace=True)
+        login=sample(c[1:], size=1, replace=True)
     )
     assert_equal(nrow(out), 20)
 

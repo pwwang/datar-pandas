@@ -1,10 +1,10 @@
-from datar_pandas.pandas import Series, assert_frame_equal
 import pytest
 import numpy as np
 from datar import f
 from datar.base import dim
 from datar.tibble import tibble
 from datar.dplyr import pull
+from datar_pandas.pandas import Series, assert_frame_equal
 from ..conftest import assert_equal
 
 
@@ -51,7 +51,7 @@ def test_pull_df():
 
 def test_pull_a_flat_dict():
     df = tibble(x=[1, 2], y=[3, 4])
-    out = df >> pull(f.y, f.x)
+    out = df >> pull(f.y, name=f.x)
     assert_equal(out, {1: 3, 2: 4})
 
     with pytest.raises(ValueError):

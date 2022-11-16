@@ -15,7 +15,6 @@ from datar.apis.dplyr import (
 from ... import pandas as pd
 from ...pandas import DataFrame
 
-from ...contexts import Context
 from ...tibble import TibbleGrouped, reconstruct_tibble
 
 

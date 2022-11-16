@@ -14,9 +14,6 @@ from ...tibble import Tibble, reconstruct_tibble
 
 @if_else.register(object, backend="pandas")
 def _if_else(condition, true, false, missing=None):
-    if isinstance(condition, SeriesGroupBy):
-        return _if_else_sgb(condition, true, false, missing)
-
     if missing is None:
         missing = np.nan
         na_conds = False
@@ -51,7 +48,7 @@ def _if_else(condition, true, false, missing=None):
     return out
 
 
-# SeriesGroupBy
+@if_else.register(SeriesGroupBy, backend="pandas")
 def _if_else_sgb(condition, true, false, missing=None):
     if missing is None:
         missing = np.nan

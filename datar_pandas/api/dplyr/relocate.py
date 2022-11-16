@@ -11,7 +11,7 @@ from ...common import setdiff, union, intersect
 from .select import _eval_select
 
 
-@relocate.register(DataFrame, context=Context.SELECT)
+@relocate.register(DataFrame, context=Context.SELECT, backend="pandas")
 def _relocate(
     _data: DataFrame,
     *args: Any,

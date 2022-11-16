@@ -1,8 +1,21 @@
 # tests grabbed from:
 # https://github1s.com/tidyverse/dplyr/blob/master/tests/testthat/test-rows.R
 import pytest
+
+from datar.all import (
+    tibble,
+    seq,
+    letters,
+    NA,
+    c,
+    rows_insert,
+    # rows_append,
+    rows_delete,
+    rows_patch,
+    rows_update,
+    rows_upsert,
+)
 from datar_pandas.pandas import assert_frame_equal
-from datar.all import *
 
 
 @pytest.fixture

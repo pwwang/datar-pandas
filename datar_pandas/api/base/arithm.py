@@ -85,6 +85,7 @@ func_bootstrap(
 )
 func_bootstrap(
     quantile,
+    exclude={"na_rm", "names", "type_", "digits"},
     func=quantile.dispatch(object, backend="numpy"),
 )
 
@@ -224,7 +225,7 @@ def _scale_seriesgroupby(
 ) -> Series:
     """Scaling on series"""
     return x.transform(
-        _scale_series.dispatch(Series, backend="pandas"),
+        scale.dispatch(Series, backend="pandas"),
         center=center,
         scale_=scale_,
     ).groupby(

@@ -14,7 +14,6 @@ from datar.apis.base import (
     seq_len,
     sort,
 )
-from datar.apis.tibble import tibble
 
 from ... import pandas as pd
 from ...broadcast import _grouper_compatible
@@ -22,7 +21,7 @@ from ...collections import Collection
 from ...common import is_integer, is_scalar
 from ...factory import func_bootstrap
 from ...pandas import DataFrame, PandasObject, Series, SeriesGroupBy, NDFrame
-from ...tibble import TibbleGrouped, reconstruct_tibble
+from ...tibble import Tibble, TibbleGrouped, reconstruct_tibble
 
 func_bootstrap(
     length,
@@ -117,7 +116,7 @@ def match(x, table, nomatch=-1):
     return match_dummy(x, table)
 
 
-def _order_post(out, x, descending, na_last):
+def _order_post(out, x, decreasing=False, na_last=True):
     if not isinstance(out, SeriesGroupBy):
         return out
 
@@ -153,7 +152,7 @@ def _order(x: Series, decreasing=False, na_last=True):
 
 @rep.register(SeriesGroupBy, backend="pandas")
 def _rep_sgb(x, times, length, each):
-    df = tibble(x=x)
+    df = Tibble.from_args(x=x)
     times_sgb = isinstance(times, SeriesGroupBy)
     length_sgb = isinstance(length, SeriesGroupBy)
     each_sgb = isinstance(each, SeriesGroupBy)
@@ -216,7 +215,7 @@ def _c_sgb(*args):
         else:
             values.extend(elem)
 
-    df = tibble(*values)
+    df = Tibble.from_args(*values)
     # pandas 1.3.0 expand list into columns after aggregation
     # pandas 1.3.2 has this fixed
     # https://github.com/pandas-dev/pandas/issues/42727
@@ -242,7 +241,10 @@ def _c_ndframe(*args):
 
 @c_.register(object, backend="pandas", favored=True)
 def _c(*args):
-    return Collection(*args)
+    if any(isinstance(arg, SeriesGroupBy) for arg in args):
+        return c_.dispatch(SeriesGroupBy, backend="pandas")(*args)
+
+    return c_.dispatch(NDFrame, backend="pandas")(*args)
 
 
 @func_bootstrap(rev, kind="transform")

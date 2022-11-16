@@ -99,11 +99,15 @@ def test_preserve_orders():
 
 # test_that("lead() and lag() work for matrices (#5028)", {
 #   m <- matrix(1:6, ncol = 2)
-#   expect_equal(lag(m, 1), matrix(c(NA_integer_, 1L, 2L, NA_integer_, 4L, 5L), ncol = 2))
-#   expect_equal(lag(m, 1, default = NA), matrix(c(NA_integer_, 1L, 2L, NA_integer_, 4L, 5L), ncol= 2))
+#   expect_equal(lag(m, 1), matrix(c(NA_integer_, 1L, 2L, NA_integer_, 4L, 5L),
+#                ncol = 2))
+#   expect_equal(lag(m, 1, default = NA), matrix(c(NA_integer_, 1L, 2L,
+#                NA_integer_, 4L, 5L), ncol= 2))
 
-#   expect_equal(lead(m, 1), matrix(c(2L, 3L, NA_integer_, 5L, 6L, NA_integer_), ncol = 2))
-#   expect_equal(lead(m, 1, default = NA), matrix(c(2L, 3L, NA_integer_, 5L, 6L, NA_integer_), ncol = 2))
+#   expect_equal(lead(m, 1), matrix(c(2L, 3L, NA_integer_, 5L, 6L, NA_integer_),
+#                ncol = 2))
+#   expect_equal(lead(m, 1, default = NA), matrix(c(2L, 3L, NA_integer_, 5L, 6L,
+#                NA_integer_), ncol = 2))
 # })
 
 

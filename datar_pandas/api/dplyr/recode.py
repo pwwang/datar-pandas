@@ -15,8 +15,7 @@ from ...common import is_scalar, intersect
 from ...factory import func_bootstrap
 from ...tibble import SeriesCategorical
 from ...collections import Collection
-from ...contexts import Context
-from ...utils import NA_integer_, NA_character_
+from ...utils import NA_integer_, NA_character_, as_series
 
 
 def _get_first(x):
@@ -227,30 +226,20 @@ def _check_args(values, default, missing):
         raise ValueError("No replacements provided.")
 
 
-@func_bootstrap(recode, kind="transform")
-def _recode(
+@recode.register(object, backend="pandas")
+def _recode_obj(
     _x,
     *args,
     _default=None,
     _missing=None,
     **kwargs,
 ):
-    if is_categorical_dtype(_x):  # Categorical
-        return recode.dispatch(SeriesCategorical)(
-            _x,
-            *args,
-            _default=_default,
-            _missing=_missing,
-            **kwargs,
-        )
-
-    if is_numeric_dtype(_x):
-        return _recode_numeric(
-            _x, *args, _default=_default, _missing=_missing, **kwargs
-        )
-
-    return _recode_character(
-        _x, *args, _default=_default, _missing=_missing, **kwargs
+    return recode.dispatch(Series)(
+        as_series(_x),
+        *args,
+        _default=_default,
+        _missing=_missing,
+        **kwargs,
     )
 
 
@@ -306,8 +295,54 @@ def _recode_cat(
     return Series(out[x.codes], index=_x.index, name=_x.name)
 
 
+@func_bootstrap(recode, kind="transform")
+def _recode(
+    _x,
+    *args,
+    _default=None,
+    _missing=None,
+    **kwargs,
+):
+    if is_categorical_dtype(_x):  # Categorical
+        return recode.dispatch(SeriesCategorical)(
+            _x,
+            *args,
+            _default=_default,
+            _missing=_missing,
+            **kwargs,
+        )
+
+    if is_numeric_dtype(_x):
+        return _recode_numeric(
+            _x, *args, _default=_default, _missing=_missing, **kwargs
+        )
+
+    return _recode_character(
+        _x, *args, _default=_default, _missing=_missing, **kwargs
+    )
+
+
+@recode_factor.register(object, backend="pandas")
+def _recode_factor_obj(
+    _x,
+    *args,
+    _default=None,
+    _missing=None,
+    _ordered=False,
+    **kwargs,
+):
+    return recode_factor.dispatch(Series)(
+        as_series(_x),
+        *args,
+        _default=_default,
+        _missing=_missing,
+        _ordered=_ordered,
+        **kwargs,
+    )
+
+
 @func_bootstrap(recode_factor, kind="transform")
-def recode_factor(
+def _recode_factor_bootstrap(
     _x,
     *args,
     _default=None,
@@ -339,7 +374,7 @@ def recode_factor(
         if isinstance(recoded, Categorical)
         else pd.unique(recoded[pd.notnull(recoded)])
     )
-    levels = intersect(all_levels, recoded_levels, __ast_fallback="normal")
+    levels = intersect(all_levels, recoded_levels)
 
     return Series(
         Categorical(recoded, categories=levels, ordered=_ordered),

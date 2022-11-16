@@ -22,7 +22,7 @@ from ...utils import name_of
 from ...tibble import Tibble, TibbleGrouped, TibbleRowwise
 
 
-@summarise.register(DataFrame, context=Context.PENDING)
+@summarise.register(DataFrame, context=Context.PENDING, backend="pandas")
 def _summarise(
     _data: DataFrame,
     *args: Any,

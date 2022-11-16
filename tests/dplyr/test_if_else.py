@@ -6,11 +6,11 @@ import pytest
 
 import pandas
 import numpy as np
-from datar_pandas.pandas import Series
 from datar import f
 from datar.base import NA, c
 from datar.dplyr import if_else, case_when, mutate, pull
 from datar.data import mtcars
+from datar_pandas.pandas import Series
 from ..conftest import assert_iterable_equal
 
 
@@ -116,9 +116,9 @@ def test_errors():
     with pytest.raises(ValueError):
         # condition has to be the same length as data
         case_when(x, [True, False], [1, 2, 3], [False, True], [1, 2])
-    with pytest.raises(ValueError):
+    with pytest.raises(TypeError):
         case_when()
-    with pytest.raises(ValueError):
+    with pytest.raises(TypeError):
         case_when("a")
     # ok
     case_when([], 1)

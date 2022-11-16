@@ -8,12 +8,17 @@ from datar.apis.dplyr import pull
 
 from ...pandas import DataFrame, Series
 from ...common import is_scalar
-from ...tibble import Tibble, TibbleGrouped
+# from ...tibble import Tibble, TibbleGrouped
 from ...contexts import Context
 
 
-@pull.register(DataFrame, context=Context.SELECT)
-def _pull(_data, var=-1, name=None, to=None):
+@pull.register(
+    DataFrame,
+    context=Context.SELECT,
+    kw_context={"name": Context.EVAL},
+    backend="pandas",
+)
+def _pull(_data, var=-1, *, name=None, to=None):
     # make sure pull(df, 'x') pulls a dataframe for columns
     # x$a, x$b in df
 
@@ -80,16 +85,17 @@ def _pull(_data, var=-1, name=None, to=None):
     return out
 
 
-@pull.register(
-    TibbleGrouped,
-    context=Context.PENDING,
-)
-def _pull_grouped(_data, var=-1, name=None, to=None):
-    """Pull a column from a grouped data frame"""
-    return pull(
-        Tibble(_data, copy=False),
-        var=var,
-        name=name,
-        to=to,
-        __ast_fallback="normal",
-    )
+# @pull.register(
+#     TibbleGrouped,
+#     context=Context.PENDING,
+#     backend="pandas",
+# )
+# def _pull_grouped(_data, var=-1, name=None, to=None):
+#     """Pull a column from a grouped data frame"""
+#     return pull(
+#         Tibble(_data, copy=False),
+#         var=var,
+#         name=name,
+#         to=to,
+#         __ast_fallback="normal",
+#     )

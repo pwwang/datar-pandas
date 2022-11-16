@@ -1,11 +1,9 @@
 # tests grabbed from:
 # https://github.com/tidyverse/dplyr/blob/master/tests/testthat/test-join.r
 import pytest  # noqa
-from datar_pandas.pandas import DataFrame, assert_frame_equal
 from datar import f
-from datar_pandas.tibble import TibbleGrouped
 from datar.tibble import tibble
-from datar.base import c, nrow, factor, rep, NA
+from datar.base import c, nrow, factor, rep
 from datar.dplyr import (
     inner_join,
     left_join,
@@ -19,6 +17,8 @@ from datar.dplyr import (
     group_rows,
     rowwise,
 )
+from datar_pandas.tibble import TibbleGrouped
+from datar_pandas.pandas import DataFrame, assert_frame_equal
 from ..conftest import assert_equal
 
 
@@ -279,7 +279,8 @@ def test_joins_preserve_groups():
 
 
 def test_group_column_names_reflect_renamed_duplicate_columns():
-    # test_that("group column names reflect renamed duplicate columns (#2330)", {
+    # test_that("group column names reflect renamed duplicate columns (#2330)",
+    # {
     df1 = tibble(x=range(1, 6), y=range(1, 6)) >> group_by(f.x, f.y)
     df2 = tibble(x=range(1, 6), y=range(1, 6))
 

@@ -16,7 +16,7 @@ from ...collections import Inverted
 from ...common import setdiff, union, intersect
 
 
-@select.register(DataFrame, context=Context.SELECT)
+@select.register(DataFrame, context=Context.SELECT, backend="pandas")
 def _select(
     _data: DataFrame,
     *args: Union[str, Iterable, Inverted],
@@ -36,7 +36,7 @@ def _select(
         out.rename(columns=new_names, inplace=True)
         if (
             isinstance(out, TibbleGrouped)
-            and len(intersect(gvars, new_names)) > 0
+            and len(intersect(gvars, list(new_names))) > 0
         ):
             out._datar["group_vars"] = [
                 new_names.get(gvar, gvar) for gvar in gvars

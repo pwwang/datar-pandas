@@ -132,7 +132,7 @@ def _mutate(
     return data
 
 
-@transmute.register(DataFrame, context=Context.PENDING)
+@transmute.register(DataFrame, context=Context.PENDING, backend="pandas")
 def _transmute(
     _data,
     *args,

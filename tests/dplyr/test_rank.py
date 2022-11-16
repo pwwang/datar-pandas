@@ -1,25 +1,25 @@
 # tests grabbed from:
 # https://github.com/tidyverse/dplyr/blob/master/tests/testthat/test-rank.r
 import numpy as np
-import pytest
-
+import pytest  # noqa: F401
 from datar import f
-from datar.tibble import tibble
-from datar.base import c, NA, nrow, rep
+from datar.base import NA, c, nrow, rep
 from datar.dplyr import (
-    mutate,
-    row_number,
-    ntile,
-    min_rank,
-    dense_rank,
-    percent_rank,
-    cume_dist,
     count,
-    pull,
-    lead,
+    cume_dist,
+    dense_rank,
     lag,
+    lead,
+    min_rank,
+    mutate,
+    ntile,
+    percent_rank,
+    pull,
+    row_number
 )
-from ..conftest import assert_iterable_equal, assert_equal
+from datar.tibble import tibble
+
+from ..conftest import assert_equal, assert_iterable_equal
 
 
 def ntile_h(x, n):
@@ -55,7 +55,7 @@ def test_ntile_always_returns_an_integer():
 
 def test_ntile_does_not_overflow():
     m = int(1e2)
-    res = tibble(a=range(1,m+1)) >> mutate(
+    res = tibble(a=range(1, m + 1)) >> mutate(
         b=ntile(f.a, n=m)
     ) >> count(f.b) >> pull(to='list')
     assert_equal(sum(res), 100)
@@ -88,7 +88,7 @@ def test_row_number_handles_empty_dfs():
 
 
 def test_lead_lag_inside_mutates_handles_expressions_as_value_for_default():
-    df = tibble(x=[1,2,3])
+    df = tibble(x=[1, 2, 3])
     res = mutate(
         df,
         leadn=lead(f.x, default=f.x[0]),

@@ -4,7 +4,7 @@ import pytest
 
 from datar import f
 from datar.data import mtcars
-from datar.base import colnames, ncol, nrow, c, NA, sum, mean, colnames
+from datar.base import colnames, set_colnames, ncol, nrow, c, NA, mean
 from datar.base import rnorm
 from datar.tibble import tibble
 from datar.dplyr import (
@@ -50,7 +50,7 @@ def test_non_syntactic_grouping_variable_is_preserved():
 
 def test_select_doesnot_fail_if_some_names_missing():
     df1 = tibble(x=range(1, 11), y=range(1, 11), z=range(1, 11))
-    df2 = colnames(df1, ["x", "y", ""])
+    df2 = set_colnames(df1, ["x", "y", ""])
 
     out1 = select(df1, f.x)
     assert out1.equals(tibble(x=range(1, 11)))
@@ -70,7 +70,7 @@ def test_with_no_args_returns_nothing():
 
 
 def test_excluding_all_vars_returns_nothing():
-    out = select(mtcars, ~f[f.mpg : ])
+    out = select(mtcars, ~c[f.mpg:])
     assert out.shape == (32, 0)
 
     out = mtcars >> select(starts_with("x"))
@@ -101,15 +101,15 @@ def test_can_select_with_duplicate_columns():
 # Select variables -----------------------------------------------
 def test_can_be_before_group_by():
     df = tibble(
-        id = c(1, 1, 2, 2, 2, 3, 3, 4, 4, 5),
-        year = c(2013, 2013, 2012, 2013, 2013, 2013, 2012, 2012, 2013, 2013),
-        var1 = rnorm(10)
+        id=c(1, 1, 2, 2, 2, 3, 3, 4, 4, 5),
+        year=c(2013, 2013, 2012, 2013, 2013, 2013, 2012, 2012, 2013, 2013),
+        var1=rnorm(10)
     )
     dfagg = df >> group_by(
         f.id, f.year
     ) >> select(
         f.id, f.year, f.var1
-    ) >> summarise(var1 = mean(f.var1))
+    ) >> summarise(var1=mean(f.var1))
 
     assert_iterable_equal(colnames(dfagg), ["id", "year", "var1"])
 
@@ -168,21 +168,21 @@ def test_can_select_with_strings():
 
 
 def test_works_on_empty_names():
-    df = tibble(x=1, y=2, z=3) >> colnames(c("x", "y", ""))
+    df = tibble(x=1, y=2, z=3) >> set_colnames(c("x", "y", ""))
     out = select(df, f.x)
     assert_iterable_equal(out.x, [1])
 
-    df >>= colnames(c("", "y", "z"))
+    df >>= set_colnames(c("", "y", "z"))
     out = select(df, f.y)
     assert_iterable_equal(out.y, [2])
 
 
 def test_works_on_na_names():
-    df = tibble(x=1, y=2, z=3) >> colnames(c("x", "y", NA))
+    df = tibble(x=1, y=2, z=3) >> set_colnames(c("x", "y", NA))
     out = select(df, f.x)
     assert_iterable_equal(out.x, [1])
 
-    df >>= colnames(c(NA, "y", "z"))
+    df >>= set_colnames(c(NA, "y", "z"))
     out = select(df, f.y)
     assert_iterable_equal(out.y, [2])
 
@@ -214,7 +214,7 @@ def test_tidyselect_funs():
     out = df >> select(where(isupper))
     assert out.columns.tolist() == ["X", "Y"]
 
-    @register_verb(DataFrame)
+    @register_verb(DataFrame, dependent=True)
     def islower(_data, series):
         return [series.name.islower(), True]
 

@@ -91,7 +91,6 @@ def tibble_api():
 @plugin.impl
 def other_api():
     from .api.other import (
-        use_pandas,
         itemgetter,
         attrgetter,
         pd_cat,
@@ -99,7 +98,6 @@ def other_api():
         pd_str,
     )
     return {
-        "use_pandas": use_pandas,
         "itemgetter": itemgetter,
         "attrgetter": attrgetter,
         "pd_cat": pd_cat,

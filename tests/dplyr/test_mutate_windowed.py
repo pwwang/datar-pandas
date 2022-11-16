@@ -1,7 +1,6 @@
 # tests grabbed from:
 # https://github.com/tidyverse/dplyr/blob/master/tests/testthat/test-mutate-windowed.R
 import pytest  # noqa
-from datar.all import *
 from datar import f
 from datar.base import (
     c,
@@ -18,6 +17,7 @@ from datar.base import (
     scale,
     all,
 )
+from datar.tibble import tibble
 from datar.dplyr import (
     rowwise,
     mutate,
@@ -147,7 +147,8 @@ def test_cum_sum_min_max_works():
 
 
 def test_lead_lag_simple_hybrid_version_gives_correct_results():
-    # test_that("lead and lag simple hybrid version gives correct results (#133)", {
+    # test_that(
+    #     "lead and lag simple hybrid version gives correct results (#133)", {
     res = (
         group_by(mtcars, f.cyl)
         >> mutate(disp_lag_2=lag(f.disp, 2), disp_lead_2=lead(f.disp, 2))
@@ -308,7 +309,7 @@ def test_lag_handles_default_argument_in_mutate():
 # # })
 
 def test_mutate_handles_matrix_columns():
-    df = tibble(a=rep([1,2,3], each=2), b=range(1,7))
+    df = tibble(a=rep([1, 2, 3], each=2), b=range(1, 7))
 
     df_regular = mutate(df, b=scale(f.b))
     df_grouped = mutate(group_by(df, f.a), b=scale(f.b))

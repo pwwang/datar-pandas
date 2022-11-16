@@ -1,13 +1,11 @@
 # tests grabbed from:
-# https://github.com/tidyverse/dplyr/blob/master/tests/testthat/test-summarise.r
+# https://github.com/tidyverse/dplyr/blob/master/tests/testthat/test-summarise.R
 
 import pytest
 from datar import f
 from datar.data import mtcars
-from datar_pandas.contexts import Context
 from datar.core.names import NameNonUniqueError
-from datar_pandas.tibble import TibbleRowwise
-from datar.base import runif, quantile, rnorm
+from datar.base import runif, quantile, rnorm, as_double
 from datar.base import c, mean, rep, seq_len, dim, letters, sum, length
 from datar.dplyr import (
     summarise,
@@ -19,8 +17,11 @@ from datar.dplyr import (
     ends_with,
     rowwise,
     across,
+    pull,
 )
 from datar.tibble import tibble
+from datar_pandas.contexts import Context
+from datar_pandas.tibble import TibbleRowwise
 from datar_pandas.pandas import assert_frame_equal
 from pipda import register_func
 
@@ -153,7 +154,10 @@ def test_allows_names():
         >> group_by(f.y)
         >> summarise(a=length(f.x), b=quantile(f.x, 0.5))
     )
-    assert res.b.tolist() == [1.0, 2.0, 3.0]
+    assert len(res.b) == 3
+    assert res.b.tolist()[0] == 1.0
+    assert res.b.tolist()[1] == 2.0
+    assert res.b.tolist()[2] == 3.0
 
 
 def test_list_output_columns():
@@ -184,9 +188,9 @@ def test_named_tibbles_are_packed():
         return tibble(**kwargs)
 
     df = tibble(x=[1, 2])
-    # out = summarise(df, df=tibble_func(y=f.x * 2, z=3)) >> pull(f.df)
-    # assert out.y.tolist() == [2, 4]
-    # assert out.z.tolist() == [3, 3]
+    out = summarise(df, df=tibble_func(y=f.x * 2, z=3)) >> pull(f.df)
+    assert out.y.tolist() == [2, 4]
+    assert out.z.tolist() == [3, 3]
 
 
 def test_groups_arg(caplog):
@@ -304,7 +308,8 @@ def test_errors(caplog):
 
 
 def test_summarise_with_multiple_acrosses():
-    """https://stackoverflow.com/questions/63200530/python-pandas-equivalent-to-dplyr-1-0-0-summarizeacross"""
+    """https://stackoverflow.com/questions/63200530/python-pandas-equivalent-to-dplyr-1-0-0-summarizeacross
+    """  # noqa
     out = (
         mtcars
         >> group_by(f.cyl)
@@ -332,8 +337,8 @@ def test_use_pandas_series_func_gh14():
     out = df >> summarise(a=f.a.mean())
     # out.a is float64 with pandas 1.3
     # out.a is int64 with pandas 1.2
-    # out = out >> mutate(a=as_double(f.a))
-    # assert_frame_equal(out, tibble(g=[1, 2], a=[4.0, 8.0]))
+    out = out >> mutate(a=as_double(f.a))
+    assert_frame_equal(out, tibble(g=[1, 2], a=[4.0, 8.0]))
 
 
 def test_summarise_rowwise():

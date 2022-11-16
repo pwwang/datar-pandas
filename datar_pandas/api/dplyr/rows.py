@@ -22,7 +22,7 @@ from ...common import is_scalar, setdiff
 from ...contexts import Context
 
 
-@rows_insert.register(DataFrame, context=Context.EVAL)
+@rows_insert.register(DataFrame, context=Context.EVAL, backend="pandas")
 def _rows_insert(x, y, by=None, copy=True):
     key = _rows_check_key(by, x, y)
     _rows_check_key_df(x, key, df_name="x")
@@ -36,7 +36,7 @@ def _rows_insert(x, y, by=None, copy=True):
     return bind_rows(x, y, _copy=copy, __ast_fallback="normal")
 
 
-@rows_update.register(DataFrame, context=Context.EVAL)
+@rows_update.register(DataFrame, context=Context.EVAL, backend="pandas")
 def _rows_update(x, y, by=None, copy=True):
     key = _rows_check_key(by, x, y)
     _rows_check_key_df(x, key, df_name="x")
@@ -54,7 +54,7 @@ def _rows_update(x, y, by=None, copy=True):
     return x
 
 
-@rows_patch.register(DataFrame)
+@rows_patch.register(DataFrame, context=Context.EVAL, backend="pandas")
 def _rows_patch(x, y, by=None, copy=True):
     key = _rows_check_key(by, x, y)
     _rows_check_key_df(x, key, df_name="x")
@@ -75,7 +75,7 @@ def _rows_patch(x, y, by=None, copy=True):
     return x
 
 
-@rows_upsert.register(DataFrame)
+@rows_upsert.register(DataFrame, context=Context.EVAL, backend="pandas")
 def _rows_upsert(x, y, by=None, copy=True):
     key = _rows_check_key(by, x, y)
     _rows_check_key_df(x, key, df_name="x")
@@ -90,7 +90,7 @@ def _rows_upsert(x, y, by=None, copy=True):
     return bind_rows(x, y.loc[new], _copy=copy, __ast_fallback="normal")
 
 
-@rows_delete.register(DataFrame)
+@rows_delete.register(DataFrame, context=Context.EVAL, backend="pandas")
 def _rows_delete(
     x,
     y,

@@ -21,7 +21,7 @@ from datar.apis.dplyr import (
 from ... import pandas as pd
 from ...pandas import DataFrame, SeriesGroupBy
 
-from ...common import is_integer
+from ...common import is_integer, is_scalar
 from ...collections import Collection
 from ...broadcast import _ungroup
 from ...contexts import Context
@@ -32,7 +32,7 @@ if TYPE_CHECKING:
     from ...pandas import Index
 
 
-@slice_.register(DataFrame, context=Context.SELECT)
+@slice_.register(DataFrame, context=Context.SELECT, backend="pandas")
 def _slice(
     _data: DataFrame,
     *rows: Union[int, str],
@@ -48,7 +48,7 @@ def _slice(
     return _data.take(rows)
 
 
-@slice_.register(TibbleGrouped, context=Context.SELECT)
+@slice_.register(TibbleGrouped, context=Context.SELECT, backend="pandas")
 def _slice_grouped(
     _data: TibbleGrouped,
     *rows: Any,
@@ -68,7 +68,7 @@ def _slice_grouped(
     return _data.take(indices)
 
 
-@slice_head.register(DataFrame, context=Context.EVAL)
+@slice_head.register(DataFrame, context=Context.EVAL, backend="pandas")
 def _slice_head(
     _data: DataFrame,
     n: int = None,
@@ -82,7 +82,7 @@ def _slice_head(
     )
 
 
-@slice_head.register(TibbleGrouped, context=Context.EVAL)
+@slice_head.register(TibbleGrouped, context=Context.EVAL, backend="pandas")
 def _slice_head_grouped(
     _data: DataFrame,
     n: int = None,
@@ -104,7 +104,7 @@ def _slice_head_grouped(
     return _data.take(indices)
 
 
-@slice_head.register(TibbleRowwise, context=Context.EVAL)
+@slice_head.register(TibbleRowwise, context=Context.EVAL, backend="pandas")
 def _slice_head_rowwise(
     _data: TibbleRowwise,
     n: int = None,
@@ -119,7 +119,7 @@ def _slice_head_rowwise(
     return _data.take([])
 
 
-@slice_tail.register(DataFrame, context=Context.EVAL)
+@slice_tail.register(DataFrame, context=Context.EVAL, backend="pandas")
 def _slice_tail(
     _data: DataFrame,
     n: int = 1,
@@ -133,7 +133,7 @@ def _slice_tail(
     )
 
 
-@slice_tail.register(TibbleGrouped, context=Context.EVAL)
+@slice_tail.register(TibbleGrouped, context=Context.EVAL, backend="pandas")
 def _slice_tail_grouped(
     _data: DataFrame,
     n: int = None,
@@ -154,7 +154,7 @@ def _slice_tail_grouped(
     return _data.take(indices)
 
 
-@slice_tail.register(TibbleRowwise, context=Context.PENDING)
+@slice_tail.register(TibbleRowwise, context=Context.PENDING, backend="pandas")
 def _slice_tail_rowwise(
     _data: TibbleRowwise,
     n: int = None,
@@ -169,7 +169,7 @@ def _slice_tail_rowwise(
     )
 
 
-@slice_min.register(DataFrame, context=Context.EVAL)
+@slice_min.register(DataFrame, context=Context.EVAL, backend="pandas")
 def _slice_min(
     _data: DataFrame,
     order_by: Expression,
@@ -192,7 +192,7 @@ def _slice_min(
     return _data.reindex(sliced.index.get_level_values(-1))
 
 
-@slice_max.register(DataFrame, context=Context.EVAL)
+@slice_max.register(DataFrame, context=Context.EVAL, backend="pandas")
 def _slice_max(
     _data: DataFrame,
     order_by: Iterable[Any],
@@ -215,7 +215,7 @@ def _slice_max(
     return _data.reindex(sliced.index.get_level_values(-1))
 
 
-@slice_sample.register(DataFrame, context=Context.EVAL)
+@slice_sample.register(DataFrame, context=Context.EVAL, backend="pandas")
 def _slice_sample(
     _data: DataFrame,
     n: int = 1,
@@ -276,7 +276,7 @@ def _sanitize_rows(
 ) -> np.ndarray:
     """Sanitize rows passed to slice"""
 
-    if is_integer(indices):
+    if is_scalar(indices) and is_integer(indices):
         rows = Collection(*rows, pool=indices)
         if rows.error:
             raise rows.error from None

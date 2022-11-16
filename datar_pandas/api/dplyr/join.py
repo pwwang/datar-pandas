@@ -96,10 +96,16 @@ def _join(
     return reconstruct_tibble(x, ret)
 
 
-@inner_join.register(DataFrame, context=Context.EVAL)
+@inner_join.register(
+    DataFrame,
+    context=Context.EVAL,
+    kw_context={"by": Context.SELECT},
+    backend="pandas",
+)
 def _inner_join(
     x: DataFrame,
     y: DataFrame,
+    *,
     by: Data[Str] = None,
     copy: bool = False,
     suffix: Data[Str] = ("_x", "_y"),
@@ -116,10 +122,16 @@ def _inner_join(
     )
 
 
-@left_join.register(DataFrame, context=Context.EVAL)
+@left_join.register(
+    DataFrame,
+    context=Context.EVAL,
+    kw_context={"by": Context.SELECT},
+    backend="pandas",
+)
 def _left_join(
     x: DataFrame,
     y: DataFrame,
+    *,
     by: Data[Str] = None,
     copy: bool = False,
     suffix: Data[Str] = ("_x", "_y"),
@@ -136,10 +148,16 @@ def _left_join(
     )
 
 
-@right_join.register(DataFrame, context=Context.EVAL)
+@right_join.register(
+    DataFrame,
+    context=Context.EVAL,
+    kw_context={"by": Context.SELECT},
+    backend="pandas",
+)
 def _right_join(
     x: DataFrame,
     y: DataFrame,
+    *,
     by: Data[Str] = None,
     copy: bool = False,
     suffix: Data[Str] = ("_x", "_y"),
@@ -156,10 +174,16 @@ def _right_join(
     )
 
 
-@full_join.register(DataFrame, context=Context.EVAL)
+@full_join.register(
+    DataFrame,
+    context=Context.EVAL,
+    kw_context={"by": Context.SELECT},
+    backend="pandas",
+)
 def _full_join(
     x: DataFrame,
     y: DataFrame,
+    *,
     by: Data[Str] = None,
     copy: bool = False,
     suffix: Data[Str] = ("_x", "_y"),
@@ -176,10 +200,16 @@ def _full_join(
     )
 
 
-@semi_join.register(DataFrame, context=Context.EVAL)
+@semi_join.register(
+    DataFrame,
+    context=Context.EVAL,
+    kw_context={"by": Context.SELECT},
+    backend="pandas",
+)
 def _semi_join(
     x: DataFrame,
     y: DataFrame,
+    *,
     by: Data[Str] = None,
     copy: bool = False,
 ) -> DataFrame:
@@ -200,10 +230,16 @@ def _semi_join(
     return reconstruct_tibble(x, ret)
 
 
-@anti_join.register(DataFrame, context=Context.EVAL)
+@anti_join.register(
+    DataFrame,
+    context=Context.EVAL,
+    kw_context={"by": Context.SELECT},
+    backend="pandas",
+)
 def anti_join(
     x: DataFrame,
     y: DataFrame,
+    *,
     by: Data[Str] = None,
     copy: bool = False,
 ) -> DataFrame:
@@ -220,10 +256,16 @@ def anti_join(
     return reconstruct_tibble(x, ret)
 
 
-@nest_join.register(DataFrame, context=Context.EVAL)
+@nest_join.register(
+    DataFrame,
+    context=Context.EVAL,
+    kw_context={"by": Context.SELECT},
+    backend="pandas",
+)
 def _nest_join(
     x: DataFrame,
     y: DataFrame,
+    *,
     by: Data[Str] = None,
     copy: bool = False,
     keep: bool = False,

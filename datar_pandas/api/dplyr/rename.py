@@ -13,7 +13,7 @@ from ...tibble import TibbleGrouped
 from .select import _eval_select
 
 
-@rename.register(DataFrame, context=Context.SELECT)
+@rename.register(DataFrame, context=Context.SELECT, backend="pandas")
 def _rename(_data: DataFrame, **kwargs: str) -> DataFrame:
     gvars = group_vars(_data, __ast_fallback="normal")
     all_columns = _data.columns
@@ -42,7 +42,7 @@ def _rename(_data: DataFrame, **kwargs: str) -> DataFrame:
     return out
 
 
-@rename_with.register(DataFrame, context=Context.SELECT)
+@rename_with.register(DataFrame, context=Context.SELECT, backend="pandas")
 def _rename_with(
     _data: DataFrame,
     _fn: Callable,

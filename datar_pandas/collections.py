@@ -12,6 +12,7 @@ from typing import (
 
 import numpy as np
 from pipda import evaluate_expr, Expression
+from pipda.utils import has_expr
 
 from .common import is_null, is_scalar, is_integer
 
@@ -29,10 +30,11 @@ class CollectionBase(ABC):
         self.pool = pool
         self.unmatched = set()
         self.error = None
-        try:
-            self.expand(pool=pool)
-        except (ValueError, KeyError) as exc:
-            self.error = exc
+        if not has_expr(args):
+            try:
+                self.expand(pool=pool)
+            except (ValueError, KeyError) as exc:
+                self.error = exc
 
     def _pipda_eval(self, data: Any, context: ContextType) -> Any:
         """Defines how the object should be evaluated when evaluated by

@@ -2,13 +2,13 @@
 # https://github.com/tidyverse/dplyr/blob/master/tests/testthat/test-recode.R
 import pytest
 import numpy
-from datar_pandas.pandas import Series
-from datar_pandas.utils import NA_integer_, NA_character_
 from datar.base import levels, factor, letters, c, NA, rep, seq
 from datar.dplyr import (
     recode,
     recode_factor,
 )
+from datar_pandas.pandas import Series
+from datar_pandas.utils import NA_integer_, NA_character_
 from ..conftest import assert_iterable_equal
 
 
@@ -68,7 +68,7 @@ def test_missing_default_place_nicely_together():
 
 
 def test_can_give_name_x():
-    assert recode("x", x="a") == ["a"]
+    assert_iterable_equal(recode("x", x="a"), ["a"])
 
 
 def test_default_works_when_not_all_values_are_named():
@@ -217,7 +217,7 @@ def test_errors():
     # expect_snapshot(error = TRUE, recode("a", b = 5, "c"))
     # expect_snapshot(error = TRUE, recode(factor("a"), b = 5, "c"))
 
-    ## no replacement
+    # no replacement
     with pytest.raises(ValueError):
         recode(seq(1, 5))
     with pytest.raises(ValueError):

@@ -7,7 +7,7 @@ from datar.apis.dplyr import with_order, lead, lag
 
 from ...pandas import Series
 from ...common import is_scalar
-from ...contexts import Context
+from ...utils import as_series
 from ...factory import func_bootstrap
 
 
@@ -32,7 +32,7 @@ def _shift(x, n, default=None, order_by=None):
 
 @lead.register(object, backend="pandas")
 def _lead_obj(x, n=1, default=np.nan, order_by=None):
-    return _shift(Series(x), n=-n, default=default, order_by=order_by)
+    return _shift(as_series(x), n=-n, default=default, order_by=order_by)
 
 
 @func_bootstrap(lead, kind="transform")
@@ -54,7 +54,7 @@ def _lead(x, n=1, default=np.nan, order_by=None):
 
 @lag.register(object, backend="pandas")
 def _lag_obj(x, n=1, default=np.nan, order_by=None):
-    return _shift(Series(x), n=n, default=default, order_by=order_by)
+    return _shift(as_series(x), n=n, default=default, order_by=order_by)
 
 
 @func_bootstrap(lag, kind="transform")

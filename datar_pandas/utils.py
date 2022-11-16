@@ -153,6 +153,9 @@ def as_series(x: Any) -> Series:
     Returns:
         The converted series
     """
+    if isinstance(x, Series):
+        return x
+
     with warnings.catch_warnings():
         warnings.simplefilter("ignore", category=FutureWarning)
         return Series(x)

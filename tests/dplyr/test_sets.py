@@ -4,7 +4,6 @@
 import pytest
 import numpy
 from datar import f
-from datar_pandas.pandas import assert_frame_equal
 from datar.base import (
     nrow,
     union,
@@ -35,8 +34,9 @@ from datar.dplyr import (
     filter,
 )
 from datar.tibble import tibble
+from datar_pandas.pandas import assert_frame_equal
 
-from ..conftest import assert_iterable_equal, assert_equal, assert_
+from ..conftest import assert_equal, assert_
 
 
 def test_set_uses_coercion_rules():
@@ -76,7 +76,7 @@ def test_setdiff_handles_factors_with_na():
     res = setdiff(df1, df2)
     assert is_factor(res.x)
     assert levels(res.x) == ["a"]
-    assert_iterable_equal(is_na(res.x[0]), [True])
+    assert_equal(is_na(res.x[0]), True)
 
 
 def test_intersect_does_not_unnecessarily_coerce():
@@ -116,7 +116,7 @@ def test_set_operations_reconstruct_grouping_metadata():
 
 def test_set_operations_keep_the_ordering_of_the_data():
     # test_that("set operations keep the ordering of the data (#3839)", {
-    rev_df = lambda df: df.iloc[rev(seq_len(nrow(df)))-1, :]
+    rev_df = lambda df: df.iloc[rev(seq_len(nrow(df))) - 1, :]
 
     df1 = tibble(x=seq(1, 4), g=rep([1, 2], each=2))
     df2 = tibble(x=seq(3, 6), g=rep([2, 3], each=2))

@@ -1,8 +1,11 @@
-from pipda import register_verb
+from pipda import register_verb, register_func
+from datar_numpy.utils import make_array
 
 from ..pandas import Series, PandasObject, SeriesGroupBy
 from ..contexts import Context
 from ..factory import func_factory
+from ..utils import as_series
+from ..tibble import Tibble, TibbleGrouped
 from ..collections import Collection
 
 
@@ -18,8 +21,8 @@ def _itemgetter_post(__out, x, subscr, __args_raw=None):
     )
 
 
-@func_factory(post=_itemgetter_post)
-def itemgetter(x, subscr, __args_raw=None):
+@register_func(cls=object, dispatchable=True, pipeable=True)
+def itemgetter(x, subscr):
     """Itemgetter as a function for verb
 
     In datar expression, we can do:
@@ -33,17 +36,41 @@ def itemgetter(x, subscr, __args_raw=None):
         data: The data to be get items from
         subscr: The subscripts
     """
-    # allow f[:2] to work
-    # subscr = evaluate_expr(subscr, x, Context.EVAL)
+    x = make_array(x)
     if isinstance(subscr, Collection):
         subscr.expand(pool=x.size)
 
-    if isinstance(subscr, Series):
-        subscr = subscr.values
-    out = x.iloc[subscr]
-    if isinstance(__args_raw["x"], PandasObject):
-        return out
-    return out.values
+    return x[make_array(subscr)]
+
+
+@itemgetter.register(PandasObject, backend="pandas")
+def _itemgetter_pobj(x, subscr):
+    if isinstance(x, TibbleGrouped):
+        if isinstance(subscr, SeriesGroupBy):
+            df = Tibble.from_args(x=x, subscr=subscr)
+            return df.apply(
+                lambda subdf: itemgetter(subdf['x'], subdf['subscr'])
+            )
+
+        return x._datar["grouped"].apply(
+            lambda subdf: itemgetter(subdf, subscr)
+        )
+
+    if isinstance(x, SeriesGroupBy):
+        return x.apply(lambda ser: itemgetter(ser, subscr))
+
+    if isinstance(x, PandasObject):
+        if isinstance(subscr, Collection):
+            subscr.expand(x.shape[0])
+
+        subscr = make_array(subscr)
+        return x.iloc[subscr, :] if x.ndim == 2 else x.iloc[subscr]
+
+    # x is not a PandasObject
+    # then subscr must be a PandasObject
+    # as the function is registered for PandasObject
+    x = as_series(x)
+    return x.iloc[make_array(subscr)]
 
 
 class _MethodAccessor:

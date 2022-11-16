@@ -11,7 +11,6 @@ from datar.apis.dplyr import (
     cume_dist_,
 )
 
-from ...contexts import Context
 from ._rank import (
     _row_number,
     _ntile,
@@ -19,7 +18,6 @@ from ._rank import (
     _percent_rank,
     _cume_dist,
 )
-
 
 
 @row_number_.register(object, backend="pandas")

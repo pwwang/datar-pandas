@@ -122,7 +122,7 @@ def test_errors():
 
 def test_cur_column():
     df = tibble(x=1, y=2, z=3)
-    out = df >> mutate(across(f[f.x :], (lambda x, y: y), y=cur_column()))
+    out = df >> mutate(across(c[f.x :], (lambda x, y: y), y=cur_column()))
     assert out.values.tolist() == [["x", "y", "z"]]
 
 

@@ -35,9 +35,36 @@ def _colnames(df, nested=True):
     return names if nested else df.columns.values
 
 
+@set_colnames.register(DataFrame, backend="pandas")
+def _set_colnames(df, names, nested=True):
+    df = df.copy()
+    if not nested:
+        df.columns = names
+        return df
+
+    # x, y$a, y$b with names m, n -> m, n$a, n$b
+    old_names = colnames(df, nested=True, __ast_fallback="normal")
+    mapping = dict(zip(old_names, names))
+    names = [
+        f"{mapping[col]}${col.split('$', 1)[1]}"
+        if "$" in str(col)
+        else mapping[col]
+        for col in df.columns
+    ]
+    df.columns = names
+    return df
+
+
 @rownames.register(DataFrame, backend="pandas")
 def _rownames(df):
     return df.index.values
+
+
+@set_rownames.register(DataFrame, backend="pandas")
+def _set_rownames(df, names):
+    df = df.copy()
+    df.index = names
+    return df
 
 
 @dim.register(DataFrame, backend="pandas")

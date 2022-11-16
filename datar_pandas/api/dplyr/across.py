@@ -12,6 +12,7 @@ from ...tibble import reconstruct_tibble
 from ...utils import vars_select
 from ...middlewares import Across, IfAll, IfAny
 from ...contexts import Context
+from ...collections import Collection
 from .tidyselect import everything
 
 
@@ -46,7 +47,7 @@ def _across(
 def _c_across(_data: DataFrame, _cols: Sequence[str] = None) -> DataFrame:
     _data = getattr(_data, "_datar", {}).get("summarise_source", _data)
 
-    if not _cols:
+    if not _cols and not isinstance(_cols, Collection):
         _cols = _data >> everything()
 
     _cols = vars_select(_data.columns, _cols)
