@@ -49,6 +49,7 @@ from ...pandas import (
     is_categorical_dtype,
 )
 from ...common import is_scalar
+from ...utils import as_series
 from ...factory import func_bootstrap, func_factory
 from ...tibble import Tibble
 
@@ -139,6 +140,22 @@ def _as_integer_ser(x):
     if is_categorical_dtype(x):
         return x.cat.codes
     return x.astype(int)
+
+
+@as_integer.register(SeriesGroupBy, backend="pandas")
+def _as_integer_sgb(x: SeriesGroupBy):
+    out = as_integer(x.obj, __ast_fallback="normal", __backend="pandas")
+    out = as_series(out)
+    out.index = x.obj.index
+    out = out.groupby(
+        x.grouper,
+        sort=x.sort,
+        observed=x.observed,
+        dropna=x.dropna,
+    )
+    if getattr(x, "is_rowwise", False):
+        out.is_rowwise = True
+    return out
 
 
 @is_element.register(PandasObject, backend="pandas")

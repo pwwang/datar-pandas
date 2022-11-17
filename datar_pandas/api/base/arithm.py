@@ -63,7 +63,7 @@ func_bootstrap(floor, func=np.floor, kind="transform")
 func_bootstrap(mean, func=np.mean, kind="agg")
 func_bootstrap(median, func=np.median, kind="agg")
 func_bootstrap(sqrt, func=np.sqrt, kind="transform")
-func_bootstrap(var, func=np.var, kind="agg")
+func_bootstrap(var, func="var", kind="agg")
 func_bootstrap(min_, func=np.min, kind="agg")
 func_bootstrap(max_, func=np.max, kind="agg")
 func_bootstrap(round_, func=np.round, kind="transform")
@@ -78,16 +78,22 @@ func_bootstrap(log10, func=np.log10, kind="transform")
 func_bootstrap(log1p, func=np.log1p, kind="transform")
 func_bootstrap(sd, func=np.std, kind="agg")
 func_bootstrap(proportions, func=lambda x: x / x.sum(), kind="transform")
-# func_bootstrap(signif, func=signif.dispatch(object, backend="numpy"))
-func_bootstrap(log, func=log.dispatch(object, backend="numpy"))
+func_bootstrap(signif, func=signif.dispatch(object, backend="numpy"))
+func_bootstrap(
+    log,
+    func=log.dispatch(object, backend="numpy"),
+    post="transform",
+)
 func_bootstrap(
     weighted_mean,
     func=weighted_mean.dispatch(object, backend="numpy"),
+    exclude="na_rm",
 )
 func_bootstrap(
     quantile,
-    exclude={"na_rm", "names", "type_", "digits"},
+    # exclude={"na_rm", "names", "type_", "digits"},
     func=quantile.dispatch(object, backend="numpy"),
+    kind="agg",
 )
 
 

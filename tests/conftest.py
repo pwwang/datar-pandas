@@ -1,5 +1,7 @@
 
 import pytest
+import numpy as np
+from collections import namedtuple
 
 
 def pytest_sessionstart(session):
@@ -41,6 +43,8 @@ def assert_not(x):
 
 # pytest modifies node for assert
 def assert_equal(x, y, approx=False):
+    if np.isnan(x) and np.isnan(y):
+        return
     if approx is True:
         x = pytest.approx(x)
     elif approx:
@@ -54,3 +58,31 @@ def is_installed(pkg):
         return True
     except ImportError:
         return False
+
+
+def pd_data():
+    from datar_pandas.pandas import DataFrame, Series
+    from datar_pandas.tibble import Tibble, TibbleGrouped
+    out = namedtuple(
+        "pd_data",
+        "scalar list tuple array series sgb df gf tibble tg tr",
+    )
+    out.scalar = 1
+    out.float = 1.2
+    out.neg = -1
+    out.list = [1, 2, 2, 3]
+    out.tuple = (1, 2, 2, 3)
+    out.array = np.array([1, 2, 2, 3])
+    out.naarray = np.array([1, 2, np.nan, 3])
+    out.farray = np.array([1.2, 2.2, 2.2, 3.2])
+    out.negarray = np.array([-1, -2, -2, -3])
+    out.series = Series([1, 2, 2, 3])
+    out.sgb = Series([1, 2, 2, 3], name="x").groupby(
+        Series([1, 2, 2, 3], name="x")
+    )
+    out.df = DataFrame({"x": [1, 2, 2, 3]})
+    out.gf = out.df.groupby([1, 2, 2, 3])
+    out.tibble = Tibble(out.df, copy=True)
+    out.tg = TibbleGrouped.from_groupby(out.gf)
+    out.tr = out.tibble.rowwise()
+    return out

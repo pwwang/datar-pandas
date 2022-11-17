@@ -61,10 +61,10 @@ def test_supports_NA_89():
 
 # fct_count
 def test_0_count_for_empty_levels():
-    f = factor(levels = c("a", "b"))
+    f = factor(levels=c("a", "b"))
     assert_iterable_equal(fct_count(f).n, c(0, 0))
 
-    f = factor("a", levels = c("a", "b", "c"))
+    f = factor("a", levels=c("a", "b", "c"))
     assert_iterable_equal(fct_count(f).n, c(1, 0, 0))
 
 
@@ -80,17 +80,18 @@ def test_counts_NA_even_when_not_in_levels():
 
 def test_returns_marginal_table():
     f = factor(c("a", "a", "b"))
-    out = fct_count(f, prop = TRUE)
+    out = fct_count(f, prop=TRUE)
 
     assert_iterable_equal(out.n, c(2, 1))
-    assert_iterable_equal(out.p, c(2/3., 1/3.))
+    assert_iterable_equal(out.p, c(2 / 3.0, 1 / 3.0))
 
 
 def test_sort_TRUE_brings_most_frequent_values_to_top():
     f = factor(c("a", "b", "b"))
-    out = fct_count(f, sort = TRUE)
+    out = fct_count(f, sort=TRUE)
 
-    assert_iterable_equal(out.f, factor(c("b", "a"), levels = c("a", "b")))
+    assert_iterable_equal(out.f, factor(c("b", "a"), levels=c("a", "b")))
+
 
 # fct_match
 def test_equivalent_to_in_when_levels_present():
@@ -104,17 +105,19 @@ def test_error_when_levels_are_missing():
     with pytest.raises(ValueError, match="not present"):
         fct_match(f, "d")
 
+
 # fct_unique
 def test_fct_unique():
     f = factor(c("a", "b", "c", "a", "b", "c"))
     assert_factor_equal(fct_unique(f), factor(c("a", "b", "c")))
 
+
 # lvls_reorder
 def test_changes_levels_not_values():
     f1 = factor(c("a", "b"))
-    f2 = factor(c("a", "b"), levels = c("b", "a"))
+    f2 = factor(c("a", "b"), levels=c("b", "a"))
 
-    assert_factor_equal(lvls_reorder(f1, c[2:1]), f2)
+    assert_factor_equal(lvls_reorder(f1, c[1:-1]), f2)
 
 
 def test_idx_must_be_numeric():
@@ -140,24 +143,23 @@ def test_can_change_ordered_status_of_output():
 
     out = not is_ordered(lvls_reorder(f1, c[:3]))
     assert out
-    out = not is_ordered(lvls_reorder(f1, c[:3], ordered = FALSE))
+    out = not is_ordered(lvls_reorder(f1, c[:3], ordered=FALSE))
     assert out
-    out = is_ordered(lvls_reorder(f1, c[:3], ordered = TRUE))
+    out = is_ordered(lvls_reorder(f1, c[:3], ordered=TRUE))
     assert out
 
     out = is_ordered(lvls_reorder(f2, c[:3]))
     assert out
-    out = not is_ordered(lvls_reorder(f2, c[:3], ordered = FALSE))
+    out = not is_ordered(lvls_reorder(f2, c[:3], ordered=FALSE))
     assert out
-    out = is_ordered(lvls_reorder(f2, c[:3], ordered = TRUE))
+    out = is_ordered(lvls_reorder(f2, c[:3], ordered=TRUE))
     assert out
 
 
 # lvls_expand -------------------------------------------------------------
-
-def test_changes_levels_not_values():
+def test_changes_levels_not_values2():
     f1 = factor(c("a"))
-    f2 = factor(c("a"), levels = c("a", "b"))
+    f2 = factor(c("a"), levels=c("a", "b"))
 
     assert_factor_equal(lvls_expand(f1, c("a", "b")), f2)
 
@@ -170,9 +172,10 @@ def test_must_include_all_existing_levels():
 
 # lvls_revalue ------------------------------------------------------------
 
+
 def test_changes_values_and_levels():
     f1 = factor(c("a", "b"))
-    f2 = factor(c("b", "a"), levels = c("b", "a"))
+    f2 = factor(c("b", "a"), levels=c("b", "a"))
 
     assert_factor_equal(lvls_revalue(f1, c("b", "a")), f2)
 
@@ -185,7 +188,7 @@ def test_can_collapse_values():
 
 
 def test_preserves_missing_values():
-    f1 = factor(c("a", NA), exclude = NULL)
+    f1 = factor(c("a", NA), exclude=NULL)
     f2 = lvls_revalue(f1, levels(f1))
     assert_iterable_equal(levels(f2), levels(f1))
 
@@ -208,4 +211,4 @@ def test_lvls_union():
     a = factor(["a", "b"])
     b = factor(["b", "c"])
     c = factor(["c", "d"])
-    assert_iterable_equal(lvls_union([a,b,c]), ["a", "b", "c", "d"])
+    assert_iterable_equal(lvls_union([a, b, c]), ["a", "b", "c", "d"])

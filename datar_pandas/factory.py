@@ -127,6 +127,8 @@ def _with_hooks(
                 grouped = grouped._datar["grouped"]
                 if getattr(grouped, "is_rowwise", False):
                     is_rowwise = True
+            elif isinstance(grouped, SeriesGroupBy):
+                is_rowwise = getattr(grouped, "is_rowwise", False)
 
             out = out.groupby(
                 grouped.grouper,
@@ -175,7 +177,7 @@ def _bootstrap_agg_func(
     @_with_hooks(pre=pre, post=post)
     def _series_agg(*args, **kwargs):
         if isinstance(func, str) and hasattr(args[0], func):
-            return getattr(args[0], func)(*args, **kwargs)
+            return getattr(args[0], func)(*args[1:], **kwargs)
         return func(*args, **kwargs)
 
     @registered.register(DataFrame, backend="pandas")
