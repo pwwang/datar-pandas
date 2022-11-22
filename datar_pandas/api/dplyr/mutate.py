@@ -30,8 +30,8 @@ def _mutate(
     **kwargs,
 ):
     keep = arg_match(_keep, "_keep", ["all", "unused", "used", "none"])
-    gvars = group_vars(_data, __ast_fallback="normal")
-    data = as_tibble(_data.copy(), __ast_fallback="normal")
+    gvars = group_vars(_data, __ast_fallback="normal", __backend="pandas")
+    data = as_tibble(_data.copy(), __ast_fallback="normal", __backend="pandas")
     data._datar["used_refs"] = set()
     all_columns = data.columns
 
@@ -99,6 +99,7 @@ def _mutate(
             _before=_before,
             _after=_after,
             __ast_fallback="normal",
+            __backend="pandas",
         )
 
     if keep == "all":
@@ -147,5 +148,6 @@ def _transmute(
         _before=_before,
         _after=_after,
         __ast_fallback="normal",
+        __backend="pandas",
         **kwargs,
     )

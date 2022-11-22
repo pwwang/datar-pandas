@@ -112,9 +112,9 @@ def _separate(
     separated.columns = non_na_elems(into)
     apply_dtypes(separated, convert)
 
-    _data = ungroup(data, __ast_fallback="normal")
+    _data = ungroup(data, __ast_fallback="normal", __backend="pandas")
     out = _data.drop(columns=[col]) if remove else _data
-    out = mutate(out, separated, __ast_fallback="normal")
+    out = mutate(out, separated, __ast_fallback="normal", __backend="pandas")
 
     return reconstruct_tibble(data, out)
 
@@ -140,7 +140,7 @@ def _separate_rows(
     """
     all_columns = data.columns
     selected = all_columns[vars_select(all_columns, *columns)]
-    out = ungroup(data, __ast_fallback="normal")
+    out = ungroup(data, __ast_fallback="normal", __backend="pandas")
     for sel in selected:  # TODO: apply together
         out[sel] = out[sel].apply(
             _separate_col,
@@ -158,6 +158,7 @@ def _separate_rows(
         keep_empty=True,
         dtypes=convert,
         __ast_fallback="normal",
+        __backend="pandas",
     )
 
     return reconstruct_tibble(

@@ -38,7 +38,7 @@ def _summarise(
         _groups, "_groups", ["drop", "drop_last", "keep", "rowwise", None]
     )
 
-    gvars = group_vars(_data, __ast_fallback="normal")
+    gvars = group_vars(_data, __ast_fallback="normal", __backend="pandas")
     out, all_ones = _summarise_build(_data, *args, **kwargs)
     if _groups is None:
         if not isinstance(_data, TibbleRowwise) and all_ones:
@@ -102,7 +102,11 @@ def _summarise_build(
     if isinstance(_data, TibbleRowwise):
         outframe = _data.loc[:, _data.group_vars]
     else:
-        outframe = group_keys(_data, __ast_fallback="normal")
+        outframe = group_keys(
+            _data,
+            __ast_fallback="normal",
+            __backend="pandas",
+        )
         if isinstance(_data, TibbleGrouped):
             grouped = _data._datar["grouped"]
             outframe = outframe.group_by(
@@ -143,7 +147,7 @@ def _summarise_build(
 
         outframe = newframe
 
-    gvars = group_vars(_data, __ast_fallback="normal")
+    gvars = group_vars(_data, __ast_fallback="normal", __backend="pandas")
     tmp_cols = [
         mcol
         for mcol in outframe.columns
@@ -151,6 +155,6 @@ def _summarise_build(
         and mcol not in _data._datar["used_refs"]
         and mcol not in gvars
     ]
-    outframe = ungroup(outframe, __ast_fallback="normal")
+    outframe = ungroup(outframe, __ast_fallback="normal", __backend="pandas")
     outframe = outframe[setdiff(outframe.columns, tmp_cols)]
     return outframe.reset_index(drop=True), all_ones

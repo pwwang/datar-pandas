@@ -94,7 +94,7 @@ def _cur_group(_data: DataFrame) -> Tibble:
 @cur_group.register(TibbleGrouped, context=Context.EVAL, backend="pandas")
 def _cur_group_grouped(_data: TibbleGrouped) -> Series:
     _data = _data._datar.get("summarise_source", _data)
-    out = group_keys(_data, __ast_fallback="normal")
+    out = group_keys(_data, __ast_fallback="normal", __backend="pandas")
     # split each row as a df
     out = out.apply(lambda row: row.to_frame().T, axis=1)
     out.index = _data._datar["grouped"].grouper.result_index
@@ -116,7 +116,7 @@ def _cur_group_id_grouped(_data: TibbleGrouped) -> Series:
 @cur_group_rows.register(DataFrame, context=Context.EVAL, backend="pandas")
 def _cur_group_rows(_data: DataFrame) -> np.ndarray:
     _data = getattr(_data, "_datar", {}).get("summarise_source", _data)
-    gdata = group_data(_data, __ast_fallback="normal")
+    gdata = group_data(_data, __ast_fallback="normal", __backend="pandas")
     if isinstance(_data, TibbleGrouped):
         return gdata.set_index(_data.group_vars)["_rows"]
 

@@ -184,7 +184,7 @@ def _add_column(
     return reconstruct_tibble(_data, out)
 
 
-@has_rownames.register(DataFrame, context=Context.EVAL)
+@has_rownames.register(DataFrame, context=Context.EVAL, backend="pandas")
 def _has_rownames(_data):
     """Detect if a data frame has row names
 
@@ -204,7 +204,7 @@ def _has_rownames(_data):
     )
 
 
-@remove_rownames.register(DataFrame, context=Context.EVAL)
+@remove_rownames.register(DataFrame, context=Context.EVAL, backend="pandas")
 def _remove_rownames(_data):
     """Remove the index/rownames of a data frame
 
@@ -220,7 +220,11 @@ def _remove_rownames(_data):
     return _data.reset_index(drop=True)
 
 
-@rownames_to_column.register(DataFrame, context=Context.SELECT)
+@rownames_to_column.register(
+    DataFrame,
+    context=Context.SELECT,
+    backend="pandas",
+)
 def _rownames_to_column(_data, var="rowname"):
     """Add rownames as a column
 
@@ -245,8 +249,10 @@ def _rownames_to_column(_data, var="rowname"):
             **{var: _data.index},
             _before=1,
             __ast_fallback="normal",
+            __backend="pandas",
         ),
         __ast_fallback="normal",
+        __backend="pandas",
     )
 
 
@@ -273,8 +279,10 @@ def _rowid_to_column(_data, var="rowid"):
             **{var: range(_data.shape[0])},
             _before=1,
             __ast_fallback="normal",
+            __backend="pandas",
         ),
         __ast_fallback="normal",
+        __backend="pandas",
     )
 
 
@@ -291,7 +299,7 @@ def _column_to_rownames(_data, var="rowname"):
     Returns:
         The data frame with the column converted to rownames
     """
-    if has_rownames(_data, __ast_fallback="normal"):
+    if has_rownames(_data, __ast_fallback="normal", __backend="pandas"):
         raise ValueError("`_data` must be a data frame without row names.")
 
     from datar.dplyr import mutate
@@ -300,7 +308,12 @@ def _column_to_rownames(_data, var="rowname"):
         rownames = [str(name) for name in _data[var]]
     except KeyError:
         raise KeyError(f"Column `{var}` does not exist.") from None
-    out = mutate(_data, __ast_fallback="normal", **{var: None})
+    out = mutate(
+        _data,
+        __ast_fallback="normal",
+        __backend="pandas",
+        **{var: None},
+    )
     out.index = rownames
     return out
 
@@ -338,6 +351,7 @@ def _cbind_at(data, df, pos: int, _name_repair):
         part2,
         _name_repair=_name_repair,
         __ast_fallback="normal",
+        __backend="pandas",
     )
 
 
@@ -360,4 +374,10 @@ def _rbind_at(data, df, pos):
 
     part1 = data.iloc[:pos, :]
     part2 = data.iloc[pos:, :]
-    return bind_rows(part1, df, part2, __ast_fallback="normal")
+    return bind_rows(
+        part1,
+        df,
+        part2,
+        __ast_fallback="normal",
+        __backend="pandas",
+    )

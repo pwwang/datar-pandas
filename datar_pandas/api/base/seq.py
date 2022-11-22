@@ -174,6 +174,7 @@ def _rep_sgb(x, times, length, each):
                 length=subdf["length"] if length_sgb else length,
                 each=subdf["each"] if each_sgb else each,
                 __ast_fallback="normal",
+                __backend="pandas",
             )
         )
         .explode()

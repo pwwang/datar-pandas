@@ -49,6 +49,7 @@ def _distinct(
                     **kwargs,
                     _keep="none",
                     __ast_fallback="normal",
+                    __backend="pandas",
                 )
             ).drop_duplicates()
 

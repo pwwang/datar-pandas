@@ -25,11 +25,16 @@ def _fct_c(*fs) -> Categorical:
         The concatenated factor
     """
     if not fs:
-        return factor(__ast_fallback="normal")
+        return factor(__ast_fallback="normal", __backend="pandas")
 
-    levs = lvls_union(fs, __ast_fallback="normal")
+    levs = lvls_union(fs, __ast_fallback="normal", __backend="pandas")
     allvals = list(itertools.chain(*fs))
-    return factor(allvals, levels=levs, __ast_fallback="normal")
+    return factor(
+        allvals,
+        levels=levs,
+        __ast_fallback="normal",
+        __backend="pandas",
+    )
 
 
 @fct_cross.register(object, backend="pandas")
@@ -52,20 +57,29 @@ def _fct_cross(
         The new factor
     """
     if not fs or (len(fs) == 1 and len(check_factor(fs[0])) == 0):
-        return factor(__ast_fallback="normal")
+        return factor(__ast_fallback="normal", __backend="pandas")
 
     fs = [check_factor(fct) for fct in fs]
-    newf = paste(*fs, sep=sep, __ast_fallback="normal")
+    newf = paste(*fs, sep=sep, __ast_fallback="normal", __backend="numpy")
 
-    old_levels = (levels(fct, __ast_fallback="normal") for fct in fs)
-    grid = expand_grid(*old_levels, __ast_fallback="normal")
+    old_levels = (
+        levels(fct, __ast_fallback="normal", __backend="pandas")
+        for fct in fs
+    )
+    grid = expand_grid(*old_levels, __ast_fallback="normal", __backend="pandas")
     new_levels = paste(
         *(grid[col] for col in grid),
         sep=sep,
         __ast_fallback="normal",
+        __backend="numpy",
     )
 
     if not keep_empty:
         new_levels = intersect(new_levels, newf[~is_null(newf)])
 
-    return factor(newf, levels=new_levels, __ast_fallback="normal")
+    return factor(
+        newf,
+        levels=new_levels,
+        __ast_fallback="normal",
+        __backend="pandas",
+    )

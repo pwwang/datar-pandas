@@ -31,7 +31,13 @@ def _arrange(
 
     gvars = getattr(_data, "group_vars", [])
 
-    sorting_df = mutate(_data, *args, __ast_fallback="normal", **kwargs)
+    sorting_df = mutate(
+        _data,
+        *args,
+        __ast_fallback="normal",
+        __backend="pandas",
+        **kwargs,
+    )
     if _by_group:
         sorting_cols = union(gvars, sorting_df._datar["mutated_cols"])
     else:

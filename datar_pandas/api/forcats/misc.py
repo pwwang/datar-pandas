@@ -36,13 +36,15 @@ def _fct_count(_f, sort: bool = False, prop=False) -> Categorical:
     df = DataFrame(
         {
             "f": fct_inorder(
-                levels(f2, __ast_fallback="normal"),
+                levels(f2, __ast_fallback="normal", __backend="pandas"),
                 __ast_fallback="normal",
+                __backend="pandas",
             ),
             "n": tabulate(
                 f2,
-                nlevels(f2, __ast_fallback="normal"),
+                nlevels(f2, __ast_fallback="normal", __backend="pandas"),
                 __ast_fallback="normal",
+                __backend="pandas",
             ),
         }
     )
@@ -53,14 +55,16 @@ def _fct_count(_f, sort: bool = False, prop=False) -> Categorical:
     if sort:
         df = arrange(
             df,
-            desc(f.n, __ast_fallback="normal"),
+            desc(f.n, __ast_fallback="normal", __backend="pandas"),
             __ast_fallback="normal",
+            __backend="pandas",
         )
     if prop:
         df = mutate(
             df,
-            p=proportions(f.n, __ast_fallback="normal"),
+            p=proportions(f.n, __ast_fallback="normal", __backend="pandas"),
             __ast_fallback="normal",
+            __backend="pandas",
         )
 
     return df
@@ -84,7 +88,10 @@ def _fct_match(_f, lvls: Any) -> Iterable[bool]:
     if is_scalar(lvls):
         lvls = [lvls]
 
-    bad_lvls = setdiff(lvls, levels(_f, __ast_fallback="normal"))
+    bad_lvls = setdiff(
+        lvls,
+        levels(_f, __ast_fallback="normal", __backend="pandas"),
+    )
     if len(bad_lvls) > 0:
         bad_lvls = np.array(bad_lvls)[~pd.isnull(bad_lvls)]
     if len(bad_lvls) > 0:
@@ -103,6 +110,12 @@ def _fct_unique(_f) -> Categorical:
     Returns:
         The factor with the unique values in `_f`
     """
-    lvls = levels(_f, __ast_fallback="normal")
-    is_ord = is_ordered(_f, __ast_fallback="normal")
-    return factor(lvls, levels=lvls, ordered=is_ord, __ast_fallback="normal")
+    lvls = levels(_f, __ast_fallback="normal", __backend="pandas")
+    is_ord = is_ordered(_f, __ast_fallback="normal", __backend="pandas")
+    return factor(
+        lvls,
+        levels=lvls,
+        ordered=is_ord,
+        __ast_fallback="normal",
+        __backend="pandas",
+    )

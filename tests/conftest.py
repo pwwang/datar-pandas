@@ -14,6 +14,15 @@ def pytest_sessionstart(session):
 SENTINEL = 85258525.85258525
 
 
+def _isna(x):
+    if isinstance(x, (list, tuple, np.ndarray)):
+        return False
+    try:
+        return np.isnan(x)
+    except (ValueError, TypeError):
+        return False
+
+
 def assert_iterable_equal(x, y, na=SENTINEL, approx=False):
     import pandas as pd
 
@@ -23,7 +32,7 @@ def assert_iterable_equal(x, y, na=SENTINEL, approx=False):
         x = pytest.approx(x)
     elif approx:
         x = pytest.approx(x, rel=approx)
-    assert x == y
+    assert x == y, f"{x} != {y}"
 
 
 def assert_factor_equal(x, y, na=8525.8525, approx=False):
@@ -34,22 +43,22 @@ def assert_factor_equal(x, y, na=8525.8525, approx=False):
 
 
 def assert_(x):
-    assert x
+    assert x, f"{x} is not True"
 
 
 def assert_not(x):
-    assert not x
+    assert not x, f"{x} is not False"
 
 
 # pytest modifies node for assert
 def assert_equal(x, y, approx=False):
-    if np.isnan(x) and np.isnan(y):
+    if _isna(x) and _isna(y):
         return
     if approx is True:
         x = pytest.approx(x)
     elif approx:
         x = pytest.approx(x, rel=approx)
-    assert x == y
+    assert x == y, f"{x} != {y}"
 
 
 def is_installed(pkg):

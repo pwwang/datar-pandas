@@ -69,7 +69,11 @@ def _nest(
 
     asis = setdiff(_data.columns, list(usedcols))
     keys = _data[asis]
-    u_keys = distinct(keys, __ast_fallback="normal").reset_index(drop=True)
+    u_keys = distinct(
+        keys,
+        __ast_fallback="normal",
+        __backend="pandas",
+    ).reset_index(drop=True)
     nested = []
     for group, columns in colgroups.items():
         if _names_sep is None:  # names as is
@@ -94,6 +98,7 @@ def _nest(
         u_keys,
         broadcast_to(out, u_keys.index),
         __ast_fallback="normal",
+        __backend="pandas",
     )
 
 
@@ -108,11 +113,11 @@ def _nest_grouped(
         cols = {
             "data": setdiff(
                 _data.columns,
-                group_vars(_data, __ast_fallback="normal"),
+                group_vars(_data, __ast_fallback="normal", __backend="pandas"),
             )
         }
     out = nest.dispatch(DataFrame)(
-        ungroup(_data, __ast_fallback="normal"),
+        ungroup(_data, __ast_fallback="normal", __backend="pandas"),
         **cols,
         _names_sep=_names_sep,
     )
@@ -168,7 +173,7 @@ def _unnest(
     cols = vars_select(all_columns, cols)
     cols = all_columns[cols]
 
-    out = ungroup(data, __ast_fallback="normal")
+    out = ungroup(data, __ast_fallback="normal", __backend="pandas")
 
     for col in cols:
         out[col] = _as_df(data[col])
@@ -179,6 +184,7 @@ def _unnest(
         keep_empty=keep_empty,
         dtypes=dtypes,
         __ast_fallback="normal",
+        __backend="pandas",
     )
     out = unpack(
         out,
@@ -186,6 +192,7 @@ def _unnest(
         names_sep=names_sep,
         names_repair=names_repair,
         __ast_fallback="normal",
+        __backend="pandas",
     )
     return reconstruct_tibble(data, out)
 
@@ -201,7 +208,7 @@ def _unnest_roowise(
 ) -> TibbleGrouped:
     """Unnest rowwise dataframe"""
     out = unnest.dispatch(DataFrame)(
-        ungroup(data, __ast_fallback="normal"),
+        ungroup(data, __ast_fallback="normal", __backend="pandas"),
         *cols,
         keep_empty=keep_empty,
         dtypes=dtypes,
@@ -267,7 +274,7 @@ def _vec_split(x: NDFrame, by: NDFrame) -> DataFrame:
     if isinstance(by, Series):  # pragma: no cover, always a data frame?
         by = by.to_frame()
 
-    df = bind_cols(x, by, __ast_fallback="normal")
+    df = bind_cols(x, by, __ast_fallback="normal", __backend="pandas")
     if df.shape[0] == 0:
         return Tibble(columns=["key", "val"])
     if by.shape[1] > 0:
@@ -275,8 +282,13 @@ def _vec_split(x: NDFrame, by: NDFrame) -> DataFrame:
             df = Tibble(df, copy=False)
         df = df.group_by(by.columns.tolist(), drop=True)
 
-    gdata = group_data(df, __ast_fallback="normal")
-    gdata = arrange(gdata, gdata._rows, __ast_fallback="normal")
+    gdata = group_data(df, __ast_fallback="normal", __backend="pandas")
+    gdata = arrange(
+        gdata,
+        gdata._rows,
+        __ast_fallback="normal",
+        __backend="pandas",
+    )
     out = Tibble(index=gdata.index)
     out["key"] = gdata[by.columns]
     out["val"] = [

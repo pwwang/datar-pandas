@@ -39,10 +39,11 @@ def _complete(
         Data frame with missing values completed
     """
     full = expand(
-        ungroup(data, __ast_fallback="normal"),
+        ungroup(data, __ast_fallback="normal", __backend="pandas"),
         *args,
         **kwargs,
         __ast_fallback="normal",
+        __backend="pandas",
     )
     if full.shape[0] == 0:
         return data.copy()
@@ -52,7 +53,8 @@ def _complete(
         data,
         by=full.columns.tolist(),
         __ast_fallback="normal",
+        __backend="pandas",
     )
-    full = replace_na(full, fill, __ast_fallback="normal")
+    full = replace_na(full, fill, __ast_fallback="normal", __backend="pandas")
 
     return reconstruct_tibble(data, full)

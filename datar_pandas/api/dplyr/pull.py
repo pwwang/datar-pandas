@@ -28,7 +28,7 @@ def _pull(_data, var=-1, *, name=None, to=None):
     if name is not None and is_scalar(name):
         name = [name]
 
-    _data = as_tibble(_data, __ast_fallback="normal")
+    _data = as_tibble(_data, __ast_fallback="normal", __backend="pandas")
     if isinstance(var, int):
         var = _data.columns[var]
         var = var.split("$", 1)[0]

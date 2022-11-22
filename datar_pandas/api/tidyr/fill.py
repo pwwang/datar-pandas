@@ -49,6 +49,7 @@ def _fill(
             data.iloc[:, colidx],
             _direction=_direction,
             __ast_fallback="normal",
+            __backend="pandas",
         )
     return data
 
@@ -65,6 +66,7 @@ def _fill_grouped(
         *columns,
         _direction=_direction,
         __ast_fallback="normal",
+        __backend="pandas",
         # drop the index, pandas 1.4 and <1.4 act differently
     ).sort_index().reset_index(drop=True)
     return reconstruct_tibble(_data, out)

@@ -29,7 +29,7 @@ from ...utils import vars_select
 @where.register(DataFrame, context=Context.EVAL)
 def _where(_data: DataFrame, fn: Callable) -> List[str]:
     columns = _data >> everything()
-    _data = ungroup(_data, __ast_fallback="normal")
+    _data = ungroup(_data, __ast_fallback="normal", __backend="pandas")
     mask = []
     for col in columns:
         if getattr(fn, "_pipda_functype", None) == "verb" and fn.dependent:
@@ -54,7 +54,7 @@ def _everything(_data: DataFrame) -> List[str]:
     return list(
         setdiff(
             _data.columns,
-            group_vars(_data, __ast_fallback="normal"),
+            group_vars(_data, __ast_fallback="normal", __backend="pandas"),
         )
     )
 

@@ -35,7 +35,7 @@ def _drop_na(
     """
     arg_match(how_, "how_", ["any", "all"])
     all_columns = _data.columns
-    data = ungroup(_data, __ast_fallback="normal")
+    data = ungroup(_data, __ast_fallback="normal", __backend="pandas")
     if columns:
         columns = vars_select(all_columns, *columns)
         columns = all_columns[columns]

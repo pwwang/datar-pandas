@@ -175,29 +175,29 @@ def test_zero_row_dfs():
 
     x = summarise(dfg, n=n())
     assert x.shape == (0, 2)
-    assert_equal(group_vars(x), [])
+    assert_iterable_equal(group_vars(x), [])
 
     x = mutate(dfg, c=f.b + 1)
     assert x.shape == (0, 4)
-    assert_equal(group_vars(x), ["g"])
+    assert_iterable_equal(group_vars(x), ["g"])
     sizes = group_size(x)
     assert sizes == []
 
     x = filter(dfg, f.a == 100)
     assert x.shape == (0, 3)
-    assert_equal(group_vars(x), ["g"])
+    assert_iterable_equal(group_vars(x), ["g"])
     sizes = group_size(x)
     assert sizes == []
 
     x = arrange(dfg, f.a, f.g)
     assert x.shape == (0, 3)
-    assert_equal(group_vars(x), ["g"])
+    assert_iterable_equal(group_vars(x), ["g"])
     sizes = group_size(x)
     assert sizes == []
 
     x = select(dfg, f.a)
     assert x.shape == (0, 2)
-    assert_equal(group_vars(x), ["g"])
+    assert_iterable_equal(group_vars(x), ["g"])
     sizes = group_size(x)
     assert sizes == []
 

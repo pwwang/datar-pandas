@@ -24,7 +24,6 @@ from datar.apis.base import (
     as_double,
     as_integer,
     as_logical,
-    as_null,
     as_numeric,
     is_factor,
     is_ordered,
@@ -94,11 +93,11 @@ def _is_ordered_cat(x):
     return x.ordered
 
 
-func_bootstrap(is_atomic, func=is_scalar, kind="transform")
+func_bootstrap(is_atomic, func=is_scalar, kind="agg")
 func_bootstrap(is_finite, func=np.isfinite, kind="transform")
 func_bootstrap(is_infinite, func=np.isinf, kind="transform")
 func_bootstrap(is_na, func=pd.isna, kind="transform")
-func_bootstrap(is_null, func=pd.isnull, kind="transform")
+func_bootstrap(is_null, func=lambda x: False, kind="agg")
 func_bootstrap(
     is_ordered,
     func=lambda x: is_categorical_dtype(x) and x.cat.ordered,
@@ -111,23 +110,67 @@ func_bootstrap(as_complex, func=lambda x: x.astype(complex), kind="transform")
 func_bootstrap(as_double, func=lambda x: x.astype(float), kind="transform")
 func_bootstrap(as_integer, func=lambda x: x.astype(int), kind="transform")
 func_bootstrap(as_logical, func=lambda x: x.astype(bool), kind="transform")
-func_bootstrap(as_null, func=lambda x: None, kind="agg")
 func_bootstrap(
     as_numeric,
     func=as_numeric.dispatch(object, backend="numpy"),
     kind="transform",
 )
-func_bootstrap(as_factor, func=lambda x: Categorical(x), kind="transform")
-func_bootstrap(
-    as_ordered,
-    func=lambda x: Categorical(x, ordered=True),
-    kind="transform",
-)
+# func_bootstrap(as_factor, func=lambda x: Categorical(x), kind="transform")
+# func_bootstrap(
+#     as_ordered,
+#     func=lambda x: Categorical(x, ordered=True),
+#     kind="transform",
+# )
 
 
 @as_factor.register(object, backend="pandas")
-def _as_integer_obj(x):
+def _as_factor_obj(x):
     return Categorical(x)
+
+
+@as_factor.register(Categorical, backend="pandas")
+def _as_factor_cat(x):
+    return x
+
+
+@as_factor.register(Series, backend="pandas")
+def _as_factor_series(x):
+    return x.astype("category")
+
+
+@as_factor.register(SeriesGroupBy, backend="pandas")
+def _as_factor_series_groupby(x):
+    return x.obj.astype("category").groupby(
+        x.grouper,
+        sort=x.sort,
+        observed=x.observed,
+        dropna=x.dropna,
+    )
+
+
+@as_ordered.register(object, backend="pandas")
+def _as_ordered_obj(x):
+    return Categorical(x, ordered=True)
+
+
+@as_ordered.register(Categorical, backend="pandas")
+def _as_ordered_cat(x: Categorical):
+    return x if x.ordered else x.as_ordered()
+
+
+@as_ordered.register(Series, backend="pandas")
+def _as_ordered_series(x):
+    return x.astype("category").cat.as_ordered()
+
+
+@as_ordered.register(SeriesGroupBy, backend="pandas")
+def _as_ordered_series_groupby(x):
+    return x.obj.astype("category").cat.as_ordered().groupby(
+        x.grouper,
+        sort=x.sort,
+        observed=x.observed,
+        dropna=x.dropna,
+    )
 
 
 @as_integer.register(Categorical, backend="pandas")
@@ -186,7 +229,7 @@ def _is_element(x, y):
     if isinstance(x, Series):
         return x.isin(y)
 
-    return np.isin(x, y)
+    return np.isin(x, y)  # pragma: no cover
 
 
 @func_bootstrap(as_date, kind="transform")
@@ -232,8 +275,17 @@ as_pd_date = func_factory(
 )
 
 
-func_bootstrap(is_true, func=lambda x: False, kind="agg")
-func_bootstrap(is_false, func=lambda x: False, kind="agg")
+func_bootstrap(
+    is_true,
+    func=lambda x: x.size == 1 and x.values[0].item() is True,
+    kind="agg",
+)
+
+func_bootstrap(
+    is_false,
+    func=lambda x: x.size == 1 and x.values[0].item() is False,
+    kind="agg",
+)
 
 func_bootstrap(all_, func=builtins.all, kind="agg")
 func_bootstrap(any_, func=builtins.any, kind="agg")

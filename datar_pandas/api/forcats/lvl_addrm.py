@@ -41,7 +41,12 @@ def _fct_expand(_f, *additional_levels: Any) -> Categorical:
         else:
             addlevs.extend(alev)
     new_levels = union(levs, addlevs)
-    return lvls_expand(_f, new_levels, __ast_fallback="normal")
+    return lvls_expand(
+        _f,
+        new_levels,
+        __ast_fallback="normal",
+        __backend="pandas",
+    )
 
 
 @fct_explicit_na.register(
@@ -131,6 +136,11 @@ def _fct_unify(
     for fct in fs:
         fct = check_factor(fct)
         out.append(
-            lvls_expand(fct, new_levels=levels, __ast_fallback="normal")
+            lvls_expand(
+                fct,
+                new_levels=levels,
+                __ast_fallback="normal",
+                __backend="pandas",
+            )
         )
     return out

@@ -57,7 +57,7 @@ def _fct_relevel(
     """
 
     _f = check_factor(_f)
-    old_levels = levels(_f, __ast_fallback="normal")
+    old_levels = levels(_f, __ast_fallback="normal", __backend="pandas")
     if len(lvls) == 1 and callable(lvls[0]):
         first_levels = lvls[0](old_levels)
     else:
@@ -74,12 +74,19 @@ def _fct_relevel(
         first_levels,
         after=after,
         __ast_fallback="normal",
+        __backend="numpy",
     )
 
     return lvls_reorder(
         _f,
-        match(new_levels, old_levels, __ast_fallback="normal"),
+        match(
+            new_levels,
+            old_levels,
+            __ast_fallback="normal",
+            __backend="numpy",
+        ),
         __ast_fallback="normal",
+        __backend="pandas",
     )
 
 
@@ -99,10 +106,16 @@ def _fct_inorder(_f, ordered: bool = None) -> Categorical:
     _f1 = _f.obj if is_sgb else _f
 
     _f1 = check_factor(_f1)
-    dups = duplicated(_f1, __ast_fallback="normal")
-    idx = as_integer(_f1, __ast_fallback="normal")[~dups]
+    dups = duplicated(_f1, __ast_fallback="normal", __backend="numpy")
+    idx = as_integer(_f1, __ast_fallback="normal", __backend="pandas")[~dups]
     idx = idx[~pd.isnull(_f1[~dups])]
-    out = lvls_reorder(_f1, idx, ordered=ordered, __ast_fallback="normal")
+    out = lvls_reorder(
+        _f1,
+        idx,
+        ordered=ordered,
+        __ast_fallback="normal",
+        __backend="pandas",
+    )
 
     if not is_sgb:
         return out
@@ -131,12 +144,16 @@ def _fct_infreq(_f, ordered: bool = None) -> Categorical:
     return lvls_reorder(
         _f,
         order(
-            table(_f, __ast_fallback="normal").values.flatten(),
+            table(
+                _f, __ast_fallback="normal", __backend="pandas"
+            ).values.flatten(),
             decreasing=True,
             __ast_fallback="normal",
+            __backend="numpy",
         ),
         ordered=ordered,
         __ast_fallback="normal",
+        __backend="pandas",
     )
 
 
@@ -153,11 +170,13 @@ def _fct_inseq(_f, ordered: bool = None) -> Categorical:
         The factor with levels reordered
     """
     _f = check_factor(_f)
-    levs = levels(_f, __ast_fallback="normal")
+    levs = levels(_f, __ast_fallback="normal", __backend="pandas")
     num_levels = []
     for lev in levs:
         try:
-            numlev = as_integer(lev, __ast_fallback="normal")
+            numlev = as_integer(
+                lev, __ast_fallback="normal", __backend="numpy"
+            )
         except (ValueError, TypeError):
             numlev = np.nan
         num_levels.append(numlev)
@@ -169,9 +188,15 @@ def _fct_inseq(_f, ordered: bool = None) -> Categorical:
 
     return lvls_reorder(
         _f,
-        order(num_levels, na_last=True, __ast_fallback="normal"),
+        order(
+            num_levels,
+            na_last=True,
+            __ast_fallback="normal",
+            __backend="numpy",
+        ),
         ordered=ordered,
         __ast_fallback="normal",
+        __backend="pandas",
     )
 
 
@@ -186,7 +211,16 @@ def _last2(_x: Iterable, _y: Sequence) -> Any:
     Returns:
         Last element of `_y` ordered by `_x`
     """
-    return list(_y[order(_x, na_last=False, __ast_fallback="normal")])[-1]
+    return list(
+        _y[
+            order(
+                _x,
+                na_last=False,
+                __ast_fallback="normal",
+                __backend="numpy",
+            )
+        ]
+    )[-1]
 
 
 @first2.register(object, backend="pandas")
@@ -200,7 +234,7 @@ def _first2(_x: Sequence, _y: Sequence) -> Any:
     Returns:
         First element of `_y` ordered by `_x`
     """
-    return _y[order(_x, __ast_fallback="normal")][0]
+    return _y[order(_x, __ast_fallback="normal", __backend="numpy")][0]
 
 
 @fct_reorder.register(ForcatsRegType, context=Context.EVAL, backend="pandas")
@@ -251,8 +285,14 @@ def _fct_reorder(
 
     return lvls_reorder(
         _f,
-        order(summary.iloc[:, 0], decreasing=_desc, __ast_fallback="normal"),
+        order(
+            summary.iloc[:, 0],
+            decreasing=_desc,
+            __ast_fallback="normal",
+            __backend="numpy",
+        ),
         __ast_fallback="normal",
+        __backend="pandas",
     )
 
 
@@ -310,8 +350,14 @@ def _fct_reorder2(
 
     return lvls_reorder(
         _f,
-        order(summary, decreasing=_desc, __ast_fallback="normal"),
+        order(
+            summary,
+            decreasing=_desc,
+            __ast_fallback="normal",
+            __backend="numpy",
+        ),
         __ast_fallback="normal",
+        __backend="pandas",
     )
 
 
@@ -329,8 +375,9 @@ def _fct_shuffle(_f) -> Categorical:
 
     return lvls_reorder(
         _f,
-        sample(lvls_seq(_f), __ast_fallback="normal"),
+        sample(lvls_seq(_f), __ast_fallback="normal", __backend="numpy"),
         __ast_fallback="normal",
+        __backend="pandas",
     )
 
 
@@ -348,8 +395,9 @@ def _fct_rev(_f) -> Categorical:
 
     return lvls_reorder(
         _f,
-        rev(lvls_seq(_f), __ast_fallback="normal"),
+        rev(lvls_seq(_f), __ast_fallback="normal", __backend="numpy"),
         __ast_fallback="normal",
+        __backend="pandas",
     )
 
 
@@ -365,7 +413,11 @@ def _fct_shift(_f, n: int = 1) -> Categorical:
     Returns:
         The factor with levels shifted
     """
-    nlvls = nlevels(_f, __ast_fallback="normal")
-    lvl_order = (seq_len(nlvls, __ast_fallback="normal") + n - 1) % nlvls
+    nlvls = nlevels(_f, __ast_fallback="normal", __backend="pandas")
+    lvl_order = (
+        seq_len(nlvls, __ast_fallback="normal", __backend="numpy") + n - 1
+    ) % nlvls
 
-    return lvls_reorder(_f, lvl_order, __ast_fallback="normal")
+    return lvls_reorder(
+        _f, lvl_order, __ast_fallback="normal", __backend="pandas"
+    )

@@ -57,7 +57,12 @@ def _pack(
             cols[f"{group}${newcol}"] = _data[oldcol]
 
     asis = setdiff(_data.columns, list(usedcols))
-    out = bind_cols(_data[asis], DataFrame(cols), __ast_fallback="normal")
+    out = bind_cols(
+        _data[asis],
+        DataFrame(cols),
+        __ast_fallback="normal",
+        __backend="pandas",
+    )
     return reconstruct_tibble(_data, out)
 
 

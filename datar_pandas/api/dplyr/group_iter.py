@@ -53,10 +53,17 @@ def _group_map(
     **kwargs: Any,
 ):
     keys = (
-        group_keys(_data, __ast_fallback="normal") if _nargs(_f) > 1 else None
+        group_keys(_data, __ast_fallback="normal", __backend="pandas")
+        if _nargs(_f) > 1
+        else None
     )
     for i, chunk in enumerate(
-        group_split(_data, _keep=_keep, __ast_fallback="normal")
+        group_split(
+            _data,
+            _keep=_keep,
+            __ast_fallback="normal",
+            __backend="pandas",
+        )
     ):
         if keys is None:
             yield _f(chunk)
@@ -80,6 +87,7 @@ def _group_map_list(
             **kwargs,
             _keep=_keep,
             __ast_fallback="normal",
+            __backend="pandas",
         )
     )
 
@@ -110,7 +118,7 @@ def _group_modify_grouped(
     _keep: bool = False,
     **kwargs: Any,
 ) -> DataFrame:
-    gvars = group_vars(_data, __ast_fallback="normal")
+    gvars = group_vars(_data, __ast_fallback="normal", __backend="pandas")
     func = (lambda df, keys: _f(df)) if _nargs(_f) == 1 else _f
 
     def fun(df, keys):
@@ -132,7 +140,13 @@ def _group_modify_grouped(
             axis=1,
         )
 
-    chunks = group_map(_data, fun, _keep=_keep, __ast_fallback="normal")
+    chunks = group_map(
+        _data,
+        fun,
+        _keep=_keep,
+        __ast_fallback="normal",
+        __backend="pandas",
+    )
     out = pd.concat(chunks, axis=0)
 
     return reconstruct_tibble(_data, out)
@@ -156,6 +170,7 @@ def _group_walk(
             **kwargs,
             _keep=_keep,
             __ast_fallback="normal",
+            __backend="pandas",
         )
     )
 
@@ -170,12 +185,13 @@ def _group_trim_grouped(
     _data: TibbleGrouped,
     _drop: bool = None,
 ) -> TibbleGrouped:
-    ungrouped = ungroup(_data, __ast_fallback="normal")
+    ungrouped = ungroup(_data, __ast_fallback="normal", __backend="pandas")
 
     fgroups = select(
         ungrouped,
         where(is_factor),
         __ast_fallback="normal",
+        __backend="pandas",
     )
     dropped = mutate(
         ungrouped,
@@ -184,6 +200,7 @@ def _group_trim_grouped(
             droplevels,
         ),
         __ast_fallback="normal",
+        __backend="pandas",
     )
 
     return reconstruct_tibble(_data, dropped, drop=_drop)
@@ -198,12 +215,17 @@ def _with_groups(
     **kwargs: Any,
 ) -> Any:
     if _groups is None:
-        grouped = ungroup(_data, __ast_fallback="normal")
+        grouped = ungroup(_data, __ast_fallback="normal", __backend="pandas")
     else:
         # all_columns = _data.columns
         # _groups = evaluate_expr(_groups, _data, Context.SELECT)
         # _groups = all_columns[vars_select(all_columns, _groups)]
-        grouped = group_by(_data, _groups, __ast_fallback="normal")
+        grouped = group_by(
+            _data,
+            _groups,
+            __ast_fallback="normal",
+            __backend="pandas",
+        )
 
     return _func(grouped, *args, **kwargs)
 
@@ -215,7 +237,13 @@ def _group_split(
     _keep: bool = True,
     **kwargs: Any,
 ):
-    data = group_by(_data, *args, **kwargs, __ast_fallback="normal")
+    data = group_by(
+        _data,
+        *args,
+        **kwargs,
+        __ast_fallback="normal",
+        __backend="pandas",
+    )
     yield from group_split_impl(data, _keep=_keep)
 
 
@@ -269,6 +297,7 @@ def _group_split_list(
             *args,
             _keep=_keep,
             __ast_fallback="normal",
+            __backend="pandas",
             **kwargs,
         )
     )
@@ -283,11 +312,11 @@ group_split.list = register_verb(
 
 def group_split_impl(data, _keep):
     """Implement splitting data frame by groups"""
-    out = ungroup(data, __ast_fallback="normal")
-    indices = group_rows(data, __ast_fallback="normal")
+    out = ungroup(data, __ast_fallback="normal", __backend="pandas")
+    indices = group_rows(data, __ast_fallback="normal", __backend="pandas")
 
     if not _keep:
-        remove = group_vars(data, __ast_fallback="normal")
+        remove = group_vars(data, __ast_fallback="normal", __backend="pandas")
         _keep = out.columns
         _keep = setdiff(_keep, remove)
         out = out[_keep]

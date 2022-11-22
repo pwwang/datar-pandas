@@ -32,7 +32,13 @@ def _group_by(
     _dropna: bool = False,
     **kwargs: Any,
 ) -> TibbleGrouped:
-    _data = mutate(_data, *args, __ast_fallback="normal", **kwargs)
+    _data = mutate(
+        _data,
+        *args,
+        __ast_fallback="normal",
+        __backend="pandas",
+        **kwargs,
+    )
     _data.reset_index(drop=True, inplace=True)
 
     if _drop is None:
@@ -58,10 +64,16 @@ def _group_by_grouped(
     if _drop is None:
         _drop = group_by_drop_default(_data)
 
-    _data = mutate(_data, *args, __ast_fallback="normal", **kwargs)
+    _data = mutate(
+        _data,
+        *args,
+        __ast_fallback="normal",
+        __backend="pandas",
+        **kwargs,
+    )
     new_cols = _data._datar["mutated_cols"]
     gvars = union(
-        group_vars(_data, __ast_fallback="normal"),
+        group_vars(_data, __ast_fallback="normal", __backend="pandas"),
         new_cols,
     ) if _add else new_cols
 
@@ -72,6 +84,7 @@ def _group_by_grouped(
         _sort=_sort,
         _dropna=_dropna,
         __ast_fallback="normal",
+        __backend="pandas",
     )
 
 
@@ -89,6 +102,7 @@ def _rowwise(
     return as_tibble(
         _data.reset_index(drop=True),
         __ast_fallback="normal",
+        __backend="pandas",
     ).rowwise(gvars)
 
 
@@ -105,7 +119,12 @@ def _rowwise_grouped(
         )
 
     cols = _data.group_vars
-    return rowwise(_data._datar["grouped"].obj, *cols, __ast_fallback="normal")
+    return rowwise(
+        _data._datar["grouped"].obj,
+        *cols,
+        __ast_fallback="normal",
+        __backend="pandas",
+    )
 
 
 @rowwise.register(TibbleRowwise, context=Context.SELECT, backend="pandas")
@@ -137,11 +156,16 @@ def _ungroup_grouped(
     if not cols:
         return Tibble(obj)
 
-    old_groups = group_vars(x, __ast_fallback="normal")
+    old_groups = group_vars(x, __ast_fallback="normal", __backend="pandas")
     to_remove = vars_select(obj.columns, *cols)
     new_groups = setdiff(old_groups, obj.columns[to_remove])
 
-    return group_by(obj, *new_groups, __ast_fallback="normal")
+    return group_by(
+        obj,
+        *new_groups,
+        __ast_fallback="normal",
+        __backend="pandas",
+    )
 
 
 @ungroup.register(TibbleRowwise, context=Context.SELECT, backend="pandas")

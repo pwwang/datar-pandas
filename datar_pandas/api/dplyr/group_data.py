@@ -20,7 +20,15 @@ from ...pandas import DataFrame, GroupBy
 
 @group_data.register(DataFrame, context=Context.EVAL, backend="pandas")
 def _group_data(_data: DataFrame) -> Tibble:
-    return Tibble({"_rows": group_rows(_data, __ast_fallback="normal")})
+    return Tibble(
+        {
+            "_rows": group_rows(
+                _data,
+                __ast_fallback="normal",
+                __backend="pandas",
+            ),
+        }
+    )
 
 
 @group_data.register(
@@ -29,8 +37,12 @@ def _group_data(_data: DataFrame) -> Tibble:
     backend="pandas",
 )
 def _group_data_grouped(_data: TibbleGrouped | GroupBy) -> Tibble:
-    gpdata = group_keys(_data, __ast_fallback="normal")
-    gpdata["_rows"] = group_rows(_data, __ast_fallback="normal")
+    gpdata = group_keys(_data, __ast_fallback="normal", __backend="pandas")
+    gpdata["_rows"] = group_rows(
+        _data,
+        __ast_fallback="normal",
+        __backend="pandas",
+    )
     return gpdata
 
 
@@ -58,7 +70,11 @@ def _group_rows(_data: DataFrame) -> List[List[int]]:
 
 @group_rows.register(TibbleGrouped, context=Context.EVAL, backend="pandas")
 def _group_rows_grouped(_data: TibbleGrouped) -> List[List[int]]:
-    return group_rows(_data._datar["grouped"], __ast_fallback="normal")
+    return group_rows(
+        _data._datar["grouped"],
+        __ast_fallback="normal",
+        __backend="pandas",
+    )
 
 
 @group_rows.register(GroupBy, context=Context.EVAL, backend="pandas")
@@ -78,7 +94,11 @@ def _group_indices(_data: DataFrame) -> List[int]:
 @group_indices.register(TibbleGrouped, context=Context.EVAL, backend="pandas")
 def _group_indices_gruoped(_data: TibbleGrouped) -> List[int]:
     ret = {}
-    for row in group_data(_data, __ast_fallback="normal").itertuples():
+    for row in group_data(
+        _data,
+        __ast_fallback="normal",
+        __backend="pandas",
+    ).itertuples():
         for index in row[-1]:
             ret[index] = row.Index
     return [ret[key] for key in sorted(ret)]
@@ -97,7 +117,12 @@ def _group_size(_data: DataFrame) -> Sequence[int]:
 
 @group_size.register(TibbleGrouped, context=Context.EVAL, backend="pandas")
 def _group_size_grouped(_data: TibbleGrouped) -> Sequence[int]:
-    return list(map(len, group_rows(_data, __ast_fallback="normal")))
+    return list(
+        map(
+            len,
+            group_rows(_data, __ast_fallback="normal", __backend="pandas"),
+        )
+    )
 
 
 @n_groups.register(DataFrame, context=Context.EVAL, backend="pandas")

@@ -47,22 +47,30 @@ def _fct_anon(
         The factor with levels anonymised
     """
     _f = check_factor(_f)
-    nlvls = nlevels(_f, __ast_fallback="normal")
+    nlvls = nlevels(_f, __ast_fallback="normal", __backend="pandas")
     ndigits = len(str(nlvls))
     lvls = paste0(
         prefix,
         [str(i).rjust(ndigits, "0") for i in range(nlvls)],
         __ast_fallback="normal",
+        __backend="numpy",
     )
     _f = lvls_revalue(
-        _f, sample(lvls, __ast_fallback="normal"), __ast_fallback="normal"
+        _f,
+        sample(lvls, __ast_fallback="normal", __backend="numpy"),
+        __ast_fallback="normal",
+        __backend="pandas",
     )
     return lvls_reorder(
         _f,
         match(
-            lvls, levels(_f, __ast_fallback="normal"), __ast_fallback="normal"
+            lvls,
+            levels(_f, __ast_fallback="normal", __backend="pandas"),
+            __ast_fallback="normal",
+            __backend="numpy",
         ),
         __ast_fallback="normal",
+        __backend="pandas",
     )
 
 
@@ -106,7 +114,7 @@ def _fct_recode(
         recodings.update(arg)
     recodings.update(kwargs)
 
-    lvls = levels(_f, __ast_fallback="normal")
+    lvls = levels(_f, __ast_fallback="normal", __backend="pandas")
     for_recode = dict(zip(lvls, lvls))  # old => new
     unknown = set()
     for key, val in recodings.items():
@@ -125,7 +133,12 @@ def _fct_recode(
     if unknown:
         logger.warning("[fct_recode] Unknown levels in `_f`: %s", unknown)
 
-    return recode_factor(_f, for_recode, __ast_fallback="normal").values
+    return recode_factor(
+        _f,
+        for_recode,
+        __ast_fallback="normal",
+        __backend="pandas",
+    ).values
 
 
 @fct_collapse.register(ForcatsRegType, context=Context.EVAL, backend="pandas")
@@ -151,7 +164,7 @@ def _fct_collapse(
     levs = set(lev for sublevs in kwargs.values() for lev in sublevs)
 
     if other_level is not None:
-        lvls = levels(_f, __ast_fallback="normal")
+        lvls = levels(_f, __ast_fallback="normal", __backend="pandas")
         kwargs[other_level] = set(lvls) - levs
 
     out = fct_recode(_f, kwargs)
@@ -161,6 +174,7 @@ def _fct_collapse(
             other_level,
             after=-1,
             __ast_fallback="normal",
+            __backend="pandas",
         )
 
     return out
@@ -194,14 +208,26 @@ def _fct_lump_min(
 
     new_levels = if_else(
         calcs["count"] >= min,
-        levels(_f, __ast_fallback="normal"),
+        levels(_f, __ast_fallback="normal", __backend="pandas"),
         other_level,
         __ast_fallback="normal",
+        __backend="pandas",
     )
 
     if other_level in new_levels:
-        _f = lvls_revalue(_f, new_levels, __ast_fallback="normal")
-        return fct_relevel(_f, other_level, after=-1, __ast_fallback="normal")
+        _f = lvls_revalue(
+            _f,
+            new_levels,
+            __ast_fallback="normal",
+            __backend="pandas",
+        )
+        return fct_relevel(
+            _f,
+            other_level,
+            after=-1,
+            __ast_fallback="normal",
+            __backend="pandas",
+        )
 
     return _f
 
@@ -235,24 +261,37 @@ def _fct_lump_prop(
     if prop < 0:
         new_levels = if_else(
             prop_n <= -prop,
-            levels(_f, __ast_fallback="normal"),
+            levels(_f, __ast_fallback="normal", __backend="pandas"),
             other_level,
             __ast_fallback="normal",
+            __backend="pandas",
         )
     else:
         new_levels = if_else(
             prop_n > prop,
-            levels(_f, __ast_fallback="normal"),
+            levels(_f, __ast_fallback="normal", __backend="pandas"),
             other_level,
             __ast_fallback="normal",
+            __backend="pandas",
         )
 
     if prop > 0 and sum(prop_n <= prop) <= 1:
         return _f
 
     if other_level in new_levels:
-        _f = lvls_revalue(_f, new_levels, __ast_fallback="normal")
-        return fct_relevel(_f, other_level, after=-1, __ast_fallback="normal")
+        _f = lvls_revalue(
+            _f,
+            new_levels,
+            __ast_fallback="normal",
+            __backend="pandas",
+        )
+        return fct_relevel(
+            _f,
+            other_level,
+            after=-1,
+            __ast_fallback="normal",
+            __backend="pandas",
+        )
 
     return _f
 
@@ -287,27 +326,45 @@ def _fct_lump_n(
 
     if n < 0:
         rnk = rank(
-            calcs["count"], ties_method=ties_method, __ast_fallback="normal"
+            calcs["count"],
+            ties_method=ties_method,
+            __ast_fallback="normal",
+            __backend="numpy",
         )
         n = -n
     else:
         rnk = rank(
-            -calcs["count"], ties_method=ties_method, __ast_fallback="normal"
+            -calcs["count"],
+            ties_method=ties_method,
+            __ast_fallback="normal",
+            __backend="numpy",
         )
 
     new_levels = if_else(
         rnk <= n,
-        levels(_f, __ast_fallback="normal"),
+        levels(_f, __ast_fallback="normal", __backend="pandas"),
         other_level,
         __ast_fallback="normal",
+        __backend="pandas",
     )
 
     if sum(rnk > n) <= 1:
         return _f
 
     if other_level in new_levels:
-        _f = lvls_revalue(_f, new_levels, __ast_fallback="normal")
-        return fct_relevel(_f, other_level, after=-1, __ast_fallback="normal")
+        _f = lvls_revalue(
+            _f,
+            new_levels,
+            __ast_fallback="normal",
+            __backend="pandas",
+        )
+        return fct_relevel(
+            _f,
+            other_level,
+            after=-1,
+            __ast_fallback="normal",
+            __backend="pandas",
+        )
 
     return _f  # pragma: no cover
 
@@ -334,14 +391,26 @@ def _fct_lump_lowfreq(_f, other_level: Any = "Other"):
 
     new_levels = if_else(
         ~in_smallest(calcs["count"]),
-        levels(_f, __ast_fallback="normal"),
+        levels(_f, __ast_fallback="normal", __backend="pandas"),
         other_level,
         __ast_fallback="normal",
+        __backend="pandas",
     )
 
     if other_level in new_levels:
-        _f = lvls_revalue(_f, new_levels, __ast_fallback="normal")
-        return fct_relevel(_f, other_level, after=-1, __ast_fallback="normal")
+        _f = lvls_revalue(
+            _f,
+            new_levels,
+            __ast_fallback="normal",
+            __backend="pandas",
+        )
+        return fct_relevel(
+            _f,
+            other_level,
+            after=-1,
+            __ast_fallback="normal",
+            __backend="pandas",
+        )
 
     return _f
 
@@ -423,18 +492,19 @@ def _fct_other(
     ):
         raise ValueError("Must supply exactly one of `keep` and `drop`")
 
-    lvls = levels(_f, __ast_fallback="normal")
+    lvls = levels(_f, __ast_fallback="normal", __backend="pandas")
     if keep is not None:
         lvls[~np.isin(lvls, keep)] = other_level
     else:
         lvls[np.isin(lvls, drop)] = other_level
 
-    _f = lvls_revalue(_f, lvls, __ast_fallback="normal")
+    _f = lvls_revalue(_f, lvls, __ast_fallback="normal", __backend="pandas")
     return fct_relevel(
         _f,
         other_level,
         after=-1,
         __ast_fallback="normal",
+        __backend="pandas",
     )
 
 
@@ -459,13 +529,18 @@ def _fct_relabel(
         The factor with levels relabeled
     """
     _f = check_factor(_f)
-    old_levels = levels(_f, __ast_fallback="normal")
+    old_levels = levels(_f, __ast_fallback="normal", __backend="pandas")
     if getattr(_fun, "_pipda_functype", None) in ("verb", "pipeable"):
         # TODO: test
         # pragma: no cover
         kwargs["__ast_fallback"] = "normal"
     new_levels = _fun(old_levels, *args, **kwargs)
-    return lvls_revalue(_f, new_levels, __ast_fallback="normal")
+    return lvls_revalue(
+        _f,
+        new_levels,
+        __ast_fallback="normal",
+        __backend="pandas",
+    )
 
 
 # -------------
@@ -502,7 +577,11 @@ def check_calc_levels(_f, w=None):
     w = check_weights(w, len(_f))
 
     if w is None:
-        cnt = table(_f, __ast_fallback="normal").iloc[0, :].values
+        cnt = (
+            table(_f, __ast_fallback="normal", __backend="pandas")
+            .iloc[0, :]
+            .values
+        )
         total = len(_f)
     else:
         cnt = (
@@ -535,8 +614,10 @@ def lump_cutoff(x) -> int:
 
 def in_smallest(x) -> Iterable[bool]:
     """Check if elements in x are the smallest of x"""
-    ord_x = order(x, decreasing=True, __ast_fallback="normal")
+    ord_x = order(
+        x, decreasing=True, __ast_fallback="normal", __backend="numpy"
+    )
     idx = lump_cutoff(x[ord_x])
 
     to_lump = np.arange(len(x)) >= idx
-    return to_lump[order(ord_x, __ast_fallback="normal")]
+    return to_lump[order(ord_x, __ast_fallback="normal", __backend="numpy")]

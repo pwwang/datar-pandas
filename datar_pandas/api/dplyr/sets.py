@@ -14,6 +14,7 @@ from datar.apis.dplyr import (
 
 from ... import pandas as pd
 from ...pandas import DataFrame
+from ...common import setdiff as _setdiff
 from ...tibble import TibbleGrouped, reconstruct_tibble
 
 
@@ -25,8 +26,8 @@ def _check_xy(x, y):
             f"- different number of columns: {x.shape[1]} vs {y.shape[1]}"
         )
 
-    in_y_not_x = setdiff(y.columns, x.columns, __ast_fallback="normal")
-    in_x_not_y = setdiff(x.columns, y.columns, __ast_fallback="normal")
+    in_y_not_x = _setdiff(y.columns, x.columns)
+    in_x_not_y = _setdiff(x.columns, y.columns)
     if in_y_not_x.size > 0 or in_x_not_y.size > 0:
         msg = ["not compatible:"]
         if in_y_not_x:
@@ -51,8 +52,13 @@ def _intersect_df(x: DataFrame, y: DataFrame) -> DataFrame:
     from .distinct import distinct
 
     out = distinct(
-        pd.merge(x, ungroup(y, __ast_fallback="normal"), how="inner"),
+        pd.merge(
+            x,
+            ungroup(y, __ast_fallback="normal", __backend="pandas"),
+            how="inner",
+        ),
         __ast_fallback="normal",
+        __backend="pandas",
     )
     if isinstance(y, TibbleGrouped):
         return reconstruct_tibble(y, out)
@@ -61,8 +67,8 @@ def _intersect_df(x: DataFrame, y: DataFrame) -> DataFrame:
 
 @intersect.register(TibbleGrouped, backend="pandas")
 def _intersect_grouped(x, y):
-    newx = ungroup(x, __ast_fallback="normal")
-    newy = ungroup(y, __ast_fallback="normal")
+    newx = ungroup(x, __ast_fallback="normal", __backend="pandas")
+    newy = ungroup(y, __ast_fallback="normal", __backend="pandas")
     out = intersect.dispatch(DataFrame)(newx, newy)
     return reconstruct_tibble(x, out)
 
@@ -82,8 +88,13 @@ def _union_df(x, y):
     from .distinct import distinct
 
     out = distinct(
-        pd.merge(x, ungroup(y, __ast_fallback="normal"), how="outer"),
+        pd.merge(
+            x,
+            ungroup(y, __ast_fallback="normal", __backend="pandas"),
+            how="outer",
+        ),
         __ast_fallback="normal",
+        __backend="pandas",
     )
     out.reset_index(drop=True, inplace=True)
     if isinstance(y, TibbleGrouped):
@@ -94,8 +105,8 @@ def _union_df(x, y):
 @union.register(TibbleGrouped, backend="pandas")
 def _union_grouped(x, y):
     out = union.dispatch(DataFrame)(
-        ungroup(x, __ast_fallback="normal"),
-        ungroup(y, __ast_fallback="normal"),
+        ungroup(x, __ast_fallback="normal", __backend="pandas"),
+        ungroup(y, __ast_fallback="normal", __backend="pandas"),
     )
     return reconstruct_tibble(x, out)
 
@@ -115,7 +126,7 @@ def _setdiff_df(x, y):
     indicator = "__datar_setdiff__"
     out = pd.merge(
         x,
-        ungroup(y, __ast_fallback="normal"),
+        ungroup(y, __ast_fallback="normal", __backend="pandas"),
         how="left",
         indicator=indicator,
     )
@@ -127,6 +138,7 @@ def _setdiff_df(x, y):
         .drop(columns=[indicator])
         .reset_index(drop=True),
         __ast_fallback="normal",
+        __backend="pandas",
     )
     if isinstance(y, TibbleGrouped):
         return reconstruct_tibble(y, out)
@@ -136,8 +148,8 @@ def _setdiff_df(x, y):
 @setdiff.register(TibbleGrouped, backend="pandas")
 def _setdiff_grouped(x, y):
     out = setdiff.dispatch(DataFrame)(
-        ungroup(x, __ast_fallback="normal"),
-        ungroup(y, __ast_fallback="normal"),
+        ungroup(x, __ast_fallback="normal", __backend="pandas"),
+        ungroup(y, __ast_fallback="normal", __backend="pandas"),
     )
     return reconstruct_tibble(x, out)
 
@@ -156,8 +168,9 @@ def _union_all(x, y):
     _check_xy(x, y)
     out = bind_rows(
         x,
-        ungroup(y, __ast_fallback="normal"),
+        ungroup(y, __ast_fallback="normal", __backend="pandas"),
         __ast_fallback="normal",
+        __backend="pandas",
     )
     if isinstance(y, TibbleGrouped):
         return reconstruct_tibble(y, out)
@@ -167,8 +180,8 @@ def _union_all(x, y):
 @union_all.register(TibbleGrouped, backend="pandas")
 def _union_all_grouped(x, y):
     out = union_all.dispatch(DataFrame)(
-        ungroup(x, __ast_fallback="normal"),
-        ungroup(y, __ast_fallback="normal"),
+        ungroup(x, __ast_fallback="normal", __backend="pandas"),
+        ungroup(y, __ast_fallback="normal", __backend="pandas"),
     )
     return reconstruct_tibble(x, out)
 
@@ -186,8 +199,8 @@ def _set_equal_df(x, y, equal_na=True):
     Returns:
         True if they equal else False
     """
-    x = ungroup(x, __ast_fallback="normal")
-    y = ungroup(y, __ast_fallback="normal")
+    x = ungroup(x, __ast_fallback="normal", __backend="pandas")
+    y = ungroup(y, __ast_fallback="normal", __backend="pandas")
     _check_xy(x, y)
 
     x = x.sort_values(by=x.columns.to_list()).reset_index(drop=True)

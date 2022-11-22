@@ -24,8 +24,9 @@ def lvls_seq(_f):
     """Get the index sequence of a factor levels"""
     return (
         seq_along(
-            levels(_f, __ast_fallback="normal"),
+            levels(_f, __ast_fallback="normal", __backend="pandas"),
             __ast_fallback="normal",
+            __backend="numpy",
         )
         - 1
     )
@@ -34,7 +35,7 @@ def lvls_seq(_f):
 def refactor(_f, new_levels: Iterable, ordered: bool = None) -> Categorical:
     """Refactor using new levels"""
     if ordered is None:
-        ordered = is_ordered(_f, __ast_fallback="normal")
+        ordered = is_ordered(_f, __ast_fallback="normal", __backend="pandas")
 
     new_f = factor(
         _f,
@@ -42,6 +43,7 @@ def refactor(_f, new_levels: Iterable, ordered: bool = None) -> Categorical:
         exclude=np.nan,
         ordered=ordered,
         __ast_fallback="normal",
+        __backend="pandas",
     )
     # keep attributes?
     return new_f
@@ -73,15 +75,18 @@ def _lvls_reorder(
     len_idx = len(idx)
     seq_lvls = lvls_seq(_f)
     if not setequal(
-        idx, seq_lvls, __ast_fallback="normal"
-    ) or len_idx != nlevels(_f, __ast_fallback="normal"):
+        idx,
+        seq_lvls,
+        __ast_fallback="normal",
+        __backend="numpy",
+    ) or len_idx != nlevels(_f, __ast_fallback="normal", __backend="pandas"):
         raise ValueError(
             "`idx` must contain one integer for each level of `f`"
         )
 
     return refactor(
         _f,
-        levels(_f, __ast_fallback="normal")[idx],
+        levels(_f, __ast_fallback="normal", __backend="pandas")[idx],
         ordered=ordered,
     )
 
@@ -103,29 +108,55 @@ def _lvls_revalue(
     """
     _f = check_factor(_f)
 
-    if len(new_levels) != nlevels(_f, __ast_fallback="normal"):
+    if len(new_levels) != nlevels(
+        _f,
+        __ast_fallback="normal",
+        __backend="pandas",
+    ):
         raise ValueError(
             "`new_levels` must be the same length as `levels(f)`: expected ",
-            f"{nlevels(_f, __ast_fallback='normal')} new levels, "
-            f"got {len(new_levels)}.",
+            f"{nlevels(_f, __ast_fallback='normal', __backend='pandas')} "
+            f"new levels, got {len(new_levels)}.",
         )
 
     u_levels = unique(new_levels)
     if len(new_levels) > len(u_levels):
         # has duplicates
-        index = match(new_levels, u_levels, __ast_fallback="normal")
-        out = factor(
-            as_character(index[as_integer(_f, __ast_fallback="normal")]),
+        index = match(
+            new_levels,
+            u_levels,
             __ast_fallback="normal",
+            __backend="numpy",
+        )
+        out = factor(
+            as_character(
+                index[
+                    as_integer(_f, __ast_fallback="normal", __backend="pandas")
+                ]
+            ),
+            __ast_fallback="normal",
+            __backend="pandas",
         )
         return recode_factor(
             out,
-            dict(zip(levels(out, __ast_fallback="normal"), u_levels)),
+            dict(
+                zip(
+                    levels(out, __ast_fallback="normal", __backend="pandas"),
+                    u_levels,
+                )
+            ),
             __ast_fallback="normal",
+            __backend="pandas",
         ).values
 
-    recodings = dict(zip(levels(_f, __ast_fallback="normal"), new_levels))
-    return recode_factor(_f, recodings, __ast_fallback="normal").values
+    recodings = dict(
+        zip(
+            levels(_f, __ast_fallback="normal", __backend="pandas"), new_levels
+        )
+    )
+    return recode_factor(
+        _f, recodings, __ast_fallback="normal", __backend="pandas"
+    ).values
 
 
 @lvls_expand.register(ForcatsRegType, context=Context.EVAL, backend="pandas")
@@ -144,7 +175,7 @@ def _lvls_expand(
         The factor with the new levels
     """
     _f = check_factor(_f)
-    levs = levels(_f, __ast_fallback="normal")
+    levs = levels(_f, __ast_fallback="normal", __backend="pandas")
 
     missing = setdiff(levs, new_levels)
     if len(missing) > 0:
@@ -170,6 +201,6 @@ def _lvls_union(
     out = []
     for fct in fs:
         fct = check_factor(fct)
-        levs = levels(fct, __ast_fallback="normal")
+        levs = levels(fct, __ast_fallback="normal", __backend="pandas")
         out = union(out, levs)
     return out

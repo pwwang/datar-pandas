@@ -33,7 +33,13 @@ def _rows_insert(x, y, by=None, copy=True):
     if any(bad):
         raise ValueError("Attempting to insert duplicate rows.")
 
-    return bind_rows(x, y, _copy=copy, __ast_fallback="normal")
+    return bind_rows(
+        x,
+        y,
+        _copy=copy,
+        __ast_fallback="normal",
+        __backend="pandas",
+    )
 
 
 @rows_update.register(DataFrame, context=Context.EVAL, backend="pandas")
@@ -87,7 +93,13 @@ def _rows_upsert(x, y, by=None, copy=True):
     idx_existing = idx[~new]
 
     x.loc[idx_existing, y.columns] = y.loc[~new].values
-    return bind_rows(x, y.loc[new], _copy=copy, __ast_fallback="normal")
+    return bind_rows(
+        x,
+        y.loc[new],
+        _copy=copy,
+        __ast_fallback="normal",
+        __backend="pandas",
+    )
 
 
 @rows_delete.register(DataFrame, context=Context.EVAL, backend="pandas")
@@ -153,6 +165,16 @@ def _rows_check_key_df(df, by, df_name) -> None:
 def _rows_match(x, y):
     """Mimic vctrs::vec_match"""
     id_col = "__id__"
-    y_with_id = rownames_to_column(y, var=id_col, __ast_fallback="normal")
+    y_with_id = rownames_to_column(
+        y,
+        var=id_col,
+        __ast_fallback="normal",
+        __backend="pandas",
+    )
 
-    return left_join(x, y_with_id, __ast_fallback="normal")[id_col].values
+    return left_join(
+        x,
+        y_with_id,
+        __ast_fallback="normal",
+        __backend="pandas",
+    )[id_col].values

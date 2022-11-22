@@ -43,7 +43,7 @@ def _unite(
         unite_idx = vars_select(data, columns)
         columns = all_columns[unite_idx]
 
-    out = ungroup(data, __ast_fallback="normal").copy()
+    out = ungroup(data, __ast_fallback="normal", __backend="pandas").copy()
 
     united = Series(out[columns].values.tolist(), index=out.index)
     if sep is not None:

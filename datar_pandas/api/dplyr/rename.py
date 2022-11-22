@@ -15,7 +15,7 @@ from .select import _eval_select
 
 @rename.register(DataFrame, context=Context.SELECT, backend="pandas")
 def _rename(_data: DataFrame, **kwargs: str) -> DataFrame:
-    gvars = group_vars(_data, __ast_fallback="normal")
+    gvars = group_vars(_data, __ast_fallback="normal", __backend="pandas")
     all_columns = _data.columns
     selected, new_names = _eval_select(
         all_columns,
@@ -59,4 +59,9 @@ def _rename_with(
     new_columns = {
         _fn(col, *args, **kwargs): col for col in cols  # type: ignore
     }
-    return rename(_data, **new_columns, __ast_fallback="normal")
+    return rename(
+        _data,
+        **new_columns,
+        __ast_fallback="normal",
+        __backend="pandas",
+    )

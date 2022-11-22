@@ -74,7 +74,7 @@ def _pivot_wider(
     if id_cols is not None and is_scalar(id_cols):
         id_cols = [id_cols]  # type: ignore
 
-    undata = ungroup(_data, __ast_fallback="normal")
+    undata = ungroup(_data, __ast_fallback="normal", __backend="pandas")
     if id_cols is None:
         all_cols = _data.columns
         names_from = all_cols[vars_select(all_cols, names_from)]

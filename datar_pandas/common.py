@@ -25,20 +25,20 @@ def is_factor(x: Any) -> bool:
 
 
 def is_integer(x: Any) -> bool:
-    return _is_integer(x, __ast_fallback="normal")
+    return _is_integer(x, __ast_fallback="normal", __backend="numpy")
 
 
 def is_logical(x: Any) -> bool:
-    return _is_logical(x, __ast_fallback="normal")
+    return _is_logical(x, __ast_fallback="normal", __backend="numpy")
 
 
 def intersect(x: Any, y: Any) -> Any:
-    return _intersect(x, y, __ast_fallback="normal")
+    return _intersect(x, y, __ast_fallback="normal", __backend="numpy")
 
 
 def setdiff(x: Any, y: Any) -> Any:
-    return _setdiff(x, y, __ast_fallback="normal")
+    return _setdiff(x, y, __ast_fallback="normal", __backend="numpy")
 
 
 def union(x: Any, y: Any) -> Any:
-    return _union(x, y, __ast_fallback="normal")
+    return _union(x, y, __ast_fallback="normal", __backend="numpy")

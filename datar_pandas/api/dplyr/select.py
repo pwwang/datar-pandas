@@ -23,7 +23,7 @@ def _select(
     **kwargs: Mapping[str, str],
 ) -> Tibble:
     all_columns = _data.columns
-    gvars = group_vars(_data, __ast_fallback="normal")
+    gvars = group_vars(_data, __ast_fallback="normal", __backend="pandas")
     selected_idx, new_names = _eval_select(
         all_columns,
         *args,

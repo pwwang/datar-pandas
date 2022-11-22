@@ -19,8 +19,8 @@ def _relocate(
     _after: Union[int, str] = None,
     **kwargs: Any,
 ) -> Tibble:
-    gvars = group_vars(_data, __ast_fallback="normal")
-    _data = as_tibble(_data.copy(), __ast_fallback="normal")
+    gvars = group_vars(_data, __ast_fallback="normal", __backend="pandas")
+    _data = as_tibble(_data.copy(), __ast_fallback="normal", __backend="pandas")
 
     all_columns = _data.columns
     to_move, new_names = _eval_select(

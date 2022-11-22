@@ -158,7 +158,7 @@ def pd_str(x):
 
     This is helpful when x is a SeriesGroupBy object
     """
-    return attrgetter(x, "str", __ast_fallback="normal")
+    return attrgetter(x, "str", __ast_fallback="normal", __backend="pandas")
 
 
 @register_verb(PandasObject, context=Context.EVAL)
@@ -167,7 +167,7 @@ def pd_cat(x):
 
     This is helpful when x is a SeriesGroupBy object
     """
-    return attrgetter(x, "cat", __ast_fallback="normal")
+    return attrgetter(x, "cat", __ast_fallback="normal", __backend="pandas")
 
 
 @register_verb(PandasObject, context=Context.EVAL)
@@ -176,4 +176,4 @@ def pd_dt(x):
 
     This is helpful when x is a SeriesGroupBy object
     """
-    return attrgetter(x, "dt", __ast_fallback="normal")
+    return attrgetter(x, "dt", __ast_fallback="normal", __backend="pandas")

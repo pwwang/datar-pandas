@@ -293,7 +293,7 @@ def _nest_join(
                 condition = y[on[key]] == row[key]
             else:
                 condition = condition & (y[on[key]] == row[key])
-        df = filter_(y, condition, __ast_fallback="normal")
+        df = filter_(y, condition, __ast_fallback="normal", __backend="pandas")
         if not keep:
             df = df[setdiff(df.columns, list(on.values()))]
 

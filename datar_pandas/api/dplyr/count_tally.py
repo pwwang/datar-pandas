@@ -49,6 +49,7 @@ def _count(
             _add=True,
             _drop=_drop,
             __ast_fallback="normal",
+            __backend="pandas",
         )
     else:
         out = x
@@ -59,6 +60,7 @@ def _count(
         sort=sort,
         name=name,
         __ast_fallback="normal",
+        __backend="pandas",
     )
 
     return reconstruct_tibble(x, out)
@@ -71,22 +73,27 @@ def _tally(
     sort: bool = False,
     name: str = None,
 ):
-    name = _check_name(name, group_vars(x, __ast_fallback="normal"))
+    name = _check_name(
+        name,
+        group_vars(x, __ast_fallback="normal", __backend="pandas"),
+    )
     # thread-safety?
     with options_context(dplyr_summarise_inform=False):
         out = summarise(
             x,
             __ast_fallback="normal",
+            __backend="pandas",
             **{name: n() if wt is None else wt.sum()},
         )
 
     if sort:
         out = arrange(
-            ungroup(out, __ast_fallback="normal"),
+            ungroup(out, __ast_fallback="normal", __backend="pandas"),
             # desc(f[name], __calling_env=CallingEnvs.PIPING)
             # FunctionCall(desc, (f[name], ), {}),
             desc(f[name]),
             __ast_fallback="normal",
+            __backend="pandas",
         )
         out.reset_index(drop=True, inplace=True)
         return reconstruct_tibble(x, out)
@@ -110,11 +117,19 @@ def _add_count(
             **kwargs,
             _add=True,
             __ast_fallback="normal",
+            __backend="pandas",
         )
     else:
         out = x
 
-    out = add_tally(out, wt=wt, sort=sort, name=name, __ast_fallback="normal")
+    out = add_tally(
+        out,
+        wt=wt,
+        sort=sort,
+        name=name,
+        __ast_fallback="normal",
+        __backend="pandas",
+    )
     return out
 
 
@@ -131,15 +146,17 @@ def _add_tally(
         x,
         **{name: n() if wt is None else wt.sum()},
         __ast_fallback="normal",
+        __backend="pandas",
     )
 
     if sort:
         sort_ed = arrange(
-            ungroup(out, __ast_fallback="normal"),
+            ungroup(out, __ast_fallback="normal", __backend="pandas"),
             # desc(f[name], __calling_env=CallingEnvs.PIPING)
             # FunctionCall(desc, (f[name], ), {}),
             desc(f[name]),
             __ast_fallback="normal",
+            __backend="pandas",
         )
         sort_ed.reset_index(drop=True, inplace=True)
         return reconstruct_tibble(x, sort_ed)

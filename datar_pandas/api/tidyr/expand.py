@@ -134,9 +134,10 @@ def _expand_grouped(
         return expand(
             df,
             *args,
-            _name_repair=_name_repair,
             **kwargs,
+            _name_repair=_name_repair,
             __ast_fallback="normal",
+            __backend="pandas",
         )
 
     out = data._datar["grouped"].apply(apply_func).droplevel(-1).reset_index()
@@ -152,11 +153,12 @@ def _expand_rowwise(
 ) -> DataFrame:
     """Expand on rowwise dataframe"""
     return expand(
-        ungroup(data, __ast_fallback="normal"),
+        ungroup(data, __ast_fallback="normal", __backend="pandas"),
         *args,
-        _name_repair=_name_repair,
         **kwargs,
+        _name_repair=_name_repair,
         __ast_fallback="normal",
+        __backend="pandas",
     )
 
 
@@ -290,6 +292,7 @@ def _vec_repeat(
             levels=levels(vec),
             ordered=vec.ordered,
             __ast_fallback="normal",
+            __backend="pandas",
         )
     return out
 
@@ -308,6 +311,7 @@ def _flatten_nested(
                 x,
                 name,
                 __ast_fallback="normal",
+                __backend="pandas",
             )
             for name in named
         }
@@ -353,6 +357,7 @@ def _sorted_unique(x: Iterable[Any]) -> Union[Categorical, np.ndarray]:
             exclude=None,
             ordered=x.ordered,
             __ast_fallback="normal",
+            __backend="pandas",
         )
 
     # don't sort on bare list?
@@ -361,8 +366,9 @@ def _sorted_unique(x: Iterable[Any]) -> Union[Categorical, np.ndarray]:
 
     if isinstance(x, DataFrame):
         return arrange(
-            distinct(x, __ast_fallback="normal"),
+            distinct(x, __ast_fallback="normal", __backend="pandas"),
             __ast_fallback="normal",
+            __backend="pandas",
         )
 
     # return np.sort(np.unique(x))

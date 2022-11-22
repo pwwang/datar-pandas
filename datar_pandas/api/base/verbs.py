@@ -20,7 +20,7 @@ from datar.apis.base import (
 )
 from ... import pandas as pd
 from ...pandas import DataFrame, Series, Index, SeriesGroupBy
-from ...common import is_scalar
+from ...common import is_scalar, unique as _unique
 
 
 @colnames.register(DataFrame, backend="pandas")
@@ -31,7 +31,7 @@ def _colnames(df, nested=True):
 
     # x, y, y -> x, y
     names = Index([col.split("$", 1)[0] for col in df.columns])
-    names = unique(names, __ast_fallback="normal")
+    names = _unique(names)
     return names if nested else df.columns.values
 
 
@@ -43,7 +43,12 @@ def _set_colnames(df, names, nested=True):
         return df
 
     # x, y$a, y$b with names m, n -> m, n$a, n$b
-    old_names = colnames(df, nested=True, __ast_fallback="normal")
+    old_names = colnames(
+        df,
+        nested=True,
+        __ast_fallback="normal",
+        __backend="pandas",
+    )
     mapping = dict(zip(old_names, names))
     names = [
         f"{mapping[col]}${col.split('$', 1)[1]}"
@@ -70,8 +75,8 @@ def _set_rownames(df, names):
 @dim.register(DataFrame, backend="pandas")
 def _dim(x, nested=True):
     return (
-        nrow(x, __ast_fallback="normal"),
-        ncol(x, nested, __ast_fallback="normal")
+        nrow(x, __ast_fallback="normal", __backend="pandas"),
+        ncol(x, nested, __ast_fallback="normal", __backend="pandas"),
     )
 
 
@@ -85,7 +90,14 @@ def _ncol(_data, nested=True):
     if not nested:
         return _data.shape[1]
 
-    return len(colnames(_data, nested=nested, __ast_fallback=True))
+    return len(
+        colnames(
+            _data,
+            nested=nested,
+            __ast_fallback=True,
+            __backend="pandas",
+        )
+    )
 
 
 @diag.register(object, backend="pandas")
@@ -130,7 +142,7 @@ def _t(_data, copy=False):
 
 
 @unique.register(SeriesGroupBy, backend="pandas")
-def _unique(x):
+def _unique_sgb(x):
     return x.apply(pd.unique).explode().astype(x.obj.dtype)
 
 

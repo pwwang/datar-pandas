@@ -121,7 +121,7 @@ def _pivot_longer(
         The pivoted dataframe.
     """
     rowid_column = "_PIVOT_ROWID_"
-    ret = ungroup(_data, __ast_fallback="normal").assign(
+    ret = ungroup(_data, __ast_fallback="normal", __backend="pandas").assign(
         **{rowid_column: range(_data.shape[0])}
     )
     all_columns = ret.columns
@@ -181,6 +181,7 @@ def _pivot_longer(
             into=names_to,
             regex=names_pattern,
             __ast_fallback="normal",
+            __backend="pandas",
         )
 
     if names_sep:
@@ -190,9 +191,16 @@ def _pivot_longer(
             into=names_to,
             sep=names_sep,
             __ast_fallback="normal",
+            __backend="pandas",
         )
     # extract/separate puts `into` last
-    ret = relocate(ret, values_to, _after=-1, __ast_fallback="normal")
+    ret = relocate(
+        ret,
+        values_to,
+        _after=-1,
+        __ast_fallback="normal",
+        __backend="pandas",
+    )
 
     if ".value" in names_to:
         names_to = setdiff(names_to, [".value"])

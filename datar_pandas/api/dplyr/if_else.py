@@ -88,7 +88,7 @@ def _case_when(when, case, *when_cases):
     )
     df = Tibble.from_args(*when_cases, _name_repair="minimal")
 
-    ungrouped = ungroup(df, __ast_fallback="normal")
+    ungrouped = ungroup(df, __ast_fallback="normal", __backend="pandas")
 
     value = Series(np.nan, index=ungrouped.index)
     for i in range(ungrouped.shape[1] - 1, 0, -2):

@@ -63,12 +63,16 @@ def _chop(
         if cols.size > 0
         else all_columns
     )
-    ungrouped = ungroup(data, __ast_fallback="normal")
+    ungrouped = ungroup(data, __ast_fallback="normal", __backend="pandas")
     if key_cols.size == 0:
         grouped = ungrouped.groupby([1] * data.shape[0], sort=False)
         out = grouped.agg(list).reset_index(drop=True)
     else:
-        grouped = ungroup(data, __ast_fallback="normal").groupby(
+        grouped = ungroup(
+            data,
+            __ast_fallback="normal",
+            __backend="pandas",
+        ).groupby(
             list(key_cols),
             dropna=False,
             observed=True,
@@ -128,7 +132,7 @@ def _unchop(
     cols = all_columns[cols]
     key_cols = all_columns.difference(cols).tolist()
     out = _unchopping(
-        ungroup(data, __ast_fallback="normal"),
+        ungroup(data, __ast_fallback="normal", __backend="pandas"),
         cols,
         key_cols,
         keep_empty,
@@ -189,6 +193,7 @@ def _unchopping(
             *val_data,
             how_="all",
             __ast_fallback="normal",
+            __backend="pandas",
         )
     apply_dtypes(out, dtypes)
     return out

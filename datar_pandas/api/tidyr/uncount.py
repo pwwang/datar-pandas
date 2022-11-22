@@ -32,7 +32,7 @@ def _uncount(
         dataframe with rows repeated.
     """
     grouped = getattr(data, "_datar", {}).get("grouped", None)
-    undata = ungroup(data, __ast_fallback="normal").copy()
+    undata = ungroup(data, __ast_fallback="normal", __backend="pandas").copy()
     weights = broadcast_to(
         weights,
         data.index,

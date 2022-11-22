@@ -75,7 +75,7 @@ def _extract(
             f"found {regex.groups}."
         )
 
-    undata = ungroup(data, __ast_fallback="normal")
+    undata = ungroup(data, __ast_fallback="normal", __backend="pandas")
     out = undata[col].str.extract(regex)
     out = {
         outcol: (

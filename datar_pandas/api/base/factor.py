@@ -41,7 +41,7 @@ def _levels_cat(x):
 
 @func_bootstrap(nlevels, kind="agg")
 def _nlevels_bootstrap(x) -> int:
-    lvls = levels(x, __ast_fallback="normal")
+    lvls = levels(x, __ast_fallback="normal", __backend="pandas")
     return 0 if lvls is None else len(lvls)
 
 

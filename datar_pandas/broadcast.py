@@ -755,7 +755,7 @@ def _(value: SeriesGroupBy, name: str) -> Tibble:
 def _(value: Union[DataFrame, DataFrameGroupBy], name: str) -> Tibble:
     from datar.apis.tibble import as_tibble
 
-    result = as_tibble(value, __ast_fallback="normal")
+    result = as_tibble(value, __ast_fallback="normal", __backend="pandas")
 
     if name:
         result = result.copy()

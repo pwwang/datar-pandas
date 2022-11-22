@@ -83,6 +83,7 @@ def _tibble(
         _drop_index=_drop_index,
         _index=_index,
         __ast_fallback="normal",
+        __backend="pandas",
         **evaled_kws,
     )
 
@@ -200,18 +201,18 @@ def _tibble_row(
     return df
 
 
-@as_tibble.register((dict, DataFrame), context=Context.EVAL)
+@as_tibble.register((dict, DataFrame), context=Context.EVAL, backend="pandas")
 def _as_tibble_df(df: DataFrame | dict) -> Tibble:
     return Tibble(df)
 
 
-@as_tibble.register(DataFrameGroupBy, context=Context.EVAL)
+@as_tibble.register(DataFrameGroupBy, context=Context.EVAL, backend="pandas")
 def _as_tibble_dfg(df: DataFrameGroupBy) -> TibbleGrouped:
     """Convert a pandas DataFrameGroupBy object to TibbleGrouped object"""
     return TibbleGrouped.from_groupby(df)
 
 
-@as_tibble.register(Tibble, context=Context.EVAL)
+@as_tibble.register(Tibble, context=Context.EVAL, backend="pandas")
 def _as_tibble_tbl(df: Tibble) -> Tibble:
     """Convert a pandas DataFrame object to Tibble object"""
     return df

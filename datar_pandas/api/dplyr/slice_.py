@@ -78,6 +78,7 @@ def _slice_head(
         _data,
         builtins.slice(None, n),
         __ast_fallback="normal",
+        __backend="pandas",
     )
 
 
@@ -129,6 +130,7 @@ def _slice_tail(
         _data,
         builtins.slice(-n, None),
         __ast_fallback="normal",
+        __backend="pandas",
     )
 
 
@@ -165,6 +167,7 @@ def _slice_tail_rowwise(
         n=n,
         prop=prop,
         __ast_fallback="normal",
+        __backend="pandas",
     )
 
 

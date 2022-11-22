@@ -48,7 +48,7 @@ def _filter(
     if isinstance(condition, Series):
         condition = condition.values
 
-    out = ungroup(_data, __ast_fallback="normal")[condition]
+    out = ungroup(_data, __ast_fallback="normal", __backend="pandas")[condition]
     if isinstance(_data, TibbleGrouped):
         out.reset_index(drop=True, inplace=True)
 
