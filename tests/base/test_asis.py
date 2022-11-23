@@ -1,6 +1,6 @@
 import pytest  # noqa
 
-# import numpy as np
+import numpy as np
 from datar.base import (
     as_double,
     as_integer,
@@ -26,15 +26,17 @@ from datar.base import (
     is_null,
     is_na,
     is_ordered,
+    as_pd_date,
     all_,
     any_,
+    any_na,
     levels,
 )
 from datar.base import factor
 from datar.tibble import tibble
 from datar_pandas import pandas as pd
 from datar_pandas.pandas import Series, Categorical
-from ..conftest import assert_, assert_not, assert_iterable_equal
+from ..conftest import assert_, assert_equal, assert_not, assert_iterable_equal
 
 
 def test_as_double():
@@ -184,6 +186,12 @@ def test_as_ordered():
     assert out.obj.cat.ordered
 
 
+def test_as_pd_date():
+    assert_equal(
+        as_pd_date("Sep 16, 2021"), pd.Timestamp("2021-09-16 00:00:00")
+    )
+
+
 def test_is_atomic():
     assert_(is_atomic(1))
     assert_not(is_atomic([1]))
@@ -325,4 +333,12 @@ def test_is_ordered():
     assert_iterable_equal(
         is_ordered(o.groupby([1, 1, 2])),
         [True, True],
+    )
+
+
+def test_any_na():
+    assert_(any_na(Series([1, np.nan])))
+    assert_iterable_equal(
+        any_na(Series([1, np.nan, 1]).groupby([1, 1, 2])),
+        [True, False],
     )

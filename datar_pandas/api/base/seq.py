@@ -32,7 +32,7 @@ func_bootstrap(
 )
 func_bootstrap(
     lengths,
-    func=lambda x: x.transform(lambda y: 1 if is_scalar(y) else len(y)),
+    func=lambda x: x.agg(lambda y: 1 if is_scalar(y) else len(y)),
     kind="agg",
 )
 func_bootstrap(
@@ -119,7 +119,7 @@ def _match(x, table, nomatch=-1):
 
 
 def _order_post(out, x, decreasing=False, na_last=True):
-    if not isinstance(out, SeriesGroupBy):
+    if not isinstance(x, SeriesGroupBy):
         return out
 
     return (
@@ -153,32 +153,33 @@ def _order(x: Series, decreasing=False, na_last=True):
 
 
 @rep.register(SeriesGroupBy, backend="pandas")
-def _rep_sgb(x, times, length, each):
-    df = Tibble.from_args(x=x)
+def _rep_sgb(x, times=1, length=None, each=1):
+    data = {}
     times_sgb = isinstance(times, SeriesGroupBy)
     length_sgb = isinstance(length, SeriesGroupBy)
     each_sgb = isinstance(each, SeriesGroupBy)
     if times_sgb:
-        df["times"] = times
+        data["times"] = times
     if length_sgb:
-        df["length"] = length
+        data["length"] = length
     if each_sgb:
-        df["each"] = each
+        data["each"] = each
+    # in case x is not grouped
+    data["x"] = x
 
+    df = Tibble.from_args(**data)
     out = (
         df._datar["grouped"]
         .apply(
-            lambda subdf: rep(
+            lambda subdf: rep.dispatch(object, backend="numpy")(
                 subdf["x"],
                 times=subdf["times"] if times_sgb else times,
                 length=subdf["length"] if length_sgb else length,
                 each=subdf["each"] if each_sgb else each,
-                __ast_fallback="normal",
-                __backend="pandas",
             )
         )
         .explode()
-        .astype(x.obj.dtype)
+        .astype(df["x"].obj.dtype)
     )
     grouping = out.index
     return out.reset_index(drop=True).groupby(
@@ -190,7 +191,7 @@ def _rep_sgb(x, times, length, each):
 
 
 @rep.register(DataFrame, backend="pandas")
-def _rep_df(x, times, length, each):
+def _rep_df(x, times=1, length=None, each=1):
     if not is_integer(each) or each != 1:
         raise ValueError("`each` has to be 1 to replicate a data frame.")
 
@@ -202,7 +203,7 @@ def _rep_df(x, times, length, each):
 
 
 @rep.register(TibbleGrouped, backend="pandas")
-def _rep_grouped(x, times, length, each):
+def _rep_grouped(x, times=1, length=None, each=1):
     out = rep.dispatch(DataFrame)(x, times, length, each)
     return reconstruct_tibble(x, out)
 
@@ -252,7 +253,7 @@ def _c(*args):
 
 @func_bootstrap(rev, kind="transform")
 def _rev(x, __args_raw=None):
-    rawx = __args_raw["x"]
+    rawx = x if __args_raw is None else __args_raw["x"]
     if isinstance(rawx, (Series, SeriesGroupBy)):  # groupby from transform()
         out = x[::-1]
         out.index = x.index
@@ -270,10 +271,11 @@ def _sort(
     decreasing=False,
     na_last=True,
 ):
-    idx = order.func(x, decreasing=decreasing, na_last=na_last).values
+    idx = order(x.values, decreasing=decreasing, na_last=na_last)
     out = x.iloc[idx]
     out.index = x.index
     return out
 
 
-func_bootstrap(seq_len, func=seq_len.dispatch(object, backend="numpy"))
+func_bootstrap(seq_len, func=seq_len.dispatch(np.ndarray, backend="numpy"))
+func_bootstrap(seq_along, func=seq_along.dispatch(object, backend="numpy"))

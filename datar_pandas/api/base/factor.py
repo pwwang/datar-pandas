@@ -34,6 +34,11 @@ def _levels(x):
     return x.cat.categories.values.copy()
 
 
+@levels.register(object, backend="pandas")
+def _levels_object(x):
+    return None
+
+
 @levels.register(Categorical, backend="pandas")
 def _levels_cat(x):
     return x.categories.values.copy()
@@ -43,6 +48,11 @@ def _levels_cat(x):
 def _nlevels_bootstrap(x) -> int:
     lvls = levels(x, __ast_fallback="normal", __backend="pandas")
     return 0 if lvls is None else len(lvls)
+
+
+@nlevels.register(object, backend="pandas")
+def _nlevels_object(x) -> int:
+    return 0
 
 
 @nlevels.register(Categorical, backend="pandas")

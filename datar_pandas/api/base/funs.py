@@ -18,6 +18,7 @@ from ...tibble import Tibble
 
 
 @func_bootstrap(cut)
+@cut.register(object, backend="pandas")
 def _cut(
     x,
     breaks,
@@ -57,13 +58,7 @@ func_bootstrap(
     diff,
     func=diff.dispatch(object, backend="numpy"),
     post=_diff_sgb_post,
-)
-
-
-func_bootstrap(
-    outer,
-    func=outer.dispatch(object, backend="numpy"),
-    post=lambda out, *args, **kwargs: Tibble(out),
+    exclude={"lag", "differences"},
 )
 
 
@@ -72,3 +67,9 @@ func_bootstrap(
     func=rank.dispatch(object, backend="numpy"),
     kind="transform",
 )
+
+
+@outer.register(object, backend="pandas", favored=True)
+def _outer(x, y, fun="*"):
+    out = outer(x, y, fun=fun, __backend="numpy")
+    return Tibble(out)

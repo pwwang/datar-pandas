@@ -275,6 +275,11 @@ as_pd_date = func_factory(
 )
 
 
+@as_pd_date.register(object, backend="pandas")
+def _as_pd_data_obj(x):
+    return pd.to_datetime(x)
+
+
 func_bootstrap(
     is_true,
     func=lambda x: x.size == 1 and x.values[0].item() is True,
