@@ -96,6 +96,6 @@ def _case_when(when, case, *when_cases):
         value[condition] = ungrouped.iloc[:, i][condition]
 
     value = value.to_frame(name="when_case_result")
-    value = reconstruct_tibble(df, value)
+    value = reconstruct_tibble(value, df)
     value = value["when_case_result"]
     return value if is_series else value.values

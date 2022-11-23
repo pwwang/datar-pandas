@@ -205,7 +205,7 @@ def _rep_df(x, times=1, length=None, each=1):
 @rep.register(TibbleGrouped, backend="pandas")
 def _rep_grouped(x, times=1, length=None, each=1):
     out = rep.dispatch(DataFrame)(x, times, length, each)
-    return reconstruct_tibble(x, out)
+    return reconstruct_tibble(out, x)
 
 
 @c_.register(SeriesGroupBy, backend="pandas")

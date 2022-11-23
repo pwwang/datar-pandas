@@ -69,4 +69,4 @@ def _fill_grouped(
         __backend="pandas",
         # drop the index, pandas 1.4 and <1.4 act differently
     ).sort_index().reset_index(drop=True)
-    return reconstruct_tibble(_data, out)
+    return reconstruct_tibble(out, _data)

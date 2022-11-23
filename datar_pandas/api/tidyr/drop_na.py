@@ -43,4 +43,4 @@ def _drop_na(
     else:
         out = data.dropna(how=how_).reset_index(drop=True)
 
-    return reconstruct_tibble(_data, out)
+    return reconstruct_tibble(out, _data)

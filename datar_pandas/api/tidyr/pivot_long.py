@@ -257,4 +257,4 @@ def _pivot_longer(
     names = repair_names(ret.columns.tolist(), names_repair)
     ret.columns = names
 
-    return reconstruct_tibble(_data, ret)
+    return reconstruct_tibble(ret, _data)

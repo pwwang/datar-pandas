@@ -93,7 +93,7 @@ def _join(
                     ),
                 )
 
-    return reconstruct_tibble(x, ret)
+    return reconstruct_tibble(ret, x)
 
 
 @inner_join.register(
@@ -227,7 +227,7 @@ def _semi_join(
         **on,
     )
     ret = ret.loc[ret["__merge__"] == "both", x.columns]
-    return reconstruct_tibble(x, ret)
+    return reconstruct_tibble(ret, x)
 
 
 @anti_join.register(
@@ -253,7 +253,7 @@ def anti_join(
         **_merge_on(by),
     )
     ret = ret.loc[ret._merge != "both", x.columns]
-    return reconstruct_tibble(x, ret)
+    return reconstruct_tibble(ret, x)
 
 
 @nest_join.register(
@@ -305,7 +305,7 @@ def _nest_join(
         y_matched = y_matched.to_frame(name=y_name)
 
     out = pd.concat([newx, y_matched], axis=1)
-    return reconstruct_tibble(x, out)
+    return reconstruct_tibble(out, x)
 
 
 def _merge_on(by):

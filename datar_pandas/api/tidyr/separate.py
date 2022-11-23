@@ -116,7 +116,7 @@ def _separate(
     out = _data.drop(columns=[col]) if remove else _data
     out = mutate(out, separated, __ast_fallback="normal", __backend="pandas")
 
-    return reconstruct_tibble(data, out)
+    return reconstruct_tibble(out, data)
 
 
 @separate_rows.register(DataFrame, context=Context.SELECT, backend="pandas")
@@ -162,8 +162,8 @@ def _separate_rows(
     )
 
     return reconstruct_tibble(
-        data,
         out,
+        data,
         ungrouping_vars=list(selected),
     )
 

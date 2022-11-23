@@ -160,7 +160,7 @@ def _pivot_wider(
     if names_sort:
         ret = ret.loc[:, sorted(ret.columns)]
 
-    return reconstruct_tibble(_data, ret)
+    return reconstruct_tibble(ret, _data)
 
 
 def _flatten_column_names(

@@ -63,7 +63,7 @@ def _pack(
         __ast_fallback="normal",
         __backend="pandas",
     )
-    return reconstruct_tibble(_data, out)
+    return reconstruct_tibble(out, _data)
 
 
 @unpack.register(DataFrame, context=Context.SELECT, backend="pandas")

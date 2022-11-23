@@ -141,7 +141,7 @@ def _expand_grouped(
         )
 
     out = data._datar["grouped"].apply(apply_func).droplevel(-1).reset_index()
-    return reconstruct_tibble(data, out)
+    return reconstruct_tibble(out, data)
 
 
 @expand.register(TibbleRowwise, context=Context.PENDING, backend="pandas")

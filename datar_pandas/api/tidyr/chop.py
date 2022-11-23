@@ -79,7 +79,7 @@ def _chop(
             sort=False,
         )
         out = grouped.agg(list).reset_index()
-    return reconstruct_tibble(data, out)
+    return reconstruct_tibble(out, data)
 
 
 @unchop.register(DataFrame, context=Context.SELECT, backend="pandas")
@@ -139,7 +139,7 @@ def _unchop(
     )
 
     apply_dtypes(out, dtypes)
-    return reconstruct_tibble(data, out)
+    return reconstruct_tibble(out, data)
 
 
 def _unchopping(

@@ -51,7 +51,7 @@ def _c_across(_data: DataFrame, _cols: Sequence[str] = None) -> DataFrame:
         _cols = _data >> everything()
 
     _cols = vars_select(_data.columns, _cols)
-    return reconstruct_tibble(_data, _data.iloc[:, _cols])
+    return reconstruct_tibble(_data.iloc[:, _cols], _data)
 
 
 @if_any.register(DataFrame, backend="pandas", context=Context.SELECT)

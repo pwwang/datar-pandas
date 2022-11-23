@@ -62,4 +62,4 @@ def _unite(
         to_remove = [i if i < insert_at else i + 1 for i in unite_idx]
         out = out.iloc[:, setdiff(range(out.shape[1]), to_remove)]
 
-    return reconstruct_tibble(data, out)
+    return reconstruct_tibble(out, data)

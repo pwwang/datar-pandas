@@ -149,7 +149,7 @@ def _group_modify_grouped(
     )
     out = pd.concat(chunks, axis=0)
 
-    return reconstruct_tibble(_data, out)
+    return reconstruct_tibble(out, _data)
 
 
 @group_walk.register(DataFrame, context=Context.EVAL, backend="pandas")
@@ -203,7 +203,7 @@ def _group_trim_grouped(
         __backend="pandas",
     )
 
-    return reconstruct_tibble(_data, dropped, drop=_drop)
+    return reconstruct_tibble(dropped, _data, drop=_drop)
 
 
 @with_groups.register(DataFrame, context=Context.PENDING, backend="pandas")

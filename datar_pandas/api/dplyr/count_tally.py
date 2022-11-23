@@ -63,7 +63,7 @@ def _count(
         __backend="pandas",
     )
 
-    return reconstruct_tibble(x, out)
+    return reconstruct_tibble(out, x)
 
 
 @tally.register(DataFrame, context=Context.PENDING, backend="pandas")
@@ -96,7 +96,7 @@ def _tally(
             __backend="pandas",
         )
         out.reset_index(drop=True, inplace=True)
-        return reconstruct_tibble(x, out)
+        return reconstruct_tibble(out, x)
 
     return out
 
@@ -159,7 +159,7 @@ def _add_tally(
             __backend="pandas",
         )
         sort_ed.reset_index(drop=True, inplace=True)
-        return reconstruct_tibble(x, sort_ed)
+        return reconstruct_tibble(sort_ed, x)
 
     return out
 

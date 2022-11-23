@@ -68,7 +68,7 @@ def _distinct(
     if isinstance(out, TibbleGrouped):
         out = out.reset_index(drop=True)
 
-    return reconstruct_tibble(_data, Tibble(out, copy=False))
+    return reconstruct_tibble(Tibble(out, copy=False), _data)
 
 
 @n_distinct.register(object, context=Context.EVAL, backend="pandas")

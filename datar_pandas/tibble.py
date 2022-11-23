@@ -325,7 +325,7 @@ class TibbleGrouped(Tibble):
         """
         out = super().transform(*args, **kwargs)
         # pandas < 1.4, _datar not carried by transform
-        return reconstruct_tibble(self, out)
+        return reconstruct_tibble(out, self)
 
     def copy(self, deep: bool = True) -> "TibbleGrouped":
         grouped = self._datar["grouped"]
@@ -356,11 +356,11 @@ class TibbleGrouped(Tibble):
         grouped = self._datar["grouped"]
         result = grouped.sample(*args, **kwargs)
         result.reset_index(drop=True, inplace=True)
-        return reconstruct_tibble(self, result)
+        return reconstruct_tibble(result, self)
 
     def convert_dtypes(self, *args, **kwargs) -> "TibbleGrouped":
         out = DataFrame.convert_dtypes(self, *args, **kwargs)
-        return reconstruct_tibble(self, out)
+        return reconstruct_tibble(out, self)
 
     def group_by(
         self,
@@ -413,7 +413,7 @@ class TibbleRowwise(TibbleGrouped):
         if isinstance(result, SeriesGroupBy):
             result.is_rowwise = True
         elif isinstance(result, DataFrame):
-            return reconstruct_tibble(self, result)
+            return reconstruct_tibble(result, self)
         return result
 
     def copy(self, deep: bool = True) -> "TibbleRowwise":
@@ -454,7 +454,7 @@ class SeriesCategorical(Series):
     """Class only used for dispatching"""
 
 
-def reconstruct_tibble(orig, out, drop=None, ungrouping_vars=None):
+def reconstruct_tibble(out, orig, drop=None, ungrouping_vars=None):
     """Try to reconstruct the structure of `out` based on `orig`
 
     The rule is

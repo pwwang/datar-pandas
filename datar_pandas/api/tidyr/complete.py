@@ -57,4 +57,4 @@ def _complete(
     )
     full = replace_na(full, fill, __ast_fallback="normal", __backend="pandas")
 
-    return reconstruct_tibble(data, full)
+    return reconstruct_tibble(full, data)

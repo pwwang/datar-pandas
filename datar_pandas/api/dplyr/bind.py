@@ -125,7 +125,7 @@ def _bind_rows_grouped(
         _id=_id,
         **kwargs,
     )
-    return reconstruct_tibble(grouped, out)
+    return reconstruct_tibble(out, grouped)
 
 
 @bind_cols.register((DataFrame, dict, type(None)), backend="pandas")

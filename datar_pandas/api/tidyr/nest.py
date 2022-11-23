@@ -121,7 +121,7 @@ def _nest_grouped(
         **cols,
         _names_sep=_names_sep,
     )
-    return reconstruct_tibble(_data, out)
+    return reconstruct_tibble(out, _data)
 
 
 @unnest.register(DataFrame, context=Context.SELECT, backend="pandas")
@@ -194,7 +194,7 @@ def _unnest(
         __ast_fallback="normal",
         __backend="pandas",
     )
-    return reconstruct_tibble(data, out)
+    return reconstruct_tibble(out, data)
 
 
 @unnest.register(TibbleRowwise, context=Context.SELECT, backend="pandas")

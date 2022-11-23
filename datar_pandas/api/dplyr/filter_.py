@@ -52,4 +52,4 @@ def _filter(
     if isinstance(_data, TibbleGrouped):
         out.reset_index(drop=True, inplace=True)
 
-    return reconstruct_tibble(_data, out)
+    return reconstruct_tibble(out, _data)

@@ -126,7 +126,7 @@ def _mutate(
     # so we don't have discripency on
     # df.x.obj when df is grouped
     if intersect(_data.columns, mutated_cols).size > 0:
-        data = reconstruct_tibble(_data, data)
+        data = reconstruct_tibble(data, _data)
 
     # used for group_by
     data._datar["mutated_cols"] = mutated_cols

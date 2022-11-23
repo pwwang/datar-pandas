@@ -137,7 +137,7 @@ def _add_row(
     out = _rbind_at(_data, df, pos)
 
     if isinstance(_data, TibbleRowwise):
-        out = reconstruct_tibble(_data, out)
+        out = reconstruct_tibble(out, _data)
 
     return out
 
@@ -181,7 +181,7 @@ def _add_column(
     out = _cbind_at(_data, df, pos, _name_repair)
     if len(_data) == 0:
         out = out.loc[[], :]
-    return reconstruct_tibble(_data, out)
+    return reconstruct_tibble(out, _data)
 
 
 @has_rownames.register(DataFrame, context=Context.EVAL, backend="pandas")

@@ -56,7 +56,7 @@ def _uncount(
     else:
         out = out.reset_index(drop=True)
 
-    return reconstruct_tibble(data, out)
+    return reconstruct_tibble(out, data)
 
 
 def _check_weights(weights: Iterable[Any]) -> None:

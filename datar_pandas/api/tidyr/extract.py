@@ -91,4 +91,4 @@ def _extract(
 
     base = undata[all_columns.difference([col])] if remove else undata
     out = pd.concat([base, out], axis=1)
-    return reconstruct_tibble(data, out)
+    return reconstruct_tibble(out, data)

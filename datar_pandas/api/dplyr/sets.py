@@ -61,7 +61,7 @@ def _intersect_df(x: DataFrame, y: DataFrame) -> DataFrame:
         __backend="pandas",
     )
     if isinstance(y, TibbleGrouped):
-        return reconstruct_tibble(y, out)
+        return reconstruct_tibble(out, y)
     return out
 
 
@@ -70,7 +70,7 @@ def _intersect_grouped(x, y):
     newx = ungroup(x, __ast_fallback="normal", __backend="pandas")
     newy = ungroup(y, __ast_fallback="normal", __backend="pandas")
     out = intersect.dispatch(DataFrame)(newx, newy)
-    return reconstruct_tibble(x, out)
+    return reconstruct_tibble(out, x)
 
 
 @union.register(DataFrame, backend="pandas")
@@ -98,7 +98,7 @@ def _union_df(x, y):
     )
     out.reset_index(drop=True, inplace=True)
     if isinstance(y, TibbleGrouped):
-        return reconstruct_tibble(y, out)
+        return reconstruct_tibble(out, y)
     return out
 
 
@@ -108,7 +108,7 @@ def _union_grouped(x, y):
         ungroup(x, __ast_fallback="normal", __backend="pandas"),
         ungroup(y, __ast_fallback="normal", __backend="pandas"),
     )
-    return reconstruct_tibble(x, out)
+    return reconstruct_tibble(out, x)
 
 
 @setdiff.register(DataFrame, backend="pandas")
@@ -141,7 +141,7 @@ def _setdiff_df(x, y):
         __backend="pandas",
     )
     if isinstance(y, TibbleGrouped):
-        return reconstruct_tibble(y, out)
+        return reconstruct_tibble(out, y)
     return out
 
 
@@ -151,7 +151,7 @@ def _setdiff_grouped(x, y):
         ungroup(x, __ast_fallback="normal", __backend="pandas"),
         ungroup(y, __ast_fallback="normal", __backend="pandas"),
     )
-    return reconstruct_tibble(x, out)
+    return reconstruct_tibble(out, x)
 
 
 @union_all.register(DataFrame, backend="pandas")
@@ -173,7 +173,7 @@ def _union_all(x, y):
         __backend="pandas",
     )
     if isinstance(y, TibbleGrouped):
-        return reconstruct_tibble(y, out)
+        return reconstruct_tibble(out, y)
     return out
 
 
@@ -183,7 +183,7 @@ def _union_all_grouped(x, y):
         ungroup(x, __ast_fallback="normal", __backend="pandas"),
         ungroup(y, __ast_fallback="normal", __backend="pandas"),
     )
-    return reconstruct_tibble(x, out)
+    return reconstruct_tibble(out, x)
 
 
 @setequal.register(DataFrame, backend="pandas")
