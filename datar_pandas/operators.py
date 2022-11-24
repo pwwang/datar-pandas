@@ -53,20 +53,20 @@ def _binop(
 
 
 def _arithmetize1(op: str, operand: Any) -> Any:
-        """Operator for single operand"""
-        op_func = getattr(operator, op)
-        if isinstance(operand, GroupBy):
-            out = op_func(operand.obj).groupby(
-                operand.grouper,
-                observed=operand.observed,
-                sort=operand.sort,
-                dropna=operand.dropna,
-            )
-            if getattr(operand, "is_rowwise", False):
-                out.is_rowwise = True
-            return out
+    """Operator for single operand"""
+    op_func = getattr(operator, op)
+    if isinstance(operand, GroupBy):
+        out = op_func(operand.obj).groupby(
+            operand.grouper,
+            observed=operand.observed,
+            sort=operand.sort,
+            dropna=operand.dropna,
+        )
+        if getattr(operand, "is_rowwise", False):
+            out.is_rowwise = True
+        return out
 
-        return op_func(operand)
+    return op_func(operand)
 
 
 def _arithmetize2(op: str, left: Any, right: Any) -> Any:

@@ -123,7 +123,7 @@ def _tabulate(bin, nbins=None):
         bin if is_scalar(bin) else 0 if len(bin) == 0 else max(bin),
         0 if nbins is None else nbins,
     )
-    tabled = table(bin)
+    tabled = table(bin, __ast_fallback="normal", __backend="pandas")
     tabled = (
         tabled.T
         .reindex(range(1, nbins + 1), fill_value=0)

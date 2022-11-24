@@ -320,12 +320,12 @@ class TibbleGrouped(Tibble):
         self._datar["grouped"].obj = Tibble(self, copy=False)
         return self
 
-    def transform(self, *args, **kwargs):
-        """Transform brings the metadata of original df, we need to update it
-        """
-        out = super().transform(*args, **kwargs)
-        # pandas < 1.4, _datar not carried by transform
-        return reconstruct_tibble(out, self)
+    # def transform(self, *args, **kwargs):
+    #     """Transform brings the metadata of original df, we need to update it
+    #     """
+    #     out = super().transform(*args, **kwargs)
+    #     # pandas < 1.4, _datar not carried by transform
+    #     return reconstruct_tibble(out, self)
 
     def copy(self, deep: bool = True) -> "TibbleGrouped":
         grouped = self._datar["grouped"]
@@ -346,7 +346,7 @@ class TibbleGrouped(Tibble):
 
     def take(self, *args, **kwargs) -> "TibbleGrouped":
         result = Tibble.take(self, *args, **kwargs)
-        if kwargs.get("axis", 0) == 1:
+        if kwargs.get("axis", 0) == 1:  # pragma: no cover
             return result
 
         result.reset_index(drop=True, inplace=True)

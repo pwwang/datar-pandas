@@ -65,7 +65,7 @@ class Across:
 
     def evaluate(self, context=None):
         """Evaluate object with context"""
-        if isinstance(context, Context):
+        if isinstance(context, Context):  # pragma: no cover
             context = context.value
 
         if not self.fns:
@@ -92,7 +92,7 @@ class Across:
                     getattr(fn, "_pipda_functype", None) == "verb"
                     and fn.dependent
                 ):
-                    value = fn(
+                    value = fn(  # pragma: no cover
                         self.data,
                         self.data[column],
                         *args,

@@ -151,7 +151,7 @@ def get_versions():
         "pandas": pandas.__version__,
     }
 
-    if get_option("use_modin"):
+    if get_option("use_modin"):  # pragma: no cover
         import modin
         out["modin"] = modin.__version__
 

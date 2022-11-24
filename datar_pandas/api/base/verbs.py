@@ -50,12 +50,15 @@ def _set_colnames(df, names, nested=True):
         __backend="pandas",
     )
     mapping = dict(zip(old_names, names))
-    names = [
-        f"{mapping[col]}${col.split('$', 1)[1]}"
-        if "$" in str(col)
-        else mapping[col]
-        for col in df.columns
-    ]
+    names = []
+    for col in df.columns:
+        strcol = str(col)
+        if "$" in strcol:
+            prefix, suffix = strcol.split("$", 1)
+            new_prefix = mapping[prefix]
+            names.append(f"{new_prefix}${suffix}")
+        else:
+            names.append(mapping[col])
     df.columns = names
     return df
 

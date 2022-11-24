@@ -39,6 +39,7 @@ from datar.base import (
 )
 from datar.tibble import tibble
 from datar_pandas import pandas as pd
+from datar_pandas.pandas import Series
 
 from ..conftest import assert_iterable_equal
 
@@ -269,6 +270,9 @@ def test_first_uses_default_value_for_0len_input():
 def test_desc():
     x = factor(c(letters[:3], NA), levels=letters[:3])
     out = desc(x)
+    assert_iterable_equal(out, [-0.0, -1.0, -2.0, NA])
+
+    out = desc(Series(x))
     assert_iterable_equal(out, [-0.0, -1.0, -2.0, NA])
 
     out = desc([1, 2, 3])

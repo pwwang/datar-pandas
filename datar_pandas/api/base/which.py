@@ -7,6 +7,6 @@ from datar.apis.base import (
 
 from ...factory import func_bootstrap
 
-func_bootstrap(which, func=np.flatnonzero, kind="transform")
+func_bootstrap(which, func=np.flatnonzero)
 func_bootstrap(which_max, func=np.argmax, kind="agg")
 func_bootstrap(which_min, func=np.argmin, kind="agg")

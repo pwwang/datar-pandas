@@ -440,7 +440,7 @@ def func_bootstrap(
     kind = arg_match(kind, "kind", ["apply", "transform", "agg", "aggregation"])
 
     if func is NO_DEFAULT:
-        func = registered.init_func
+        func = getattr(registered, "init_func", None)
 
     if pre is NO_DEFAULT:
         pre = getattr(registered, "init_pre", None)
