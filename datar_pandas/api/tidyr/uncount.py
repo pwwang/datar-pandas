@@ -1,7 +1,6 @@
 """Uncount a data frame"""
 from typing import Any, Iterable
 
-from datar.apis.dplyr import ungroup
 from datar.apis.tidyr import uncount
 
 from ...pandas import DataFrame, Series, is_number
@@ -9,6 +8,7 @@ from ...common import is_scalar
 from ...broadcast import broadcast_to
 from ...contexts import Context
 from ...tibble import reconstruct_tibble
+from ..dplyr.group_by import ungroup
 
 
 @uncount.register(DataFrame, context=Context.EVAL, backend="pandas")

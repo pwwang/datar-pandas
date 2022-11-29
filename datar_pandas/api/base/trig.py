@@ -19,6 +19,7 @@ from datar.apis.base import (
     tanpi,
     atan2,
 )
+from datar_numpy.api import trig as _  # noqa: F401
 
 from ...factory import func_bootstrap
 from ...pandas import DataFrame, SeriesGroupBy

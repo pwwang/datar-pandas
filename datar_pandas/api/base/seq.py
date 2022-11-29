@@ -1,6 +1,5 @@
 import numpy as np
 from datar_numpy.utils import make_array
-import datar_numpy.api.seq  # noqa: F401
 from datar.apis.base import (  # noqa: F401
     append,
     c_,
@@ -16,6 +15,7 @@ from datar.apis.base import (  # noqa: F401
     seq_len,
     sort,
 )
+from datar_numpy.api import seq as _  # noqa: F401
 
 from ... import pandas as pd
 from ...broadcast import _grouper_compatible

@@ -1,7 +1,6 @@
 """Unite multiple columns into one by pasting strings together"""
 from typing import Union
 
-from datar.apis.dplyr import ungroup
 from datar.apis.tidyr import unite
 
 from ... import pandas as pd
@@ -10,6 +9,7 @@ from ...common import setdiff
 from ...contexts import Context
 from ...utils import vars_select
 from ...tibble import reconstruct_tibble
+from ..dplyr.group_by import ungroup
 
 
 @unite.register(DataFrame, context=Context.SELECT, backend="pandas")

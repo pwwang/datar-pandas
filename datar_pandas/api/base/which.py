@@ -4,6 +4,7 @@ from datar.apis.base import (
     which_max,
     which_min,
 )
+from datar_numpy.api import which as _  # noqa: F401
 
 from ...factory import func_bootstrap
 

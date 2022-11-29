@@ -11,6 +11,7 @@ from datar.apis.base import (
     factorial,
     lfactorial,
 )
+from datar_numpy.api import special as _  # noqa: F401
 
 from ...factory import func_bootstrap
 

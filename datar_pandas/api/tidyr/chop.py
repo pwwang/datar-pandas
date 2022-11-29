@@ -6,7 +6,6 @@ from collections import defaultdict
 from typing import Iterable
 
 import numpy as np
-from datar.apis.dplyr import ungroup
 from datar.apis.tidyr import drop_na, chop, unchop
 
 from ... import pandas as pd
@@ -15,6 +14,7 @@ from ...common import is_scalar, union, setdiff
 from ...utils import vars_select, apply_dtypes
 from ...contexts import Context
 from ...tibble import reconstruct_tibble
+from ..dplyr.group_by import ungroup
 
 
 def _keep_column_order(df: DataFrame, order: Iterable[str]):

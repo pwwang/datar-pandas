@@ -1,11 +1,11 @@
 """Functions from tidyr"""
 
-from datar.apis.base import seq
 from datar.apis.tidyr import full_seq
 
 from ...pandas import Series
 from ...factory import func_bootstrap
 from ...utils import as_series
+from ..base.seq import seq
 
 
 @full_seq.register(object, backend="pandas")

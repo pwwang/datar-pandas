@@ -4,7 +4,6 @@ from typing import List, Any, Union, Callable, Mapping
 
 import numpy as np
 from datar.apis.base import identity
-from datar.apis.dplyr import ungroup
 from datar.apis.tidyr import pivot_wider
 
 from ... import pandas as pd
@@ -13,6 +12,7 @@ from ...common import is_scalar
 from ...contexts import Context
 from ...utils import NA_integer_, vars_select
 from ...tibble import reconstruct_tibble
+from ..dplyr.group_by import ungroup
 
 ROWID_COLUMN = "_PIVOT_ROWID_"
 

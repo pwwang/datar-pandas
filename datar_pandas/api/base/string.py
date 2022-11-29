@@ -19,6 +19,7 @@ from datar.apis.base import (
     toupper,
     trimws,
 )
+from datar_numpy.api import string as _  # noqa: F401
 
 from ...factory import func_bootstrap
 from ...tibble import Tibble, TibbleGrouped, TibbleRowwise

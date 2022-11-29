@@ -5,7 +5,6 @@ https://github.com/tidyverse/tidyr/blob/HEAD/R/extract.R
 """
 import re
 from typing import Union
-from datar.apis.dplyr import ungroup
 from datar.apis.tidyr import extract
 
 from ... import pandas as pd
@@ -14,6 +13,7 @@ from ...common import is_scalar
 from ...contexts import Context
 from ...utils import apply_dtypes, vars_select
 from ...tibble import reconstruct_tibble
+from ..dplyr.group_by import ungroup
 
 
 @extract.register(DataFrame, context=Context.SELECT, backend="pandas")

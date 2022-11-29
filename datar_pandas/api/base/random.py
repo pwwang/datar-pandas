@@ -7,6 +7,7 @@ from datar.apis.base import (
     rpois,
     runif,
 )
+from datar_numpy.api import random as _  # noqa: F401
 
 from ...factory import func_bootstrap
 

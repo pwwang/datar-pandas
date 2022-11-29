@@ -7,6 +7,7 @@ from datar.apis.base import (
     arg,
     conj,
 )
+from datar_numpy.api import complex as _  # noqa: F401
 
 from ...factory import func_bootstrap
 

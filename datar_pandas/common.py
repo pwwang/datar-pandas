@@ -1,6 +1,5 @@
 from typing import Any
 
-from datar_numpy.utils import is_scalar  # noqa: F401
 from datar.apis.base import (
     is_factor as _is_factor,
     is_logical as _is_logical,
@@ -10,6 +9,9 @@ from datar.apis.base import (
     union as _union,
     # unique as _unique,
 )
+from datar_numpy.utils import is_scalar  # noqa: F401
+from datar_numpy.api import asis as _  # noqa: F401
+from datar_numpy.api import sets as _  # noqa: F401, F811
 
 from . import pandas as pd
 from .pandas import unique  # noqa: F401

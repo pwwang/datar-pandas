@@ -5,7 +5,6 @@ https://github.com/tidyverse/tidyr/blob/master/R/pack.R
 from typing import Iterable, Set, Union, Callable
 
 from datar.core.names import repair_names
-from datar.apis.dplyr import bind_cols
 from datar.apis.tidyr import pack, unpack
 
 from ...pandas import DataFrame
@@ -13,6 +12,7 @@ from ...common import is_scalar, setdiff
 from ...utils import vars_select
 from ...tibble import reconstruct_tibble
 from ...contexts import Context
+from ..dplyr.bind import bind_cols
 
 
 @pack.register(DataFrame, context=Context.SELECT, backend="pandas")

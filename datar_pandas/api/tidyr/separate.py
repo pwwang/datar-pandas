@@ -8,7 +8,6 @@ from typing import Any, List, Tuple, Union
 
 import numpy as np
 from datar.core.utils import logger
-from datar.apis.dplyr import mutate, ungroup
 from datar.apis.tidyr import unchop, separate, separate_rows
 
 from ... import pandas as pd
@@ -17,6 +16,8 @@ from ...common import is_scalar
 from ...contexts import Context
 from ...tibble import reconstruct_tibble
 from ...utils import vars_select, apply_dtypes
+from ..dplyr.mutate import mutate
+from ..dplyr.group_by import ungroup
 
 
 @separate.register(DataFrame, context=Context.SELECT, backend="pandas")

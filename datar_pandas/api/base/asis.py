@@ -3,6 +3,7 @@ import builtins
 import numpy as np
 # load numpy implementation of datar
 import datar_numpy.api.asis  # noqa: F401
+# make sure all_ and any_ loaded first
 import datar_numpy.api.sets  # noqa: F401
 from datar.apis.base import (
     is_atomic,

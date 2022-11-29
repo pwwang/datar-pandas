@@ -6,7 +6,6 @@ import re
 from typing import Mapping, Callable, Union
 
 from datar.core.names import repair_names
-from datar.apis.dplyr import relocate, ungroup
 from datar.apis.tidyr import extract, separate, pivot_longer
 
 from ... import pandas as pd
@@ -15,6 +14,8 @@ from ...common import is_scalar, setdiff, union
 from ...contexts import Context
 from ...utils import DEFAULT_COLUMN_PREFIX, vars_select, apply_dtypes
 from ...tibble import reconstruct_tibble
+from ..dplyr.relocate import relocate
+from ..dplyr.group_by import ungroup
 
 
 @pivot_longer.register(DataFrame, context=Context.SELECT, backend="pandas")

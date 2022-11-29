@@ -8,8 +8,6 @@ from typing import Any, Callable, Iterable, Mapping, Union
 import numpy as np
 
 from datar.core.names import repair_names
-from datar.apis.base import factor, levels
-from datar.apis.dplyr import arrange, distinct, pull, ungroup
 from datar.apis.tidyr import expand, expand_grid, nesting, crossing
 
 from ... import pandas as pd
@@ -18,6 +16,11 @@ from ...common import is_scalar
 from ...contexts import Context
 from ...utils import DEFAULT_COLUMN_PREFIX
 from ...tibble import Tibble, TibbleGrouped, TibbleRowwise, reconstruct_tibble
+from ..base.factor import factor, levels
+from ..dplyr.arrange import arrange
+from ..dplyr.distinct import distinct
+from ..dplyr.pull import pull
+from ..dplyr.group_by import ungroup
 
 
 @expand_grid.register(object, backend="pandas")

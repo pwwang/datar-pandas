@@ -6,14 +6,6 @@ import re
 from typing import Callable, Mapping, Union, Iterable, List
 
 import numpy as np
-from datar.apis.dplyr import (
-    distinct,
-    bind_cols,
-    group_vars,
-    group_data,
-    arrange,
-    ungroup,
-)
 from datar.apis.tidyr import unpack, unchop, nest, unnest
 
 from ... import pandas as pd
@@ -28,6 +20,11 @@ from ...tibble import (
     TibbleRowwise,
     reconstruct_tibble,
 )
+from ..dplyr.distinct import distinct
+from ..dplyr.bind import bind_cols
+from ..dplyr.group_data import group_data, group_vars
+from ..dplyr.arrange import arrange
+from ..dplyr.group_by import ungroup
 
 
 @nest.register(DataFrame, context=Context.SELECT, backend="pandas")

@@ -1,9 +1,10 @@
-from datar.base import (
+from datar.apis.base import (
     bessel_i,
     bessel_j,
     bessel_k,
     bessel_y,
 )
+from datar_numpy.api import bessel as _  # noqa: F401
 
 from ...factory import func_bootstrap
 

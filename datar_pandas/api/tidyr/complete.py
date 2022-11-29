@@ -4,13 +4,14 @@ https://github.com/tidyverse/tidyr/blob/HEAD/R/complete.R
 """
 from typing import Iterable, Mapping, Any
 
-from datar.apis.dplyr import full_join, ungroup
 from datar.apis.tidyr import replace_na, expand, complete
 
 from ...pandas import DataFrame
 
 from ...contexts import Context
 from ...tibble import reconstruct_tibble
+from ..dplyr.group_by import ungroup
+from ..dplyr.join import full_join
 
 
 @complete.register(DataFrame, context=Context.PENDING, backend="pandas")
