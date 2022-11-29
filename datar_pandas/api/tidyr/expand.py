@@ -276,7 +276,10 @@ def _vec_repeat(
         indexes = _vec_repeat(vec.index, each=each, times=times)
         return vec.loc[indexes, :].reset_index(drop=True)
 
-    if pd.is_categorical_dtype(vec) and isinstance(vec, Series):
+    if (
+        pd.is_categorical_dtype(vec)
+        and isinstance(vec, Series)
+    ):  # pragma: no cover
         vec = vec.values
 
     # np.repeat() turn [np.nan, 'A'] to ['nan', 'A']

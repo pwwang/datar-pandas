@@ -120,6 +120,9 @@ def test_paste():
     assert_iterable_equal(out, ["1 4", "2 5", "3 5"])
 
     gf = df.group_by("y")
+    out = paste0(gf).obj
+    assert_iterable_equal(out, ["14", "25", "35"])
+
     out = paste0(gf, collapse="|")
     assert_iterable_equal(out, ["14", "25|35"])
 

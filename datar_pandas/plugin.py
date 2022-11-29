@@ -10,22 +10,7 @@ if TYPE_CHECKING:
 plugin = Simplug("datar")
 
 
-@plugin.impl
-def setup():
-    from datar.core.options import add_option
-    pdtypes.patch()
-    add_option("use_modin", False)
-    add_option("dplyr_summarise_inform", True)
-
-
-@plugin.impl
-def load_dataset(name: str, meta: "Metadata"):
-    from .pandas import read_csv
-    return read_csv(meta.source, index_col=0 if meta.index else False)
-
-
-@plugin.impl
-def base_api():
+def _base_impl():
     from .api.base import (
         arithm,
         asis,
@@ -50,7 +35,27 @@ def base_api():
 
 
 @plugin.impl
+def setup():
+    from datar.core.options import add_option
+    pdtypes.patch()
+    add_option("use_modin", False)
+    add_option("dplyr_summarise_inform", True)
+
+
+@plugin.impl
+def load_dataset(name: str, meta: "Metadata"):
+    from .pandas import read_csv
+    return read_csv(meta.source, index_col=0 if meta.index else False)
+
+
+@plugin.impl
+def base_api():
+    return _base_impl()
+
+
+@plugin.impl
 def dplyr_api():
+    _base_impl()
     from .api.dplyr import (
         across,
         arrange,
@@ -86,11 +91,13 @@ def dplyr_api():
 
 @plugin.impl
 def tibble_api():
+    _base_impl()
     from .api.tibble import tibble, verbs
 
 
 @plugin.impl
 def tidyr_api():
+    _base_impl()
     from .api.tidyr import (
         chop,
         complete,
@@ -112,6 +119,7 @@ def tidyr_api():
 
 @plugin.impl
 def forcats_api():
+    _base_impl()
     from .api.forcats import (
         fct_multi,
         lvl_addrm,
@@ -124,6 +132,7 @@ def forcats_api():
 
 @plugin.impl
 def other_api():
+    _base_impl()
     from .api.other import (
         itemgetter,
         attrgetter,

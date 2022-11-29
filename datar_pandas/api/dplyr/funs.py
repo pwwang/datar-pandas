@@ -82,7 +82,7 @@ def _coalesce(x, *replace):
         for repl in replace:
             if isinstance(repl, DataFrame):
                 x = x.combine_first(repl)
-            else:
+            else:  # pragma: no cover
                 x = x.combine_first(pd.concat([repl] * x.columns.size, axis=1))
     else:
         for repl in replace:
@@ -102,7 +102,12 @@ def _na_if_obj(x, y):
         raise ValueError(
             f"`y` must be length {x.size} (same as `x`), not {y.size}."
         )
-    eqs = np.equal(x, y)
+
+    try:
+        eqs = np.equal(x, y)
+    except np.core._exceptions.UFuncTypeError:
+        eqs = np.equal(x.astype(object), y.astype(object))
+
     if eqs.any():
         if np.issubdtype(x.dtype, np.int_):
             x = x.astype(float)
@@ -114,16 +119,7 @@ def _na_if_obj(x, y):
 
 
 @func_bootstrap(na_if, post="transform")
-def _na_if(x, y, __args_raw=None):
-    if is_scalar(x) and is_scalar(y):  # rowwise
-        return np.nan if x == y else x
-
-    rawx = __args_raw["x"] if __args_raw else x
-    lenx = 1 if is_scalar(rawx) else len(rawx)
-    if lenx < y.size:
-        raise ValueError(
-            f"`y` must be length {lenx} (same as `x`), not {y.size}."
-        )
+def _na_if(x, y):
     x[(x == y).values] = np.nan
     return x
 

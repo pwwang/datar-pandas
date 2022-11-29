@@ -121,7 +121,7 @@ def _with_hooks(
                 return out
             grouped = grouped[0]
             is_rowwise = False
-            if isinstance(grouped, TibbleGrouped):
+            if isinstance(grouped, TibbleGrouped):  # pragma: no cover
                 if isinstance(grouped, TibbleRowwise):
                     is_rowwise = True
                 grouped = grouped._datar["grouped"]
@@ -182,7 +182,7 @@ def _bootstrap_agg_func(
 
     @registered.register(DataFrame, backend="pandas")
     @_with_hooks(pre=pre, post=post)
-    def _df_agg(*args, **kwargs):
+    def _df_agg(*args, **kwargs):  # pragma: no cover
         return args[0].agg(func, 0, *args[1:], **kwargs).to_frame().T
 
     @registered.register(SeriesGroupBy, backend="pandas")
@@ -192,7 +192,7 @@ def _bootstrap_agg_func(
 
     @registered.register(TibbleGrouped, backend="pandas")
     @_with_hooks(pre=pre, post=post)
-    def _tibblegrouped_agg(*args, **kwargs):
+    def _tibblegrouped_agg(*args, **kwargs):  # pragma: no cover
         return Tibble(
             args[0]._datar["grouped"].agg(func, *args[1:], **kwargs),
             copy=False,
@@ -216,7 +216,7 @@ def _bootstrap_transform_func(
     @registered.register(Series, backend="pandas")
     @_with_hooks(pre=pre, post=post)
     def _series_transform(*args, **kwargs):
-        if isinstance(func, str) and hasattr(args[0], func):
+        if isinstance(func, str) and hasattr(args[0], func):  # pragma: no cover
             out = getattr(args[0], func)(*args[1:], **kwargs)
         else:
             out = func(*args, **kwargs)
@@ -226,7 +226,7 @@ def _bootstrap_transform_func(
 
     @registered.register(DataFrame, backend="pandas")
     @_with_hooks(pre=pre, post=post)
-    def _df_transform(*args, **kwargs):
+    def _df_transform(*args, **kwargs):  # pragma: no cover
         return args[0].transform(func, 0, *args[1:], **kwargs)
 
     @registered.register(SeriesGroupBy, backend="pandas")
@@ -236,12 +236,12 @@ def _bootstrap_transform_func(
 
     @registered.register(TibbleGrouped, backend="pandas")
     @_with_hooks(pre=pre, post=post)
-    def _tibblegrouped_transform(*args, **kwargs):
+    def _tibblegrouped_transform(*args, **kwargs):  # pragma: no cover
         return args[0]._datar["grouped"].transform(func, *args[1:], **kwargs)
 
     @registered.register(TibbleRowwise, backend="pandas")
     @_with_hooks(pre=pre, post=post)
-    def _tibblerowwise_transform(*args, **kwargs):
+    def _tibblerowwise_transform(*args, **kwargs):  # pragma: no cover
         return args[0].transform(func, 1, *args[1:], **kwargs)
 
     return registered
@@ -317,6 +317,7 @@ def func_factory(
     doc: str = None,
     module: str = None,
     pipeable: bool = False,
+    dispatch_args: str = None,
     ast_fallback: str = "normal_warning",
     pre: Callable = None,
     post: Callable = None,
@@ -338,6 +339,10 @@ def func_factory(
         doc: The docstring of the function, used to overwrite `func`'s doc.
         module: The module of the function, used to overwrite `func`'s module.
         pipeable: Whether the function is pipeable.
+        dispatch_args: The arguments to dispatch on. If not provided, the
+            function will be dispatched on the first argument if kind is
+            "agg", "aggregation" or "transform". Otherwise "args", meaning
+            the function will be dispatched on positional arguments.
         ast_fallback: The AST fallback mode. Can be one of `normal`,
             `normal_warning`, `piping`, `piping_warning` and `raise`.
             See also `help(pipda.register_func)`.
@@ -371,6 +376,12 @@ def func_factory(
             **kwargs,
         )
 
+    if dispatch_args is None:
+        if kind in {"agg", "aggregation", "transform"}:
+            dispatch_args = "first"
+        else:
+            dispatch_args = "args"
+
     registered = register_func(
         func,
         name=name,
@@ -378,6 +389,7 @@ def func_factory(
         doc=doc,
         module=module,
         pipeable=pipeable,
+        dispatch_args=dispatch_args,
         ast_fallback=ast_fallback,
     )
     registered.init_pre = pre
@@ -424,7 +436,7 @@ def func_bootstrap(
     Returns:
         The bootstrapped function.
     """
-    if not getattr(registered, "_pipda_functype", False):
+    if not getattr(registered, "_pipda_functype", False):  # pragma: no cover
         raise TypeError("Can only bootstrap a registered function")
 
     if func is None:
@@ -439,7 +451,7 @@ def func_bootstrap(
 
     kind = arg_match(kind, "kind", ["apply", "transform", "agg", "aggregation"])
 
-    if func is NO_DEFAULT:
+    if func is NO_DEFAULT:  # pragma: no cover
         func = getattr(registered, "init_func", None)
 
     if pre is NO_DEFAULT:

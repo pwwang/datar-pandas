@@ -3,22 +3,9 @@ from datar_numpy.utils import make_array
 
 from ..pandas import Series, PandasObject, SeriesGroupBy
 from ..contexts import Context
-from ..factory import func_factory
 from ..utils import as_series
-from ..tibble import Tibble, TibbleGrouped
+from ..tibble import Tibble
 from ..collections import Collection
-
-
-def _itemgetter_post(__out, x, subscr, __args_raw=None):
-    rawx = __args_raw["x"]
-    idx = __out.index.get_level_values(0)
-    out = __out.reset_index(drop=True, level=0)
-    return out.groupby(
-        idx,
-        sort=rawx.sort,
-        dropna=rawx.dropna,
-        observed=rawx.observed,
-    )
 
 
 @register_func(cls=object, dispatchable=True, pipeable=True)
@@ -45,21 +32,38 @@ def itemgetter(x, subscr):
 
 @itemgetter.register(PandasObject, backend="pandas")
 def _itemgetter_pobj(x, subscr):
-    if isinstance(x, TibbleGrouped):
-        if isinstance(subscr, SeriesGroupBy):
-            df = Tibble.from_args(x=x, subscr=subscr)
-            return df.apply(
-                lambda subdf: itemgetter(subdf['x'], subdf['subscr'])
+    if isinstance(x, SeriesGroupBy) and isinstance(subscr, SeriesGroupBy):
+        df = Tibble.from_args(x=x, subscr=subscr)
+        return df._datar["grouped"].apply(
+            lambda subdf: itemgetter(
+                subdf["x"],
+                subdf["subscr"],
+                __backend="pandas",
+                __ast_fallback="normal",
             )
-
-        return x._datar["grouped"].apply(
-            lambda subdf: itemgetter(subdf, subscr)
-        )
+        ).droplevel(-1)
 
     if isinstance(x, SeriesGroupBy):
-        return x.apply(lambda ser: itemgetter(ser, subscr))
+        return x.apply(
+            lambda ser: itemgetter(
+                ser,
+                subscr,
+                __backend="pandas",
+                __ast_fallback="normal",
+            )
+        ).droplevel(-1)
 
     if isinstance(x, PandasObject):
+        if isinstance(subscr, SeriesGroupBy):
+            return subscr.apply(
+                lambda ser: itemgetter(
+                    x,
+                    ser,
+                    __backend="pandas",
+                    __ast_fallback="normal",
+                )
+            ).droplevel(-1)
+
         if isinstance(subscr, Collection):
             subscr.expand(x.shape[0])
 
@@ -70,7 +74,7 @@ def _itemgetter_pobj(x, subscr):
     # then subscr must be a PandasObject
     # as the function is registered for PandasObject
     x = as_series(x)
-    return x.iloc[make_array(subscr)]
+    return itemgetter(x, subscr, __backend="pandas", __ast_fallback="normal")
 
 
 class _MethodAccessor:
@@ -82,11 +86,10 @@ class _MethodAccessor:
 
     def __call__(self, *args, **kwds):
         out = self.accessor.sgb.apply(
-            lambda x: getattr(
-                getattr(x, self.accessor.name),
-                self.method
-            )(*args, **kwds)
-        )
+            lambda x: getattr(getattr(x, self.accessor.name), self.method)(
+                *args, **kwds
+            )
+        ).droplevel(-1)
 
         try:
             return out.groupby(
@@ -105,6 +108,7 @@ class _Accessor:
     This is used for SeriesGroupBy object, since `sgb.str` cannot be evaluated
     immediately.
     """
+
     def __init__(self, sgb: SeriesGroupBy, name: str):
         self.sgb = sgb
         self.name = name
@@ -122,9 +126,7 @@ class _Accessor:
             return _MethodAccessor(self, name)
 
         # x.cat.categories
-        out = self.sgb.apply(
-            lambda x: getattr(getattr(x, self.name), name)
-        )
+        out = self.sgb.apply(lambda x: getattr(getattr(x, self.name), name))
 
         try:
             return out.groupby(
@@ -137,7 +139,7 @@ class _Accessor:
             return out
 
 
-@func_factory(kind="agg")
+@register_verb(Series, context=Context.EVAL)
 def attrgetter(x, attr):
     """Attrgetter as a function for verb
 
@@ -147,7 +149,7 @@ def attrgetter(x, attr):
     return getattr(x, attr)
 
 
-@attrgetter.register(SeriesGroupBy)
+@attrgetter.register(SeriesGroupBy, context=Context.EVAL)
 def _attrgetter_sgb(x, attr):
     return _Accessor(x, attr)
 
@@ -158,7 +160,7 @@ def pd_str(x):
 
     This is helpful when x is a SeriesGroupBy object
     """
-    return attrgetter(x, "str", __ast_fallback="normal", __backend="pandas")
+    return attrgetter(x, "str", __ast_fallback="normal", __backend="_default")
 
 
 @register_verb(PandasObject, context=Context.EVAL)
@@ -167,7 +169,7 @@ def pd_cat(x):
 
     This is helpful when x is a SeriesGroupBy object
     """
-    return attrgetter(x, "cat", __ast_fallback="normal", __backend="pandas")
+    return attrgetter(x, "cat", __ast_fallback="normal", __backend="_default")
 
 
 @register_verb(PandasObject, context=Context.EVAL)
@@ -176,4 +178,4 @@ def pd_dt(x):
 
     This is helpful when x is a SeriesGroupBy object
     """
-    return attrgetter(x, "dt", __ast_fallback="normal", __backend="pandas")
+    return attrgetter(x, "dt", __ast_fallback="normal", __backend="_default")

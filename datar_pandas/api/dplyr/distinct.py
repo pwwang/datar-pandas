@@ -6,7 +6,7 @@ from typing import Any
 from pipda.reference import Reference
 from datar.apis.dplyr import mutate, distinct, n_distinct
 
-from ...pandas import DataFrame, Series, GroupBy, PandasObject
+from ...pandas import DataFrame, Series, PandasObject
 from ...contexts import Context
 from ...tibble import Tibble, TibbleGrouped, reconstruct_tibble
 from ...common import union, setdiff, intersect, unique
@@ -71,22 +71,12 @@ def _distinct(
     return reconstruct_tibble(Tibble(out, copy=False), _data)
 
 
-@n_distinct.register(object, context=Context.EVAL, backend="pandas")
-def _n_distinct(x: Any, na_rm: bool = True):
-    return Series(x).nunique(dropna=na_rm)
-
-
 @func_bootstrap(n_distinct, kind="agg")
 def _n_distinct_bootstrap(x: PandasObject, na_rm: bool = True):
     """Get the length of distinct elements"""
     return x.nunique(dropna=na_rm)
 
 
-@n_distinct.register(TibbleGrouped, context=Context.EVAL, backend="pandas")
-def _n_distinct_grouped(x: Any, na_rm: bool = True):
-    return x._datar["grouped"].agg("nunique", dropna=na_rm)
-
-
-@n_distinct.register(GroupBy, context=Context.EVAL, backend="pandas")
-def _n_distinct_groupby(x: Any, na_rm: bool = True):
-    return x.agg("nunique", dropna=na_rm)
+@n_distinct.register(object, context=Context.EVAL, backend="pandas")
+def _n_distinct(x: Any, na_rm: bool = True):
+    return Series(x).nunique(dropna=na_rm)

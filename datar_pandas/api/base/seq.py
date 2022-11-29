@@ -253,16 +253,9 @@ def _c(*args):
 
 @func_bootstrap(rev, kind="transform")
 def _rev(x, __args_raw=None):
-    rawx = x if __args_raw is None else __args_raw["x"]
-    if isinstance(rawx, (Series, SeriesGroupBy)):  # groupby from transform()
-        out = x[::-1]
-        out.index = x.index
-        return out
-
-    if is_scalar(rawx):
-        return np.array([rawx], dtype=type(rawx))
-
-    return rawx[::-1]
+    out = x[::-1]
+    out.index = x.index
+    return out
 
 
 @func_bootstrap(sort, kind="transform")

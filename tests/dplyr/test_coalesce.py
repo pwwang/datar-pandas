@@ -43,7 +43,7 @@ def test_errors():
 
 def test_with_dataframes():
     out = coalesce(tibble(x=c(NA, 1)), tibble(x=[1, 2]))
-    assert out.x.tolist() == [1, 1]
+    assert_iterable_equal(out.x, [1, 1])
 
     # # multiple column replaces
     df1 = tibble(x=c(NA, 1, NA), y=c(2, NA, NA), z=c([1, 2], NA))

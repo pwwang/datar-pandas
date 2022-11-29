@@ -37,7 +37,7 @@ def _fillna_safe(data, rep=NA_character_):
         return data
 
     if is_categorical_dtype(data):
-        if isinstance(data, Series):
+        if isinstance(data, Series):  # pragma: no cover
             data = data.values
         data = data.add_categories(rep)
         return data.fillna(rep)

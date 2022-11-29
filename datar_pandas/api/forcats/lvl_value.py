@@ -530,9 +530,10 @@ def _fct_relabel(
     """
     _f = check_factor(_f)
     old_levels = levels(_f, __ast_fallback="normal", __backend="pandas")
-    if getattr(_fun, "_pipda_functype", None) in ("verb", "pipeable"):
+    if (
+        getattr(_fun, "_pipda_functype", None) in ("verb", "pipeable")
+    ):  # pragma: no cover
         # TODO: test
-        # pragma: no cover
         kwargs["__ast_fallback"] = "normal"
     new_levels = _fun(old_levels, *args, **kwargs)
     return lvls_revalue(

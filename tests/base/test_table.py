@@ -15,6 +15,7 @@ from datar.base import (
     rpois,
 )
 from datar_pandas.utils import NA_character_
+from datar_pandas.pandas import Series
 from datar.data import (
     warpbreaks,
     state_division,
@@ -75,11 +76,22 @@ def test_table():
     assert_iterable_equal(tab.columns.to_list(), ["A", "C", "D", "E"])
     assert_iterable_equal(tab.values.flatten(), [10, 10, 0, 0])
 
+    ds = Series(
+        factor(rep(c("A", "B", "C"), 10), levels=c("A", "B", "C", "D", "E"))
+    )
+    tab = table(ds, exclude="B", dnn=["x"])
+    assert_iterable_equal(tab.columns.to_list(), ["A", "C", "D", "E"])
+    assert_iterable_equal(tab.values.flatten(), [10, 10, 0, 0])
+
     d2 = factor(rep(c("A", "B", "C"), 10), levels=c("A", "B", "C", "D", "E"))
     tab = table(d, d2, exclude="B")
     assert tab.shape == (4, 4)
 
     tab = table("abc", "cba", dnn="x")
+    assert tab.shape == (3, 3)
+    assert sum(tab.values.flatten()) == 3
+
+    tab = table("abc", "cba", exclude="B", dnn="x")
     assert tab.shape == (3, 3)
     assert sum(tab.values.flatten()) == 3
 

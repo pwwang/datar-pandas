@@ -8,6 +8,17 @@
 # testing functions in datar.dplyr.funs
 import pytest
 
+from datar.base import (
+    c,
+    NA,
+    rep,
+    cumsum,
+    seq_along,
+    NULL,
+    sqrt,
+    factor,
+    letters,
+)
 from datar.dplyr import (
     between,
     lead,
@@ -26,26 +37,18 @@ from datar.dplyr import (
     first,
     last,
 )
-from datar.base import (
-    c,
-    NA,
-    rep,
-    cumsum,
-    seq_along,
-    NULL,
-    sqrt,
-    factor,
-    letters,
-)
 from datar.tibble import tibble
 from datar_pandas import pandas as pd
 from datar_pandas.pandas import Series
 
-from ..conftest import assert_iterable_equal
+from ..conftest import assert_iterable_equal, assert_equal
 
 
 def test_between():
     b = between([2, 5], 1, 3).tolist()
+    assert b == [True, False]
+
+    b = between(Series([2, 5]), 1, 3).tolist()
     assert b == [True, False]
 
 
@@ -104,7 +107,9 @@ def test_lead_lag_return_all_nas_if_n_eqs_lenx():
 def test_cumany_cumall_handle_nas_consistently():
     batman = [NA] * 5
     assert not cumany(batman).all()
+    assert not cumany(Series(batman)).all()
     assert not cumall(batman).all()
+    assert not cumall(Series(batman)).all()
 
     out = cumall(c(True, NA, False, NA)).tolist()
     assert out == [True, False, False, False]
@@ -151,6 +156,8 @@ def test_cume_dist_ignores_nas():
 def test_cummean_is_not_confused_by_fp_error():
     a = rep(99.0, 9)
     assert all(cummean(a) == a)
+    a = rep(99.0, 9)
+    assert all(cummean(Series(a)) == a)
 
 
 def test_cummean_is_consistent_with_cumsum_and_seq_along():
@@ -198,6 +205,9 @@ def test_order_by_errors():
 # na_if
 # ----------------------------------------------------------------
 def test_na_if_scalar_y_replaces_all_matching_x():
+    out = na_if(1, 1)
+    assert_equal(out, NA)
+
     x = [0, 1, 0]
     out = na_if(x, 0)
     assert_iterable_equal(out, [NA, 1.0, NA])
@@ -214,6 +224,15 @@ def test_na_if_sgb():
     df = tibble(x=[1, 2], y=[2, 2]).rowwise()
     out = na_if(df.x, df.y)
     assert_iterable_equal(out.obj, [1, NA])
+
+    df = tibble(x=["1", "2"], y=["2", "2"], g=[1, 2]).group_by("g")
+    out = na_if(df.x, df.y)
+    assert_iterable_equal(out.obj, ["1", NA])
+
+
+def test_na_if_obj():
+    df = na_if(["1", "2", "3"], ["1", "1", "1"])
+    assert_iterable_equal(df, [NA, "2", "3"])
 
 
 # near
@@ -252,6 +271,11 @@ def test_nth_index_past_ends_returns_default_value():
     assert pd.isnull(nth(x, -5))
     assert pd.isnull(nth(x, 10))
 
+    x = Series([1, 2, 3, 4])
+    assert pd.isnull(nth(x, 4))
+    assert pd.isnull(nth(x, -5))
+    assert pd.isnull(nth(x, 10))
+
 
 def test_nth_errors():
     with pytest.raises(TypeError):
@@ -261,9 +285,13 @@ def test_nth_errors():
 def test_first_uses_default_value_for_0len_input():
     # we are not distinguish NAs
     assert_iterable_equal([first([])], [NA])
+    assert_iterable_equal([first(Series([], dtype=object))], [NA])
     assert_iterable_equal([first([], default=1)], [1])
+    assert_iterable_equal([first(Series([], dtype=object), default=1)], [1])
     assert_iterable_equal([last([])], [NA])
+    assert_iterable_equal([last(Series([], dtype=object))], [NA])
     assert_iterable_equal([last([], default=1)], [1])
+    assert_iterable_equal([last(Series([], dtype=object), default=1)], [1])
 
 
 # desc -------------------------------------------------------------

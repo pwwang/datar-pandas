@@ -35,7 +35,9 @@ def _where(_data: DataFrame, fn: Callable) -> List[str]:
         if getattr(fn, "_pipda_functype", None) == "verb" and fn.dependent:
             dat = fn(_data[col])._pipda_eval(_data)
             mask.append(dat)
-        elif getattr(fn, "_pipda_functype", None) == "pipeable":
+        elif (
+            getattr(fn, "_pipda_functype", None) == "pipeable"
+        ):  # pragma: no cover
             mask.append(fn(_data[col], __ast_fallback="normal"))
         else:
             mask.append(fn(_data[col]))

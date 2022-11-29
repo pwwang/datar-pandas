@@ -100,6 +100,16 @@ def test_order():
     out = order(x)
     assert_iterable_equal(out, [1, 2, 3, 0])
 
+    out = order(x, decreasing=True)
+    assert_iterable_equal(out, [0, 3, 2, 1])
+
+    x = Series([np.nan, 5, 2, 3, 4])
+    out = order(x)
+    assert_iterable_equal(out, [2, 3, 4, 1, 0])
+
+    out = order(x, na_last=False)
+    assert_iterable_equal(out, [0, 2, 3, 4, 1])
+
     x = Series([1, 2, 3, 4]).groupby([1, 1, 2, 2])
     out = order(x)
     assert_iterable_equal(out.obj, [0, 1, 0, 1])

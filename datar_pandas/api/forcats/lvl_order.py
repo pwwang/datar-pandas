@@ -273,8 +273,7 @@ def _fct_reorder(
     if getattr(_fun, "_pipda_functype", None) in ("pipeable", "verb"):
         # simulate tapply
         # TODO: test
-        # pragma: no cover
-        summary = summary.agg(
+        summary = summary.agg(  # pragma: no cover
             lambda col: _fun(col, *args, **kwargs, __ast_fallback="normal")
         )
     else:
@@ -333,7 +332,9 @@ def _fct_reorder2(
     )
     args = args[1:]
 
-    if getattr(_fun, "_pipda_functype", None) in ("pipeable", "verb"):
+    if (
+        getattr(_fun, "_pipda_functype", None) in ("pipeable", "verb")
+    ):  # pragma: no cover
         kwargs["__ast_fallback"] = "normal"
 
     summary = summary.apply(

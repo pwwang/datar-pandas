@@ -132,3 +132,9 @@ def test_n_distinct_works_with_str_col():
     out = wrapper(df, "x")
     exp = tibble(result=2)
     assert out.equals(exp)
+
+
+def test_n_distinct_works_with_sgb():
+    df = tibble(x=[1, 1, 2, 2], g=[1, 1, 2, 2]) >> group_by(f.g)
+    out = n_distinct(df.x)
+    assert_iterable_equal(out, [1, 1])

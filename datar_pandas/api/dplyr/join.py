@@ -82,7 +82,7 @@ def _join(
             ycol = y[col]
             if isinstance(xcol, SeriesGroupBy):
                 xcol = xcol.obj
-            if isinstance(ycol, SeriesGroupBy):
+            if isinstance(ycol, SeriesGroupBy):  # pragma: no cover
                 ycol = ycol.obj
             if is_factor(xcol) and is_factor(ycol):
                 ret[col] = Categorical(
