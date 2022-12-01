@@ -17,6 +17,10 @@ modin = { version = "^0.10", optional = true }
 [tool.poetry.extras]
 modin = ["modin"]
 
+[tool.poetry.dev-dependencies]
+pytest = "^7"
+pytest-cov = "^4"
+
 [tool.poetry.plugins.datar]
 pandas = "datar_pandas:plugin"
 
