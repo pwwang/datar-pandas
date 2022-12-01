@@ -317,7 +317,7 @@ def func_factory(
     doc: str = None,
     module: str = None,
     pipeable: bool = False,
-    dispatch_args: str = None,
+    dispatchable: str = None,
     ast_fallback: str = "normal_warning",
     pre: Callable = None,
     post: Callable = None,
@@ -339,7 +339,7 @@ def func_factory(
         doc: The docstring of the function, used to overwrite `func`'s doc.
         module: The module of the function, used to overwrite `func`'s module.
         pipeable: Whether the function is pipeable.
-        dispatch_args: The arguments to dispatch on. If not provided, the
+        dispatchable: The arguments to dispatch on. If not provided, the
             function will be dispatched on the first argument if kind is
             "agg", "aggregation" or "transform". Otherwise "args", meaning
             the function will be dispatched on positional arguments.
@@ -376,11 +376,11 @@ def func_factory(
             **kwargs,
         )
 
-    if dispatch_args is None:
+    if not dispatchable:
         if kind in {"agg", "aggregation", "transform"}:
-            dispatch_args = "first"
+            dispatchable = "first"
         else:
-            dispatch_args = "args"
+            dispatchable = "args"
 
     registered = register_func(
         func,
@@ -389,7 +389,7 @@ def func_factory(
         doc=doc,
         module=module,
         pipeable=pipeable,
-        dispatch_args=dispatch_args,
+        dispatchable=dispatchable,
         ast_fallback=ast_fallback,
     )
     registered.init_pre = pre

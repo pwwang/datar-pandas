@@ -135,10 +135,7 @@ def vars_select(
             )
 
     selected = Collection(*columns, pool=list(all_columns))
-    if (
-        raise_nonexists
-        and selected.unmatched and selected.unmatched != {None}
-    ):
+    if raise_nonexists and selected.unmatched and selected.unmatched != {None}:
         raise KeyError(f"Columns `{selected.unmatched}` do not exist.")
 
     return unique(selected).astype(int)

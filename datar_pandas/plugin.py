@@ -1,11 +1,5 @@
-from typing import TYPE_CHECKING
-
 import pdtypes
 from simplug import Simplug
-
-
-if TYPE_CHECKING:
-    from datar.data.metadata import Metadata
 
 plugin = Simplug("datar")
 
@@ -19,9 +13,8 @@ def setup():
 
 
 @plugin.impl
-def load_dataset(name: str, meta: "Metadata"):
-    from .pandas import read_csv
-    return read_csv(meta.source, index_col=0 if meta.index else False)
+def data_api():
+    from .api import data
 
 
 @plugin.impl
