@@ -98,7 +98,7 @@ jobs:
         env:
           MODIN: ${{ matrix.modin }}
       - name: Show versions
-        run: python -c 'import datar; datar.options(use_modin=True); datar.get_versions()'
+        run: python -c 'import datar; from datar.core import plugin; datar.options(use_modin=True); datar.get_versions()'
       - name: Test with pytest
         run: pytest tests/ --modin --junitxml=junit/test-results-${{ matrix.python-version }}.xml
 
