@@ -4,10 +4,19 @@ import numpy as np
 from collections import namedtuple
 
 
+def pytest_addoption(parser):
+    parser.addoption("--modin", action="store_true")
+
+
 def pytest_sessionstart(session):
     from datar import options
+    modin = session.config.getoption("modin")
 
-    options(import_names_conflict="silent", backends=["numpy", "pandas"])
+    options(
+        use_modin=modin,
+        import_names_conflict="silent",
+        backends=["numpy", "pandas"],
+    )
     # set_seed(8888)
 
 

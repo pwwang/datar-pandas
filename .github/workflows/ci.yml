@@ -25,6 +25,8 @@ jobs:
         exclude:
           - python-version: 3.7
             pandas: pandas==1.4.0
+          - python-version: 3.7
+            pandas: pandas==1.5.1
 
     steps:
       - uses: actions/checkout@v2
@@ -44,7 +46,7 @@ jobs:
         env:
           PANDAS: ${{ matrix.pandas }}
       - name: Run flake8
-        run: flake8 datar
+        run: flake8 datar_pandas
       - name: Show versions
         run: python -c 'import datar; datar.get_versions()'
       - name: Test with pytest
