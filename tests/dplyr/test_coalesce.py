@@ -5,7 +5,7 @@ import pytest  # noqa
 from datar.base import NA, factor, c, letters
 from datar.dplyr import coalesce
 from datar.tibble import tibble
-from datar_pandas.pandas import assert_frame_equal
+from datar_pandas.pandas import assert_frame_equal, get_obj
 from ..conftest import assert_iterable_equal
 
 
@@ -65,4 +65,4 @@ def test_no_rep():
 def test_sgb():
     df = tibble(x=c(1, NA), y=[1, 2]).rowwise()
     out = coalesce(df.x, df.y)
-    assert_iterable_equal(out.obj, [1, 2])
+    assert_iterable_equal(get_obj(out), [1, 2])

@@ -42,12 +42,11 @@ from .pandas import (
     Series,
     CategoricalIndex,
     Index,
-)
-from .pandas import (
     NDFrame,
     DataFrameGroupBy,
     SeriesGroupBy,
     GroupBy,
+    get_obj,
 )
 
 if TYPE_CHECKING:
@@ -61,7 +60,7 @@ def _regroup(x: GroupBy, new_sizes: Data[Int]) -> GroupBy:
     """Regroup grouped object if some groups get broadcasted"""
     base_sizes = x.grouper.size()
     base_sizes1 = base_sizes == 1
-    repeats = np.ones(x.obj.shape[0], dtype=int)
+    repeats = np.ones(get_obj(x).shape[0], dtype=int)
     # If any group is 1-sized, try to broadcast it
     if base_sizes1.any():
         # better way?
@@ -78,8 +77,8 @@ def _regroup(x: GroupBy, new_sizes: Data[Int]) -> GroupBy:
     if (repeats == 1).all():
         return x
 
-    indices = np.arange(x.obj.shape[0]).repeat(repeats)
-    gdata = x.grouper.groupings[0].obj
+    indices = np.arange(get_obj(x).shape[0]).repeat(repeats)
+    gdata = get_obj(x.grouper.groupings[0])
     gdata = gdata.take(indices)
     grouped = gdata.groupby(
         x.grouper.names,
@@ -87,11 +86,15 @@ def _regroup(x: GroupBy, new_sizes: Data[Int]) -> GroupBy:
         observed=x.observed,
         sort=x.sort,
     )
-    return x.obj.take(indices).groupby(
-        grouped.grouper,
-        observed=grouped.observed,
-        sort=grouped.sort,
-        dropna=grouped.dropna,
+    return (
+        get_obj(x)
+        .take(indices)
+        .groupby(
+            grouped.grouper,
+            observed=grouped.observed,
+            sort=grouped.sort,
+            dropna=grouped.dropna,
+        )
     )
 
 
@@ -150,7 +153,7 @@ def _realign_indexes(value: GroupBy, grouper: Grouper) -> np.ndarray:
             v_new_indices.extend(v_ind)
         g_indices.extend(g_ind)
 
-    value = value.obj.take(v_new_indices)
+    value = get_obj(value).take(v_new_indices)
     sorted_indices = np.argsort(g_indices)
     return value.take(sorted_indices).values
 
@@ -209,7 +212,7 @@ def _broadcast_base(
                     f"{len(value)} to {size_tip}."
                 )
 
-            if not base.obj.index.is_unique:
+            if not get_obj(base).index.is_unique:
                 # already broadcasted
                 return base
 
@@ -273,7 +276,7 @@ def _(
             return base
 
         # check if base has already broadcasted
-        if not base.obj.index.is_unique:
+        if not get_obj(base).index.is_unique:
             return base
 
         # Broadcast size-1 groups in base
@@ -303,7 +306,7 @@ def _(
 
     if base.shape[0] == 1 or (val_sizes == base.shape[0]).all():
         if base.shape[0] == 1:
-            repeats = value.obj.shape[0]
+            repeats = get_obj(value).shape[0]
         else:
             repeats = val_sizes
 
@@ -374,7 +377,7 @@ def _(
             # No need to broadcast the base
             return base
 
-        if not base.obj.index.is_unique:
+        if not get_obj(base).index.is_unique:
             return base
 
         # Broadcast size-1 groups in base
@@ -615,19 +618,23 @@ def _(
     # Compatibility has been checked in _broadcast_base
     if isinstance(value, SeriesGroupBy):
         if np.array_equal(grouper.group_info[0], value.grouper.group_info[0]):
-            return Series(value.obj.values, index=index, name=value.obj.name)
+            return Series(
+                get_obj(value).values, index=index, name=get_obj(value).name
+            )
 
         # broadcast size-one groups and
         # realign the index
         revalue = _realign_indexes(value, grouper)
-        return Series(revalue, index=index, name=value.obj.name)
+        return Series(revalue, index=index, name=get_obj(value).name)
 
     if np.array_equal(grouper.group_info[0], value.grouper.group_info[0]):
-        return Tibble(value.obj.values, index=index, columns=value.obj.columns)
+        return Tibble(
+            get_obj(value).values, index=index, columns=get_obj(value).columns
+        )
 
     # realign the index
     revalue = _realign_indexes(value, grouper)
-    return Tibble(revalue, index=index, columns=value.obj.columns)
+    return Tibble(revalue, index=index, columns=get_obj(value).columns)
 
 
 @broadcast_to.register(TibbleGrouped)
@@ -661,7 +668,7 @@ def _(value):
 
 @_get_index_grouper.register(GroupBy)
 def _(value):
-    return value.obj.index, value.grouper
+    return get_obj(value).index, value.grouper
 
 
 @singledispatch
@@ -691,7 +698,7 @@ def _ungroup(value):
 
 @_ungroup.register(GroupBy)
 def _(value):
-    return value.obj
+    return get_obj(value)
 
 
 @_ungroup.register(TibbleGrouped)
@@ -744,7 +751,7 @@ def _(value: Series, name: str) -> Tibble:
 
 @init_tibble_from.register(SeriesGroupBy)
 def _(value: SeriesGroupBy, name: str) -> Tibble:
-    name = name or value.obj.name
+    name = name or get_obj(value).name
     if getattr(value, "is_rowwise", False):
         return TibbleRowwise.from_groupby(value, name)
     return TibbleGrouped.from_groupby(value, name)

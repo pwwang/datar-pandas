@@ -47,13 +47,16 @@ if get_option("use_modin"):  # pragma: no cover
         unique,
     )
     from modin.pandas.base import BasePandasDataset as NDFrame
-    from modin.pandas.groupby import (
-        DataFrameGroupBy,
-        GroupBy,
-        SeriesGroupBy,
-    )
+    from modin.pandas.groupby import DataFrameGroupBy, SeriesGroupBy
+    try:
+        from modin.pandas.groupby import GroupBy
+    except ImportError:
+        GroupBy = DataFrameGroupBy
 
     PandasObject = (NDFrame, DataFrameGroupBy)
+
+    def get_obj(grouped):
+        return grouped._df
 
 else:
     from pandas import (
@@ -87,3 +90,6 @@ else:
         GroupBy,
         SeriesGroupBy,
     )
+
+    def get_obj(grouped):
+        return grouped.obj

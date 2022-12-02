@@ -23,7 +23,7 @@ from datar.dplyr import (
     everything,
 )
 from datar.base import c, rep, nrow, NA, min, re, is_element, letters
-from datar_pandas.pandas import Series, assert_frame_equal
+from datar_pandas.pandas import Series, assert_frame_equal, get_obj
 from pipda import register_func
 
 from ..conftest import assert_equal
@@ -46,7 +46,7 @@ def test_handles_passing_args():
 
     df >>= group_by(f.x)
     res = g()
-    assert res.x.obj.tolist() == [3]
+    assert get_obj(res.x).tolist() == [3]
 
 
 def test_handles_simple_symbols():
@@ -76,8 +76,8 @@ def test_handles_simple_symbols():
     assert res.test.tolist() == [True]
 
     res = g(gdf)
-    assert res.x.obj.tolist() == [2]
-    assert res.test.obj.tolist() == [True]
+    assert get_obj(res.x).tolist() == [2]
+    assert get_obj(res.test).tolist() == [True]
 
 
 def test_handles_scalar_results():
@@ -138,7 +138,7 @@ def test_row_number():
 def test_row_number_0col():
     out = tibble() >> mutate(a=row_number())
     assert_equal(nrow(out), 0)
-    assert out.columns.tolist() == ['a']
+    assert out.columns.tolist() == ["a"]
 
 
 def test_mixed_orig_df():
@@ -162,7 +162,10 @@ def test_true_true():
 def test_rowwise():
     @register_func
     def grepl(a, b):
-        return Series([x in y for x, y in zip(a.obj, b.obj)], index=a.obj.index)
+        return Series(
+            [x in y for x, y in zip(get_obj(a), get_obj(b))],
+            index=get_obj(a).index,
+        )
 
     df = tibble(
         First=c("string1", "string2"),
@@ -210,10 +213,9 @@ def test_filter_false_handles_indices(caplog):
 
 
 def test_handles_tuple_columns():
-    res = (
-        tibble(a=[1, 2], x=[tuple(range(1, 11)), tuple(range(1, 6))])
-        >> filter(f.a == 1)
-    )
+    res = tibble(
+        a=[1, 2], x=[tuple(range(1, 11)), tuple(range(1, 6))]
+    ) >> filter(f.a == 1)
     assert res.x.tolist() == [tuple(range(1, 11))]
 
     res = (
@@ -221,7 +223,7 @@ def test_handles_tuple_columns():
         >> group_by(f.a)
         >> filter(f.a == 1)
     )
-    assert res.x.obj.tolist() == [tuple(range(1, 11))]
+    assert get_obj(res.x).tolist() == [tuple(range(1, 11))]
 
 
 def test_row_number_no_warning(caplog):
@@ -287,11 +289,11 @@ def test_handles_df_cols():
 
 
 def test_handles_named_logical():
-    tbl = tibble(a={'a': True})
+    tbl = tibble(a={"a": True})
     out = tbl >> filter(f.a)
     assert out.equals(tbl)
 
-    tbl = tibble(a={'a': False})
+    tbl = tibble(a={"a": False})
     out = tbl >> filter(f.a)
     assert out.shape[0] == 0
 

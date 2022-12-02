@@ -22,7 +22,7 @@ from datar.dplyr import (
 from datar.tibble import tibble
 from datar_pandas.contexts import Context
 from datar_pandas.tibble import TibbleRowwise
-from datar_pandas.pandas import assert_frame_equal
+from datar_pandas.pandas import assert_frame_equal, get_obj
 from pipda import register_func
 
 from ..conftest import assert_iterable_equal, assert_equal
@@ -145,7 +145,7 @@ def test_modify_grouping_vars():
     df = tibble(a=c(1, 2, 1, 2), b=c(1, 1, 2, 2))
     gf = group_by(df, f.a, f.b)
     out = summarise(gf, a=f.a + 1)
-    assert out.a.obj.tolist() == [2, 3, 2, 3]
+    assert get_obj(out.a).tolist() == [2, 3, 2, 3]
 
 
 def test_allows_names():
@@ -346,6 +346,6 @@ def test_summarise_rowwise():
 
     out = params >> rowwise(f.sim) >> summarise(z=rnorm(f.n, f.mean, f.sd))
     assert len(out.columns) == 2
-    assert len(out.z.obj.values[0]) == 1
-    assert len(out.z.obj.values[1]) == 2
-    assert len(out.z.obj.values[2]) == 3
+    assert len(get_obj(out.z).values[0]) == 1
+    assert len(get_obj(out.z).values[1]) == 2
+    assert len(get_obj(out.z).values[2]) == 3

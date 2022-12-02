@@ -53,7 +53,7 @@ from datar.base import (
     sqrt,
 )
 from datar.base import runif
-from datar_pandas.pandas import Series
+from datar_pandas.pandas import Series, get_obj
 from datar_pandas.tibble import TibbleGrouped, TibbleRowwise
 from datar_pandas.utils import pandas_version
 from ..conftest import assert_iterable_equal, assert_equal
@@ -121,13 +121,13 @@ def test_orders_by_groups():
         f.a, _sort=True
     )
     out = df >> count()
-    assert_iterable_equal(out.a.obj, range(1, 11))
+    assert_iterable_equal(get_obj(out.a), range(1, 11))
 
     df = tibble(a=sample(letters[:10], 3000, replace=True)) >> group_by(
         f.a, _sort=True
     )
     out = df >> count()
-    assert_iterable_equal(out.a.obj, letters[:10])
+    assert_iterable_equal(get_obj(out.a), letters[:10])
 
     df = tibble(a=sample(sqrt(range(1, 11)), 3000, replace=True)) >> group_by(
         f.a,
@@ -135,7 +135,7 @@ def test_orders_by_groups():
     )
     out = df >> count()
     expect = list(sqrt(range(1, 11)))
-    assert_iterable_equal(out.a.obj, expect)
+    assert_iterable_equal(get_obj(out.a), expect)
 
 
 def test_by_tuple_values():
@@ -148,8 +148,8 @@ def test_by_tuple_values():
     ) >> group_by(f.y)
     out = df >> count()
     # assert out.y.tolist() == [(1,2), (1,2,3)]
-    assert out.y.obj.tolist() == [1, 2]
-    assert out.n.obj.tolist() == [2, 1]
+    assert get_obj(out.y).tolist() == [1, 2]
+    assert get_obj(out.n).tolist() == [2, 1]
 
 
 def test_select_add_group_vars():
@@ -543,7 +543,7 @@ def test_compound_ungroup():
     assert ungrouped == 1
     g = Series([1, 2, 3]).groupby([1, 1, 2])
     ungrouped = ungroup(g)
-    assert ungrouped is g.obj
+    assert ungrouped is get_obj(g)
 
     with pytest.raises(ValueError):
         ungroup(g, "abc")
@@ -576,4 +576,4 @@ def test_group_by_keeps_the_right_order_of_subdfs():
         g2=["a", "b", "c", "a", "b", "c", "a", "b", "b"],
     ) >> mutate(x=range(9))
     out = df >> group_by(f.g1, f.g2) >> mutate(x=f.x)
-    assert_iterable_equal(out.x.obj, range(9))
+    assert_iterable_equal(get_obj(out.x), range(9))

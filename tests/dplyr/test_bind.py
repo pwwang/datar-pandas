@@ -24,8 +24,8 @@ from datar.dplyr import (
     bind_rows,
     group_by,
 )
-from datar_pandas.pandas import assert_frame_equal
-from ..conftest import assert_iterable_equal, assert_equal
+from datar_pandas.pandas import assert_frame_equal, get_obj
+from ..conftest import assert_iterable_equal
 
 
 def test_handle_dict():
@@ -310,4 +310,4 @@ def test_bind_empty_dfs():
 def test_bind_rows_grouped():
     df = tibble(x=[1, 2, 3]) >> group_by(f.x)
     out = bind_rows(df, {"x": 4})
-    assert_iterable_equal(out.x.obj, [1, 2, 3, 4])
+    assert_iterable_equal(get_obj(out.x), [1, 2, 3, 4])

@@ -47,7 +47,7 @@ from datar.dplyr import (
     group_walk,
     tally,
 )
-from datar_pandas.pandas import DataFrame, assert_frame_equal
+from datar_pandas.pandas import DataFrame, assert_frame_equal, get_obj
 from datar_pandas.tibble import TibbleGrouped
 from datar.data import mtcars, iris
 from ..conftest import assert_equal
@@ -505,7 +505,7 @@ def test_group_trim_drops_factor_levels_in_data_and_grouping_structure():
     )
 
     assert_equal(n_groups(res), 1)
-    assert_equal(levels(res.Species.obj), ["setosa"])
+    assert_equal(levels(get_obj(res.Species)), ["setosa"])
     # expect_equal(levels(attr(res, "groups")$Species), "setosa")
 
 

@@ -7,7 +7,11 @@ from datar.base import c, factor, letters, nrow, NULL, NA, mean, seq, rep, dim
 from datar.dplyr import group_by, group_vars, starts_with, rowwise, filter
 from datar.tibble import tibble
 from datar.tidyr import nest, unnest
-from datar_pandas.pandas import assert_frame_equal, is_categorical_dtype
+from datar_pandas.pandas import (
+    assert_frame_equal,
+    is_categorical_dtype,
+    get_obj,
+)
 from datar_pandas.tibble import TibbleGrouped, TibbleRowwise
 
 from ..conftest import assert_iterable_equal, assert_equal
@@ -26,7 +30,7 @@ def test_nest_uses_grouping_vars_if_present():
     df = tibble(x=[1, 1, 1], y=c[1:4])
     out = nest(group_by(df, f.x))
     assert_equal(group_vars(out), ["x"])
-    assert_frame_equal(out.data.obj.values[0], tibble(y=c[1:4]))
+    assert_frame_equal(get_obj(out.data).values[0], tibble(y=c[1:4]))
 
 
 def test_nest_provides_grouping_vars_override_grouped_defaults():
@@ -34,7 +38,7 @@ def test_nest_provides_grouping_vars_override_grouped_defaults():
     out = nest(df, data=f.y)
     assert isinstance(out, TibbleGrouped)
     assert out.columns.tolist() == ["x", "z", "data"]
-    assert out.data.obj.values[0].columns.tolist() == ["y"]
+    assert get_obj(out.data).values[0].columns.tolist() == ["y"]
 
 
 def test_nest_puts_data_into_correct_row():

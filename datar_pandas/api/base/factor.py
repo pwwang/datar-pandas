@@ -13,7 +13,13 @@ from datar.apis.base import (
 
 from ...common import is_scalar
 from ...factory import func_bootstrap
-from ...pandas import Categorical, Series, SeriesGroupBy, is_categorical_dtype
+from ...pandas import (
+    Categorical,
+    Series,
+    SeriesGroupBy,
+    is_categorical_dtype,
+    get_obj,
+)
 
 
 @func_bootstrap(droplevels, kind="transform")
@@ -72,13 +78,13 @@ def _factor(
 ):
     if isinstance(x, SeriesGroupBy):
         out = factor(
-            x.obj,
+            get_obj(x),
             levels=levels,
             exclude=exclude,
             ordered=ordered,
             __ast_fallback="normal",
         )
-        return Series(out, index=x.obj.index).groupby(
+        return Series(out, index=get_obj(x).index).groupby(
             x.grouper,
             observed=x.observed,
             sort=x.sort,

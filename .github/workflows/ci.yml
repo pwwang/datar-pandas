@@ -75,9 +75,9 @@ jobs:
       matrix:
         python-version: [3.7, 3.8, 3.9]
         modin: [
-          "modin[ray]==0.10.2",
-          "modin[ray]<0.16.0",  # 0.16 uses pandas 1.5.0
-          "modin[ray]" # lastest
+          "modin[dask]==0.10.2",
+          "modin[dask]<0.16.0",  # 0.16 uses pandas 1.5.0
+          "modin[dask]" # lastest
         ]
         exclude:
           - python-version: 3.7

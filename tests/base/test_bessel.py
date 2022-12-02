@@ -7,7 +7,7 @@ from datar.base import (
     NA,
     Inf,
 )
-from datar_pandas.pandas import Series, SeriesGroupBy
+from datar_pandas.pandas import Series, SeriesGroupBy, get_obj
 from ..conftest import assert_iterable_equal
 
 
@@ -36,7 +36,7 @@ from ..conftest import assert_iterable_equal
 )
 def test_bessel_j(x, nu, exp):
     out = bessel_j(x, nu)
-    out = out.obj if isinstance(out, SeriesGroupBy) else out
+    out = get_obj(out) if isinstance(out, SeriesGroupBy) else out
     assert_iterable_equal(out, exp, approx=1e-5)
 
 
@@ -77,7 +77,7 @@ def test_bessel_j(x, nu, exp):
 )
 def test_bessel_y(x, nu, exp):
     out = bessel_y(x, nu)
-    out = out.obj if isinstance(out, SeriesGroupBy) else out
+    out = get_obj(out) if isinstance(out, SeriesGroupBy) else out
     assert_iterable_equal(out, exp, approx=1e-5)
 
 
@@ -142,7 +142,7 @@ def test_bessel_y(x, nu, exp):
 )
 def test_bessel_i(x, nu, expon_scaled, exp):
     out = bessel_i(x, nu, expon_scaled)
-    out = out.obj if isinstance(out, SeriesGroupBy) else out
+    out = get_obj(out) if isinstance(out, SeriesGroupBy) else out
     assert_iterable_equal(out, exp, approx=1e-5)
 
 

@@ -13,7 +13,7 @@ from datar.apis.dplyr import (
     group_by_drop_default,
 )
 
-from ...pandas import DataFrame, GroupBy
+from ...pandas import DataFrame, GroupBy, get_obj
 from ...tibble import Tibble, TibbleGrouped, TibbleRowwise
 from ...contexts import Context
 from ...utils import vars_select
@@ -185,7 +185,7 @@ def _ungroup_groupby(
 ) -> DataFrame:
     if cols:
         raise ValueError("`*cols` is not empty.")
-    return x.obj
+    return get_obj(x)
 
 
 @group_by_drop_default.register(DataFrame, backend="pandas")

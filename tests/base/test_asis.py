@@ -35,7 +35,7 @@ from datar.base import (
 from datar.base import factor
 from datar.tibble import tibble
 from datar_pandas import pandas as pd
-from datar_pandas.pandas import Series, Categorical
+from datar_pandas.pandas import Series, Categorical, get_obj
 from ..conftest import assert_, assert_equal, assert_not, assert_iterable_equal
 
 
@@ -45,7 +45,7 @@ def test_as_double():
 
     x = tibble(a=[1, 2, 3]).rowwise()
     out = as_double(x.a)
-    assert_(is_double(out.obj))
+    assert_(is_double(get_obj(out)))
     assert_(out.is_rowwise)
 
 
@@ -56,13 +56,13 @@ def test_as_integer():
 
     x = tibble(a=factor(["a", "b"])).group_by("a")
     out = as_integer(x.a)
-    assert_iterable_equal(out.obj, [0, 1])
+    assert_iterable_equal(get_obj(out), [0, 1])
     out = is_integer(x.a)
     assert_iterable_equal(out, [False, False])
 
     x = tibble(a=factor(["a", "b"])).rowwise()
     out = as_integer(x.a)
-    assert_iterable_equal(out.obj, [0, 1])
+    assert_iterable_equal(get_obj(out), [0, 1])
     assert out.is_rowwise
 
 
@@ -160,8 +160,8 @@ def test_as_factor():
     assert_iterable_equal(levels(out), [1, 2, 3])
 
     out = as_factor(Series([1, 2, 3]).groupby([1, 1, 2]))
-    assert_iterable_equal(out.obj, [1, 2, 3])
-    assert_iterable_equal(levels(out.obj), [1, 2, 3])
+    assert_iterable_equal(get_obj(out), [1, 2, 3])
+    assert_iterable_equal(levels(get_obj(out)), [1, 2, 3])
 
 
 def test_as_ordered():
@@ -181,9 +181,9 @@ def test_as_ordered():
     assert out.cat.ordered
 
     out = as_ordered(Series([1, 2, 3]).groupby([1, 1, 2]))
-    assert_iterable_equal(out.obj, [1, 2, 3])
-    assert_iterable_equal(levels(out.obj), [1, 2, 3])
-    assert out.obj.cat.ordered
+    assert_iterable_equal(get_obj(out), [1, 2, 3])
+    assert_iterable_equal(levels(get_obj(out)), [1, 2, 3])
+    assert get_obj(out).cat.ordered
 
 
 def test_as_pd_date():
@@ -226,13 +226,13 @@ def test_is_element():
     assert_iterable_equal(out.index, [1, 2])
 
     out = is_element(df.x, [2, 3])
-    assert_iterable_equal(out.obj, [False, True, False, True])
+    assert_iterable_equal(get_obj(out), [False, True, False, True])
 
     df = tibble(x=[1, 2, 1, 2], y=[1, 1, 2, 2]).rowwise()
     out = is_element(df.x, [2, 3])
     assert out.is_rowwise
 
-    out = is_element(df.x.obj, [2, 3])
+    out = is_element(get_obj(df.x), [2, 3])
     assert_iterable_equal(out, [False, True, False, True])
     assert_iterable_equal(out.index, df.index)
 

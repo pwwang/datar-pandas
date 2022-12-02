@@ -12,7 +12,7 @@ from datar.apis.dplyr import (
 
 from ... import pandas as pd
 from ...typing import Data, Str
-from ...pandas import Categorical, DataFrame, SeriesGroupBy
+from ...pandas import Categorical, DataFrame, SeriesGroupBy, get_obj
 from ...common import is_factor, is_scalar, intersect, setdiff, union
 from ...contexts import Context
 from ...tibble import reconstruct_tibble
@@ -81,9 +81,9 @@ def _join(
             xcol = x[col]
             ycol = y[col]
             if isinstance(xcol, SeriesGroupBy):
-                xcol = xcol.obj
+                xcol = get_obj(xcol)
             if isinstance(ycol, SeriesGroupBy):  # pragma: no cover
-                ycol = ycol.obj
+                ycol = get_obj(ycol)
             if is_factor(xcol) and is_factor(ycol):
                 ret[col] = Categorical(
                     ret[col],

@@ -20,7 +20,7 @@ from datar.base import (
     cospi,
 )
 from datar.tibble import tibble
-from datar_pandas.pandas import Series, SeriesGroupBy
+from datar_pandas.pandas import Series, SeriesGroupBy, get_obj
 from ..conftest import assert_iterable_equal
 
 
@@ -52,7 +52,7 @@ def test_atan2():
     gf = df.group_by('b')
     rf = df.rowwise()
     out = atan2(rf.a, rf.b)
-    assert_iterable_equal(out.obj, [0.321751, 0.244979], approx=1e-4)
+    assert_iterable_equal(get_obj(out), [0.321751, 0.244979], approx=1e-4)
     assert out.is_rowwise
 
     out = atan2(df.a, df.b)
@@ -61,12 +61,12 @@ def test_atan2():
 
     out = atan2(gf.a, gf.b)
     assert isinstance(out, SeriesGroupBy)
-    assert_iterable_equal(out.obj, [0.321751, 0.244979], approx=1e-4)
+    assert_iterable_equal(get_obj(out), [0.321751, 0.244979], approx=1e-4)
 
     out = atan2(1, gf.b)
     assert isinstance(out, SeriesGroupBy)
-    assert_iterable_equal(out.obj, [0.321751, 0.244979], approx=1e-4)
+    assert_iterable_equal(get_obj(out), [0.321751, 0.244979], approx=1e-4)
 
     out = atan2(gf.a, 1)
     assert isinstance(out, SeriesGroupBy)
-    assert_iterable_equal(out.obj, [0.785398, 0.785398], approx=1e-4)
+    assert_iterable_equal(get_obj(out), [0.785398, 0.785398], approx=1e-4)

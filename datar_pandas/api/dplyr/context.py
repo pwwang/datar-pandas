@@ -18,7 +18,7 @@ from datar.apis.dplyr import (
 from ...typing import Data, Int
 from ...common import setdiff
 from ...contexts import Context
-from ...pandas import DataFrame, Series
+from ...pandas import DataFrame, Series, get_obj
 from ...tibble import Tibble, TibbleGrouped
 from ...middlewares import CurColumn
 from ...utils import dict_get
@@ -60,7 +60,7 @@ def _cur_data_all_grouped(_data: TibbleGrouped) -> Series:
     grouped = _data._datar["grouped"]
     return Series(
         [
-            grouped.obj.loc[dict_get(grouped.grouper.groups, key), :]
+            get_obj(grouped).loc[dict_get(grouped.grouper.groups, key), :]
             for key in grouped.grouper.result_index
         ],
         name="cur_data_all",

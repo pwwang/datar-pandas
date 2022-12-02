@@ -22,14 +22,17 @@ from ...broadcast import _grouper_compatible
 from ...collections import Collection
 from ...common import is_integer, is_scalar
 from ...factory import func_bootstrap
-from ...pandas import DataFrame, PandasObject, Series, SeriesGroupBy, NDFrame
+from ...pandas import (
+    DataFrame,
+    PandasObject,
+    Series,
+    SeriesGroupBy,
+    NDFrame,
+    get_obj,
+)
 from ...tibble import Tibble, TibbleGrouped, reconstruct_tibble
 
-func_bootstrap(
-    length,
-    func=lambda x: x.shape[0],
-    kind="agg"
-)
+func_bootstrap(length, func=lambda x: x.shape[0], kind="agg")
 func_bootstrap(
     lengths,
     func=lambda x: x.agg(lambda y: 1 if is_scalar(y) else len(y)),
@@ -63,7 +66,7 @@ def _match(x, table, nomatch=-1):
             sort=x.sort,
             dropna=x.dropna,
         )
-        df = x1.obj.to_frame()
+        df = get_obj(x1).to_frame()
         if isinstance(table, SeriesGroupBy):
             t1 = table.agg(tuple)
             t1 = t1.groupby(
@@ -74,7 +77,7 @@ def _match(x, table, nomatch=-1):
             )
             if not _grouper_compatible(x1.grouper, t1.grouper):
                 raise ValueError("Grouping of x and table are not compatible")
-            df["table"] = t1.obj
+            df["table"] = get_obj(t1)
         elif isinstance(table, Series):
             t1 = table.groupby(
                 table.index,
@@ -91,7 +94,7 @@ def _match(x, table, nomatch=-1):
             if not _grouper_compatible(x1.grouper, t1.grouper):
                 df["table"] = [make_array(table)] * df.shape[0]
             else:
-                df["table"] = t1.obj
+                df["table"] = get_obj(t1)
         else:
             df["table"] = [make_array(table)] * df.shape[0]
 
@@ -134,11 +137,7 @@ def _order_post(out, x, decreasing=False, na_last=True):
     )
 
 
-@func_bootstrap(
-    order,
-    kind="transform",
-    post=_order_post
-)
+@func_bootstrap(order, kind="transform", post=_order_post)
 def _order(x: Series, decreasing=False, na_last=True):
     if not na_last or decreasing:
         na = -np.inf

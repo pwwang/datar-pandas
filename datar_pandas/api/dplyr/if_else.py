@@ -7,7 +7,7 @@ import numpy as np
 from datar.apis.dplyr import if_else, case_when
 
 from ... import pandas as pd
-from ...pandas import Series, SeriesGroupBy
+from ...pandas import Series, SeriesGroupBy, get_obj
 from ...tibble import Tibble, reconstruct_tibble
 from ..dplyr.group_by import ungroup
 
@@ -61,12 +61,12 @@ def _if_else_sgb(condition, true, false, missing=None):
     )
     # use obj so df.x won't get a SeriesGroupBy
     grouped = df._datar["grouped"]
-    # print(grouped.obj)
+    # print(get_obj(grouped))
     out = if_else(
-        grouped.obj.iloc[:, 0],
-        grouped.obj.iloc[:, 1],
-        grouped.obj.iloc[:, 2],
-        grouped.obj.iloc[:, 3],
+        get_obj(grouped).iloc[:, 0],
+        get_obj(grouped).iloc[:, 1],
+        get_obj(grouped).iloc[:, 2],
+        get_obj(grouped).iloc[:, 3],
     )
     return out.groupby(
         condition.grouper,

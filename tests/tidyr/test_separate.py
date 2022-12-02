@@ -8,7 +8,7 @@ from datar.dplyr import group_by, group_vars
 from datar.tibble import tibble
 from datar.tidyr import separate, separate_rows
 from datar_pandas.tibble import TibbleGrouped
-from datar_pandas.pandas import assert_frame_equal
+from datar_pandas.pandas import assert_frame_equal, get_obj
 
 from ..conftest import assert_iterable_equal, assert_equal
 
@@ -194,7 +194,7 @@ def test_preserves_grouping2():
 def test_drops_grouping_when_needed2():
     df = tibble(x=1, y="a:b") >> group_by(f.x, f.y)
     out = df >> separate_rows(f.y)
-    assert_iterable_equal(out.y.obj, c("a", "b"))
+    assert_iterable_equal(get_obj(out.y), c("a", "b"))
     assert_equal(group_vars(out), ["x"])
 
     out = df >> group_by(f.y) >> separate_rows(f.y)

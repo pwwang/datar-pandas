@@ -7,7 +7,13 @@ from datar.base import (
     rank,
 )
 from datar.base import table, pi, paste0, rnorm, cumsum, seq
-from datar_pandas.pandas import Interval, DataFrame, Series, assert_frame_equal
+from datar_pandas.pandas import (
+    Interval,
+    DataFrame,
+    Series,
+    assert_frame_equal,
+    get_obj,
+)
 from ..conftest import assert_iterable_equal
 
 
@@ -70,7 +76,7 @@ def test_diff():
 
     x = Series([1, 2, 3, 4, 5]).groupby([1, 2, 2, 3, 3])
     out = diff(x)
-    assert_iterable_equal(out.obj, [1, 1])
+    assert_iterable_equal(get_obj(out), [1, 1])
     assert out.grouper.ngroups == 3
 
 

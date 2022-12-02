@@ -16,7 +16,7 @@ from datar.forcats import (
     first2,
 )
 from datar.tibble import tribble
-from datar_pandas.pandas import Series
+from datar_pandas.pandas import Series, get_obj
 
 from ..conftest import assert_iterable_equal
 
@@ -159,8 +159,8 @@ def test_fct_inorder():
 
     sgb = s.groupby([1, 1, 2, 2])
     s2 = fct_inorder(sgb)
-    assert_iterable_equal(s2.obj, f2)
-    assert_iterable_equal(levels(s2.obj), levels(f2))
+    assert_iterable_equal(get_obj(s2), f2)
+    assert_iterable_equal(levels(get_obj(s2)), levels(f2))
 
 
 def test_first2():

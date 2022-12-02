@@ -19,7 +19,7 @@ from datar.apis.forcats import (
 )
 
 from ... import pandas as pd
-from ...pandas import Categorical, DataFrame, Series, SeriesGroupBy
+from ...pandas import Categorical, DataFrame, Series, SeriesGroupBy, get_obj
 from ...common import is_scalar, intersect, setdiff
 from ...collections import Collection
 from ...contexts import Context
@@ -103,7 +103,7 @@ def _fct_inorder(_f, ordered: bool = None) -> Categorical:
         The factor with levels reordered
     """
     is_sgb = isinstance(_f, SeriesGroupBy)
-    _f1 = _f.obj if is_sgb else _f
+    _f1 = get_obj(_f) if is_sgb else _f
 
     _f1 = check_factor(_f1)
     dups = duplicated(_f1, __ast_fallback="normal", __backend="numpy")
@@ -120,7 +120,7 @@ def _fct_inorder(_f, ordered: bool = None) -> Categorical:
     if not is_sgb:
         return out
 
-    return Series(out, _f.obj.index).groupby(
+    return Series(out, get_obj(_f).index).groupby(
         _f.grouper,
         observed=_f.observed,
         sort=_f.sort,

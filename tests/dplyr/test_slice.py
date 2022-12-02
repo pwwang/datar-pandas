@@ -26,7 +26,12 @@ from datar.dplyr import (
 )
 from datar_pandas.tibble import TibbleRowwise
 from datar_pandas.api.dplyr.slice_ import _n_from_prop
-from datar_pandas.pandas import Categorical, Series, assert_frame_equal
+from datar_pandas.pandas import (
+    Categorical,
+    Series,
+    assert_frame_equal,
+    get_obj,
+)
 
 from ..conftest import assert_iterable_equal, assert_equal
 
@@ -98,7 +103,7 @@ def test_slice_works_with_grouped_data():
     out = gf >> slice(
         Series([1, 0, 0]).groupby(gf._datar["grouped"].grouper.result_index)
     )
-    assert_iterable_equal(out.x.obj, [2, 3])
+    assert_iterable_equal(get_obj(out.x), [2, 3])
 
 
 def test_slice_gives_correct_rows():
@@ -114,10 +119,12 @@ def test_slice_gives_correct_rows():
     ) >> group_by(f.group)
 
     out = slice(a, c[:3])
-    assert out.value.obj.tolist() == [f"row{i}" for i in [1, 2, 3, 6, 7, 8]]
+    assert get_obj(out.value).tolist() == [
+        f"row{i}" for i in [1, 2, 3, 6, 7, 8]
+    ]
 
     out = slice(a, c(1, 3))
-    assert out.value.obj.tolist() == [f"row{i}" for i in [2, 4, 7, 9]]
+    assert get_obj(out.value).tolist() == [f"row{i}" for i in [2, 4, 7, 9]]
 
 
 def test_slice_handles_na():

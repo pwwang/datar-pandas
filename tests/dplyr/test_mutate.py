@@ -38,7 +38,7 @@ from datar.dplyr import (
 from datar.other import itemgetter
 from datar.tibble import tibble
 
-from datar_pandas.pandas import DataFrame, Series, assert_frame_equal
+from datar_pandas.pandas import DataFrame, Series, assert_frame_equal, get_obj
 from datar_pandas.tibble import TibbleGrouped, TibbleRowwise
 
 from ..conftest import assert_equal, assert_iterable_equal
@@ -146,7 +146,7 @@ def test_handles_data_frame_columns():
     assert_frame_equal(res["new_col"], tibble(x=[1, 2, 3]))
 
     res = mutate(group_by(df, f.a), new_col=tibble(x=f.a))
-    assert_iterable_equal(res["new_col"].x.obj, [1, 2, 3])
+    assert_iterable_equal(get_obj(res["new_col"].x), [1, 2, 3])
 
     rf = rowwise(df, f.a)
     res = mutate(rf, new_col=tibble(x=f.a))
@@ -199,7 +199,7 @@ def test_works_on_0row_rowwise_df():
     res = dat >> rowwise() >> mutate(a2=f.a * 2)
 
     assert isinstance(res, TibbleRowwise)
-    assert res.a2.obj.tolist() == []
+    assert get_obj(res.a2).tolist() == []
 
 
 def test_works_on_empty_data_frames():
@@ -231,7 +231,7 @@ def test_rowwise_mutate_as_expected():
 def test_rowwise_list_data():
     test = rowwise(tibble(x=[1, 2]))
     out = test >> mutate(a=[[3, 4]]) >> mutate(
-        b=itemgetter(f.a.obj[0], cur_group_id())
+        b=itemgetter(get_obj(f.a)[0], cur_group_id())
     )
     exp = test >> mutate(a=[[3, 4]]) >> ungroup() >> mutate(b=[3, 4])
 
@@ -343,7 +343,7 @@ def test_mutate_casts_data_frame_results_to_common_type():
 
 def test_rowwise_empty_list_columns():
     res = tibble(a=[]) >> rowwise() >> mutate(n=lengths(f.a))
-    assert res.n.obj.tolist() == []
+    assert get_obj(res.n).tolist() == []
 
 
 # Error messages ----------------------------------------------------------

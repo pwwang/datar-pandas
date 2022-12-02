@@ -8,6 +8,7 @@ from datar_pandas.pandas import (
     is_integer_dtype,
     SeriesGroupBy,
     assert_frame_equal,
+    get_obj,
 )
 from datar_pandas.tibble import Tibble, TibbleRowwise, TibbleGrouped
 
@@ -95,7 +96,7 @@ def test_tibble_group_by():
 
     # __setitem__
     df3["c"] = 1
-    assert df3._datar["grouped"].c.obj.tolist() == [1, 1, 1]
+    assert get_obj(df3._datar["grouped"].c).tolist() == [1, 1, 1]
 
     df3["d"] = Tibble.from_args(d=df2.b)
     assert df3._datar["grouped"].obj["d$d"].tolist() == [4, 5, 6]
@@ -109,11 +110,11 @@ def test_tibble_group_by():
     df = df.group_by("a")
     # reindex
     df5 = df.reindex(["a", "a", "b"])
-    assert df5.b.obj.tolist() == [4, 4, 5]
+    assert get_obj(df5.b).tolist() == [4, 4, 5]
 
     # # take
     # df6 = df.take([0, 0, 1])
-    # assert df6.b.obj.tolist() == [4, 4, 5]
+    # assert df6.get_obj(b).tolist() == [4, 4, 5]
 
     # group_by
     df7 = df.group_by("b", add=True)

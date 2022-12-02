@@ -40,7 +40,7 @@ from datar.dplyr import (
 from datar.tibble import tibble
 from pipda import VerbCall, register_func, register_verb
 
-from datar_pandas.pandas import DataFrame, Series, assert_frame_equal
+from datar_pandas.pandas import DataFrame, Series, assert_frame_equal, get_obj
 from datar_pandas.tibble import TibbleRowwise
 
 from ..conftest import assert_equal, assert_iterable_equal
@@ -194,11 +194,15 @@ def test_with_group_id():
     @register_verb(DataFrame, dependent=True, context=None)
     def switcher(data, group_id, across_a, across_b):
         return group_id.apply(
-            lambda x: across_a.a.obj[0] if x == 0 else across_b.b.obj[1]
+            lambda x: (
+                get_obj(across_a.a)[0]
+                if x == 0
+                else get_obj(across_b.b)[1]
+            )
         )
 
     out = df >> mutate(x=switcher(cur_group_id(), across(f.a), across(f.b)))
-    assert out.x.obj.tolist() == [1, 4]
+    assert get_obj(out.x).tolist() == [1, 4]
 
 
 def test_cache_key():
@@ -359,7 +363,7 @@ def test_c_across():
     # what if no columns specified
     gf = df >> rowwise(f.x)
     out = gf >> mutate(z=sum(c_across()))
-    assert out.z.obj.tolist() == [3, 4]
+    assert get_obj(out.z).tolist() == [3, 4]
 
 
 def test_nb_fail():

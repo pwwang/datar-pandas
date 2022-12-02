@@ -39,7 +39,7 @@ from datar.dplyr import (
 )
 from datar.tibble import tibble
 from datar_pandas import pandas as pd
-from datar_pandas.pandas import Series
+from datar_pandas.pandas import Series, get_obj
 
 from ..conftest import assert_iterable_equal, assert_equal
 
@@ -223,11 +223,11 @@ def test_na_if_errors():
 def test_na_if_sgb():
     df = tibble(x=[1, 2], y=[2, 2]).rowwise()
     out = na_if(df.x, df.y)
-    assert_iterable_equal(out.obj, [1, NA])
+    assert_iterable_equal(get_obj(out), [1, NA])
 
     df = tibble(x=["1", "2"], y=["2", "2"], g=[1, 2]).group_by("g")
     out = na_if(df.x, df.y)
-    assert_iterable_equal(out.obj, ["1", NA])
+    assert_iterable_equal(get_obj(out), ["1", NA])
 
 
 def test_na_if_obj():
@@ -242,7 +242,7 @@ def test_near():
 
     df = tibble(x=sqrt(2) ** 2, y=2).rowwise()
     out = near(df.x, df.y)
-    assert_iterable_equal(out.obj, [True])
+    assert_iterable_equal(get_obj(out), [True])
 
 
 # nth

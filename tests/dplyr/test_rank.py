@@ -18,6 +18,7 @@ from datar.dplyr import (
     row_number
 )
 from datar.tibble import tibble
+from datar_pandas.pandas import get_obj
 
 from ..conftest import assert_equal, assert_iterable_equal
 
@@ -147,10 +148,10 @@ def test_plain_arrays():
 def test_row_number_with_groups():
     df = tibble(x=[3, 3, 4, 4]).group_by("x")
     out = df >> mutate(n=row_number())
-    assert_iterable_equal(out.n.obj, [1, 2, 1, 2])
+    assert_iterable_equal(get_obj(out.n), [1, 2, 1, 2])
 
     out = df >> mutate(n=row_number() + 1)
-    assert_iterable_equal(out.n.obj, [2, 3, 2, 3])
+    assert_iterable_equal(get_obj(out.n), [2, 3, 2, 3])
 
 
 def test_ntile_with_groups():

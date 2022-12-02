@@ -10,7 +10,7 @@ from pipda import Expression, evaluate_expr
 
 from .common import is_null, unique
 from .collections import Collection
-from .pandas import DataFrame, Series, SeriesGroupBy
+from .pandas import DataFrame, Series, SeriesGroupBy, get_obj
 
 if TYPE_CHECKING:
     from pipda import ContextType
@@ -51,7 +51,7 @@ def name_of(value: Any) -> str:
 
 
 name_of.register(Series, lambda x: x.name)
-name_of.register(SeriesGroupBy, lambda x: x.obj.name)
+name_of.register(SeriesGroupBy, lambda x: get_obj(x).name)
 name_of.register(DataFrame, lambda x: None)
 
 
@@ -120,7 +120,7 @@ def vars_select(
     columns = [
         column.name
         if isinstance(column, Series)
-        else column.obj.name
+        else get_obj(column).name
         if isinstance(column, SeriesGroupBy)
         else column
         for column in columns

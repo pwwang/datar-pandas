@@ -18,7 +18,7 @@ from datar.apis.dplyr import (
 )
 
 from ... import pandas as pd
-from ...pandas import DataFrame, SeriesGroupBy
+from ...pandas import DataFrame, SeriesGroupBy, get_obj
 from ...common import is_integer, is_scalar
 from ...collections import Collection
 from ...broadcast import _ungroup
@@ -293,7 +293,7 @@ def _sanitize_rows(
                 continue
 
             gidx = dict_get(rows.grouper.indices, key)
-            out.extend(idx.take(rows.obj.take(gidx)))
+            out.extend(idx.take(get_obj(rows).take(gidx)))
     else:
         for key in result_index:
             idx = dict_get(indices, key)

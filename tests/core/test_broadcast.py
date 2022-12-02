@@ -9,6 +9,7 @@ from datar_pandas.pandas import (
     Index,
     Series,
     assert_frame_equal,
+    get_obj,
 )
 from datar_pandas.broadcast import (
     _broadcast_base,
@@ -36,7 +37,7 @@ def test_broadcast_base_array_groupby():
     # all size-1 groups
     df = tibble(a=[1, 2]).groupby("a")
     out = _broadcast_base([1, 2], df)
-    assert out.a.obj.values.tolist() == [1, 1, 2, 2]
+    assert get_obj(out.a).values.tolist() == [1, 1, 2, 2]
 
     df = tibble(a=[1, 2, 1, 2]).groupby("a")
     with pytest.raises(ValueError, match=r"Cannot recycle `x` with size"):
@@ -46,13 +47,13 @@ def test_broadcast_base_array_groupby():
     with pytest.raises(ValueError, match=r"Cannot recycle `\[1, 2\]`"):
         _broadcast_base([1, 2], df)
 
-    df.obj.index = [0, 0, 1, 0]
+    get_obj(df).index = [0, 0, 1, 0]
     out = _broadcast_base([1, 2, 3], df)
     assert out is df
 
     df = tibble(a=[2, 2, 1, 2]).groupby("a")
     out = _broadcast_base([1, 2, 3], df)
-    assert out.a.obj.values.tolist() == [2, 2, 1, 1, 1, 2]
+    assert get_obj(out.a).values.tolist() == [2, 2, 1, 1, 1, 2]
 
     df = tibble(a=[1, 2, 2, 3, 3, 3]).groupby("a")
     with pytest.raises(
@@ -67,7 +68,7 @@ def test_broadcast_base_array_groupby():
     # TibbleGrouped
     df = tibble(a=[1, 2, 1]).group_by("a")
     out = _broadcast_base([1, 2], df)
-    assert out.a.obj.values.tolist() == [1, 2, 2, 1]
+    assert get_obj(out.a).values.tolist() == [1, 2, 2, 1]
 
     df = tibble(a=[1, 2, 1]).rowwise("a")
     with pytest.raises(ValueError, match=r"must be size 1"):
@@ -124,17 +125,17 @@ def test_broadcast_base_groupby_groupby():
     df = tibble(a=[2, 1, 2]).groupby("a")
     value = tibble(a=[1, 2, 1]).groupby("a")
     base = _broadcast_base(value, df)
-    assert base.a.obj.values.tolist() == [2, 1, 1, 2]
+    assert get_obj(base.a).values.tolist() == [2, 1, 1, 2]
 
     # TibbleGrouped
     df = tibble(a=[1, 2, 2]).group_by("a")
     base = _broadcast_base(value, df)
-    assert base.a.obj.values.tolist() == [1, 1, 2, 2]
+    assert get_obj(base.a).values.tolist() == [1, 1, 2, 2]
 
     # rowwise
     df = tibble(a=[1, 2, 2]).rowwise()
     base = _broadcast_base(df.a, df.a)
-    assert base.obj is df.a.obj
+    assert get_obj(base) is get_obj(df.a)
 
     base = _broadcast_base(df.a, df)
     assert base is df
@@ -153,16 +154,16 @@ def test_broadcast_base_groupby_ndframe():
     value = tibble(a=[2, 1, 2, 1]).groupby("a")
     df = tibble(a=3)
     base = _broadcast_base(value, df)
-    assert base.a.obj.tolist() == [3, 3, 3, 3]
+    assert get_obj(base.a).tolist() == [3, 3, 3, 3]
 
     df = tibble(a=[3, 4])
     base = _broadcast_base(value, df)
-    assert base.a.obj.tolist() == [3, 3, 4, 4]
+    assert get_obj(base.a).tolist() == [3, 3, 4, 4]
 
     # TibbleGrouped
     value = tibble(a=[2, 1, 2, 1]).group_by("a")
     base = _broadcast_base(value, df)
-    assert base.a.obj.tolist() == [3, 3, 4, 4]
+    assert get_obj(base.a).tolist() == [3, 3, 4, 4]
 
 
 def test_broadcast_base_ndframe_groupby():
@@ -194,7 +195,7 @@ def test_broadcast_base_ndframe_groupby():
     assert base is df
 
     df = tibble(a=[1, 2]).groupby("a")
-    df.obj.index = [1, 1]
+    get_obj(df).index = [1, 1]
     value = df.a.apply(lambda x: range(x.values[0])).explode().astype(int)
     base = _broadcast_base(value, df)
     assert base is df
@@ -202,12 +203,12 @@ def test_broadcast_base_ndframe_groupby():
     # Broadcast size-1 groups in base
     df = tibble(a=[1, 2]).groupby("a")
     base = _broadcast_base(value, df)
-    assert base.a.obj.tolist() == [1, 2, 2]
+    assert get_obj(base.a).tolist() == [1, 2, 2]
 
     # TibbleGrouped
     df = tibble(a=[1, 2]).group_by("a")
     base = _broadcast_base(value, df)
-    assert base.a.obj.tolist() == [1, 2, 2]
+    assert get_obj(base.a).tolist() == [1, 2, 2]
 
     # Rowwise
     df = tibble(a=[1, 2]).rowwise()
@@ -216,7 +217,7 @@ def test_broadcast_base_ndframe_groupby():
     assert base is df
 
     base = _broadcast_base(value, df.a)
-    assert base.obj is df.a.obj
+    assert get_obj(base) is get_obj(df.a)
 
     value = tibble(a=[1, 2, 3])
     with pytest.raises(ValueError):
@@ -252,13 +253,13 @@ def test_broadcast_to_factor():
     # empty
     x = factor([], levels=list("abc"))
     base = Series([], dtype=object).groupby([])
-    out = broadcast_to(x, base.obj.index, base.grouper)
+    out = broadcast_to(x, get_obj(base).index, base.grouper)
     assert_factor_equal(out.values, x)
 
     # grouped
     x = factor(["a", "b"], levels=list("abc"))
     base = Series([1, 2, 3, 4], index=[4, 5, 6, 7]).groupby([1, 1, 2, 2])
-    out = broadcast_to(x, base.obj.index, base.grouper)
+    out = broadcast_to(x, get_obj(base).index, base.grouper)
     assert_iterable_equal(out.index, [4, 5, 6, 7])
     assert_iterable_equal(out, ["a", "b"] * 2)
 
@@ -276,13 +277,13 @@ def test_broadcast_to_arrays_ndframe():
 
 def test_broadcast_to_arrays_groupby():
     df = tibble(x=[]).groupby("x")
-    value = broadcast_to([], df.obj.index, df.grouper)
+    value = broadcast_to([], get_obj(df).index, df.grouper)
     assert value.size == 0
 
     df = tibble(x=[2, 1, 2, 1])
     df.index = [4, 5, 6, 7]
     df = df.groupby("x", sort=False)
-    value = broadcast_to(["a", "b"], df.obj.index, df.grouper)
+    value = broadcast_to(["a", "b"], get_obj(df).index, df.grouper)
     assert value.tolist() == ["a", "a", "b", "b"]
 
 
@@ -300,23 +301,23 @@ def test_broadcast_to_ndframe_groupby():
     df = tibble(x=[1, 2, 2, 1, 1, 2]).groupby("x", sort=True)
     value = Series([8, 10], index=[1, 2])
     value.index.name = "x"
-    out = broadcast_to(value, df.obj.index, df.grouper)
+    out = broadcast_to(value, get_obj(df).index, df.grouper)
     assert out.tolist() == [8, 10, 10, 8, 8, 10]
 
-    out = broadcast_to(value.to_frame(name="x"), df.obj.index, df.grouper)
+    out = broadcast_to(value.to_frame(name="x"), get_obj(df).index, df.grouper)
     assert out.x.tolist() == [8, 10, 10, 8, 8, 10]
 
 
 def test_broadcast_to_groupby_ndframe():
     df = tibble(x=[1, 2, 2, 1, 1, 2]).groupby("x")
     with pytest.raises(ValueError, match=r"Can't broadcast grouped"):
-        broadcast_to(df, df.obj.index)
+        broadcast_to(df, get_obj(df).index)
 
-    out = broadcast_to(df.x, df.obj.index, df.grouper)
-    assert_iterable_equal(out, df.x.obj)
+    out = broadcast_to(df.x, get_obj(df).index, df.grouper)
+    assert_iterable_equal(out, get_obj(df.x))
 
-    out = broadcast_to(df, df.obj.index, df.grouper)
-    assert_frame_equal(out, df.obj)
+    out = broadcast_to(df, get_obj(df).index, df.grouper)
+    assert_frame_equal(out, get_obj(df))
 
     df = tibble(x=[1, 2, 2, 1, 1, 2]).group_by("x")
     out = broadcast_to(df, df.index, df._datar["grouped"].grouper)
@@ -388,13 +389,13 @@ def test_init_tibble_from_sgb():
     x = tibble(a=[1, 2, 3]).groupby("a").a
     df = init_tibble_from(x, "a")
     assert isinstance(df, TibbleGrouped)
-    assert_iterable_equal(df.a.obj, x.obj)
+    assert_iterable_equal(get_obj(df.a), get_obj(x))
 
     # rowwise
     x = tibble(a=[1, 2, 3]).rowwise().a
     df = init_tibble_from(x, "a")
     assert isinstance(df, TibbleRowwise)
-    assert_iterable_equal(df.a.obj, x.obj)
+    assert_iterable_equal(get_obj(df.a), get_obj(x))
 
 
 def test_init_tibble_from_df():
@@ -421,7 +422,7 @@ def test_add_to_tibble():
     df = df.group_by("a")
     tbl = add_to_tibble(df, "b", [3, 4], broadcast_tbl=True)
     assert isinstance(tbl, TibbleGrouped)
-    assert tbl.b.obj.tolist() == [3, 4, 3, 4]
+    assert get_obj(tbl.b).tolist() == [3, 4, 3, 4]
 
     value = tibble(b=[3, 4])
     df = tibble(a=[1, 2])
@@ -450,7 +451,7 @@ def test_catindex():
         index=Index(Categorical([1, 1, 2, 2], categories=[1, 2, 3]), name="g"),
     )
     base = _broadcast_base(x, df)
-    assert_iterable_equal(base.g.obj, [1, 1, 2, 2])
+    assert_iterable_equal(get_obj(base.g), [1, 1, 2, 2])
 
 
 def test_recycle_scalar_composed_base():
@@ -488,16 +489,16 @@ def test_incompatible_index():
     s1 = Series([1, 2], index=[0, 1])
     s2 = Series([3, 4], index=[1, 2]).groupby([1, 2])
     with pytest.raises(ValueError):
-        broadcast_to(s1, s2.obj.index)
+        broadcast_to(s1, get_obj(s2).index)
 
     with pytest.raises(ValueError):
-        broadcast_to(s1, s2.obj.index, s2.grouper)
+        broadcast_to(s1, get_obj(s2).index, s2.grouper)
 
 
 def test_nongrouped_value_with_equal_index_gets_recycled():
     s1 = Series([1, 2], index=[3, 4]).groupby([1, 2])
     s2 = Series([3, 4], index=[3, 4])
-    out = broadcast_to(s2, s1.obj.index, s1.grouper)
+    out = broadcast_to(s2, get_obj(s1).index, s1.grouper)
     assert out is s2
 
 

@@ -7,7 +7,7 @@ from datar.base import c, NA, NULL, seq
 from datar.dplyr import everything, group_by
 from datar.tidyr import fill
 from datar.tibble import tibble
-from datar_pandas.pandas import assert_frame_equal
+from datar_pandas.pandas import assert_frame_equal, get_obj
 
 from ..conftest import assert_iterable_equal
 
@@ -87,4 +87,4 @@ def test_fill_preserves_attributes():
 def test_fill_respects_grouping():
     df = tibble(x=c(1, 1, 2), y=c(1, NA, NA))
     out = df >> group_by(f.x) >> fill(f.y)
-    assert_iterable_equal(out.y.obj, [1, 1, NA])
+    assert_iterable_equal(get_obj(out.y), [1, 1, NA])

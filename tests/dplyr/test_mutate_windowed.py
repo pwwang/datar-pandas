@@ -36,6 +36,7 @@ from datar.dplyr import (
 )
 from datar.other import itemgetter
 from datar.data import mtcars
+from datar_pandas.pandas import get_obj
 from ..conftest import assert_iterable_equal
 
 
@@ -107,22 +108,22 @@ def test_cum_sum_min_max_works():
         cmaxy=cummax(f.y),
     )
     assert_iterable_equal(
-        res.csumx.obj, c(list(cumsum(df.x[:5])), list(cumsum(df.x[5:])))
+        get_obj(res.csumx), c(list(cumsum(df.x[:5])), list(cumsum(df.x[5:])))
     )
     assert_iterable_equal(
-        res.csumy.obj, c(list(cumsum(df.x[:5])), list(cumsum(df.x[5:])))
+        get_obj(res.csumy), c(list(cumsum(df.x[:5])), list(cumsum(df.x[5:])))
     )
     assert_iterable_equal(
-        res.cminx.obj, c(list(cummin(df.x[:5])), list(cummin(df.x[5:])))
+        get_obj(res.cminx), c(list(cummin(df.x[:5])), list(cummin(df.x[5:])))
     )
     assert_iterable_equal(
-        res.cminy.obj, c(list(cummin(df.x[:5])), list(cummin(df.x[5:])))
+        get_obj(res.cminy), c(list(cummin(df.x[:5])), list(cummin(df.x[5:])))
     )
     assert_iterable_equal(
-        res.cmaxx.obj, c(list(cummax(df.x[:5])), list(cummax(df.x[5:])))
+        get_obj(res.cmaxx), c(list(cummax(df.x[:5])), list(cummax(df.x[5:])))
     )
     assert_iterable_equal(
-        res.cmaxy.obj, c(list(cummax(df.x[:5])), list(cummax(df.x[5:])))
+        get_obj(res.cmaxy), c(list(cummax(df.x[:5])), list(cummax(df.x[5:])))
     )
 
     df.loc[2, "x"] = NA
@@ -233,35 +234,35 @@ def test_rank_functions_deal_correctly_with_na():
         )
     )
 
-    assert all(is_na(res.min_rank.obj[[2, 5, 8, 11]]))
-    assert all(is_na(res.dense_rank.obj[[2, 5, 8, 11]]))
-    assert all(is_na(res.percent_rank.obj[[2, 5, 8, 11]]))
-    assert all(is_na(res.cume_dist.obj[[2, 5, 8, 11]]))
-    assert all(is_na(res.ntile.obj[[2, 5, 8, 11]]))
-    assert all(is_na(res.row_number.obj[[2, 5, 8, 11]]))
+    assert all(is_na(get_obj(res.min_rank)[[2, 5, 8, 11]]))
+    assert all(is_na(get_obj(res.dense_rank)[[2, 5, 8, 11]]))
+    assert all(is_na(get_obj(res.percent_rank)[[2, 5, 8, 11]]))
+    assert all(is_na(get_obj(res.cume_dist)[[2, 5, 8, 11]]))
+    assert all(is_na(get_obj(res.ntile)[[2, 5, 8, 11]]))
+    assert all(is_na(get_obj(res.row_number)[[2, 5, 8, 11]]))
 
     assert (
-        res.percent_rank.obj[[0, 1, 3, 4, 6, 7, 9, 10]].tolist()
+        get_obj(res.percent_rank)[[0, 1, 3, 4, 6, 7, 9, 10]].tolist()
         == rep(c(1.0 / 3, 1.0, 1.0 / 3, 0.0), 2).tolist()
     )
     assert (
-        res.min_rank.obj[[0, 1, 3, 4, 6, 7, 9, 10]].tolist()
+        get_obj(res.min_rank)[[0, 1, 3, 4, 6, 7, 9, 10]].tolist()
         == rep(c(2, 4, 2, 1), 2).tolist()
     )
     assert (
-        res.dense_rank.obj[[0, 1, 3, 4, 6, 7, 9, 10]].tolist()
+        get_obj(res.dense_rank)[[0, 1, 3, 4, 6, 7, 9, 10]].tolist()
         == rep(c(2, 3, 2, 1), 2).tolist()
     )
     assert (
-        res.cume_dist.obj[[0, 1, 3, 4, 6, 7, 9, 10]].tolist()
+        get_obj(res.cume_dist)[[0, 1, 3, 4, 6, 7, 9, 10]].tolist()
         == rep(c(0.75, 1, 0.75, 0.25), 2).tolist()
     )
     assert (
-        res.ntile.obj[[0, 1, 3, 4, 6, 7, 9, 10]].tolist()
+        get_obj(res.ntile)[[0, 1, 3, 4, 6, 7, 9, 10]].tolist()
         == rep(c(1, 2, 1, 1), 2).tolist()
     )
     assert (
-        res.row_number.obj[[0, 1, 3, 4, 6, 7, 9, 10]].tolist()
+        get_obj(res.row_number)[[0, 1, 3, 4, 6, 7, 9, 10]].tolist()
         == rep(c(2, 4, 3, 1), 2).tolist()
     )
 
@@ -322,12 +323,12 @@ def test_mutate_handles_matrix_columns():
     )
 
     assert_iterable_equal(
-        df_grouped.b.obj,
+        get_obj(df_grouped.b),
         [-0.707107, 0.707107, -0.707107, 0.707107, -0.707107, 0.707107],
         approx=1e-5
     )
 
     assert_iterable_equal(
-        df_rowwise.b.obj,
+        get_obj(df_rowwise.b),
         [NA] * 6,
     )

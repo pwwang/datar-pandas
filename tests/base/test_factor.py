@@ -12,7 +12,12 @@ from datar.base import (
     ordered,
     # is_categorical,
 )
-from datar_pandas.pandas import Series, SeriesGroupBy, is_categorical_dtype
+from datar_pandas.pandas import (
+    Series,
+    SeriesGroupBy,
+    is_categorical_dtype,
+    get_obj,
+)
 from ..conftest import (
     assert_,
     assert_equal,
@@ -60,7 +65,7 @@ def test_factor_sgb():
     x = Series([1, 2, 3]).groupby([1, 1, 3])
     out = factor(x)
     assert_(isinstance(out, SeriesGroupBy))
-    assert_factor_equal(out.obj.values, factor([1, 2, 3]))
+    assert_factor_equal(get_obj(out).values, factor([1, 2, 3]))
 
 
 def test_as_factor():

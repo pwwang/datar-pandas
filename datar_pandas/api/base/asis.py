@@ -48,6 +48,7 @@ from ...pandas import (
     is_bool_dtype,
     is_numeric_dtype,
     is_categorical_dtype,
+    get_obj,
 )
 from ...common import is_scalar
 from ...utils import as_series
@@ -142,7 +143,7 @@ def _as_factor_series(x):
 
 @as_factor.register(SeriesGroupBy, backend="pandas")
 def _as_factor_series_groupby(x):
-    return x.obj.astype("category").groupby(
+    return get_obj(x).astype("category").groupby(
         x.grouper,
         sort=x.sort,
         observed=x.observed,
@@ -167,7 +168,7 @@ def _as_ordered_series(x):
 
 @as_ordered.register(SeriesGroupBy, backend="pandas")
 def _as_ordered_series_groupby(x):
-    return x.obj.astype("category").cat.as_ordered().groupby(
+    return get_obj(x).astype("category").cat.as_ordered().groupby(
         x.grouper,
         sort=x.sort,
         observed=x.observed,
@@ -189,9 +190,9 @@ def _as_integer_ser(x):
 
 @as_integer.register(SeriesGroupBy, backend="pandas")
 def _as_integer_sgb(x: SeriesGroupBy):
-    out = as_integer(x.obj, __ast_fallback="normal", __backend="pandas")
+    out = as_integer(get_obj(x), __ast_fallback="normal", __backend="pandas")
     out = as_series(out)
-    out.index = x.obj.index
+    out.index = get_obj(x).index
     out = out.groupby(
         x.grouper,
         sort=x.sort,

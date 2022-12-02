@@ -124,7 +124,7 @@ def _mutate(
     data = data[keep]
     # redo grouping if original columns changed
     # so we don't have discripency on
-    # df.x.obj when df is grouped
+    # df.get_obj(x) when df is grouped
     if intersect(_data.columns, mutated_cols).size > 0:
         data = reconstruct_tibble(data, _data)
 

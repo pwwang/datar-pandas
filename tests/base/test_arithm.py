@@ -10,6 +10,7 @@ from datar_pandas.pandas import (
     SeriesGroupBy,
     assert_frame_equal,
     assert_series_equal,
+    get_obj,
 )
 from datar_pandas.tibble import TibbleGrouped
 
@@ -101,7 +102,7 @@ pd_data = pd_data()
 def test_arithm_func(fun, x, expected, args, kwargs):
     out = fun(x, *args, **kwargs)
     if isinstance(out, SeriesGroupBy):
-        out = out.obj
+        out = get_obj(out)
     if isinstance(expected, list):
         assert_iterable_equal(out, expected, approx=1e-3)
     elif isinstance(expected, Series):
@@ -212,7 +213,7 @@ def test_col_row_verbs():
 def test_scale():
 
     out = Series([1, 2, 3, 4, 3, 2]).groupby([1, 1, 1, 2, 2, 2]) >> scale()
-    assert_iterable_equal(out.obj, [-1.0, 0, 1, 1, 0, -1])
+    assert_iterable_equal(get_obj(out), [-1.0, 0, 1, 1, 0, -1])
 
     df = tibble(x=[1, 2, 3], y=[4, 5, 6])
     assert_frame_equal(scale(df, False, False), df)

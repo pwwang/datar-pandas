@@ -7,7 +7,7 @@ import numpy as np
 from pipda import evaluate_expr
 from datar.core.names import repair_names
 
-from .pandas import DataFrame, Index, Series, SeriesGroupBy, GroupBy
+from .pandas import DataFrame, Index, Series, SeriesGroupBy, GroupBy, get_obj
 
 from .common import is_scalar, intersect, setdiff, union
 from .utils import apply_dtypes, name_of
@@ -142,7 +142,7 @@ class Tibble(DataFrame):
         value = broadcast_to(value, self.index)
 
         # if isinstance(value, GroupBy):
-        #     value = value.obj
+        #     value = get_obj(value)
 
         if isinstance(key, str) and isinstance(value, DataFrame):
             if value.shape[1] == 0:
@@ -249,7 +249,9 @@ class TibbleGrouped(Tibble):
         """"""
         if isinstance(grouped, SeriesGroupBy):
             frame = (
-                grouped.obj.to_frame(name) if name else grouped.obj.to_frame()
+                get_obj(grouped).to_frame(name)
+                if name
+                else get_obj(grouped).to_frame()
             )
             grouped = frame.groupby(
                 grouped.grouper,
@@ -262,7 +264,7 @@ class TibbleGrouped(Tibble):
         if cls is TibbleRowwise:
             meta["group_vars"] = []
 
-        return cls(grouped.obj, copy=deep, meta=meta)
+        return cls(get_obj(grouped), copy=deep, meta=meta)
 
     def __getitem__(self, key):
         result = super().__getitem__(key)
@@ -330,7 +332,7 @@ class TibbleGrouped(Tibble):
     def copy(self, deep: bool = True) -> "TibbleGrouped":
         grouped = self._datar["grouped"]
         return self.__class__.from_groupby(
-            grouped.obj.groupby(
+            get_obj(grouped).groupby(
                 grouped.grouper,
                 observed=grouped.observed,
                 sort=grouped.sort,

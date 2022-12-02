@@ -20,7 +20,7 @@ from datar.dplyr import (
     add_count,
     add_tally,
 )
-from datar_pandas.pandas import assert_frame_equal
+from datar_pandas.pandas import assert_frame_equal, get_obj
 from ..conftest import assert_equal
 
 
@@ -68,8 +68,8 @@ def test_drop():
     assert out.n.tolist() == [1, 0, 0]
 
     out = df >> group_by(f.f, _drop=FALSE) >> count()
-    # print(out.obj)
-    assert out.n.obj.tolist() == [1, 0, 0]
+    # print(get_obj(out))
+    assert get_obj(out.n).tolist() == [1, 0, 0]
 
 
 def test_preserve_grouping():

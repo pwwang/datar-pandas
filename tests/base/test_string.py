@@ -25,7 +25,7 @@ from datar.base import (
     letters,
     LETTERS,
 )
-from datar_pandas.pandas import Series
+from datar_pandas.pandas import Series, get_obj
 from ..conftest import assert_, assert_iterable_equal
 
 
@@ -80,7 +80,7 @@ def test_sub():
     assert_iterable_equal(out, ["b"])
 
     out = sub(".", "a", Series(["b"]).groupby([1]))
-    assert_iterable_equal(list(out.obj)[0], ["a"])
+    assert_iterable_equal(list(get_obj(out))[0], ["a"])
 
 
 def test_gsub():
@@ -113,7 +113,7 @@ def test_paste():
     df = tibble(a=letters[:3], b=LETTERS[:3]).rowwise()
     out = paste0(df)
     assert out.is_rowwise
-    assert_iterable_equal(out.obj, ["aA", "bB", "cC"])
+    assert_iterable_equal(get_obj(out), ["aA", "bB", "cC"])
 
     df = tibble(x=[1, 2, 3], y=[4, 5, 5])
     out = paste(df)
@@ -133,7 +133,7 @@ def test_sprintf():
 
     rf = tibble(x=["%d", "%.2f"], y=[1.1, 2.345]).rowwise()
     out = sprintf(rf.x, rf.y)
-    assert_iterable_equal(out.obj, ["1", "2.35"])
+    assert_iterable_equal(get_obj(out), ["1", "2.35"])
     assert_(out.is_rowwise)
 
 
@@ -161,11 +161,11 @@ def test_substr():
 
     tr = tibble(x=["abcd", "efgh"], g=[1, 2]).rowwise()
     out = substr(tr.x, 1, 3)
-    assert_iterable_equal(out.obj, ["bc", "fg"])
+    assert_iterable_equal(get_obj(out), ["bc", "fg"])
     assert_(out.is_rowwise)
 
     out = substring(tr.x, 1)
-    assert_iterable_equal(out.obj, ["bcd", "fgh"])
+    assert_iterable_equal(get_obj(out), ["bcd", "fgh"])
     assert_(out.is_rowwise)
 
 
@@ -203,7 +203,7 @@ def test_chartr():
 
     tr = tibble(x=["abc", "ade"], g=[1, 2]).rowwise()
     out = chartr("a", "A", tr.x)
-    assert_iterable_equal(out.obj, ["Abc", "Ade"])
+    assert_iterable_equal(get_obj(out), ["Abc", "Ade"])
     assert_(out.is_rowwise)
 
 

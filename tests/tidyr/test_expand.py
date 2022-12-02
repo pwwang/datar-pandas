@@ -24,7 +24,7 @@ from datar.tidyr import (
     nest,
     expand_grid,
 )
-from datar_pandas.pandas import assert_frame_equal
+from datar_pandas.pandas import assert_frame_equal, get_obj
 from datar_pandas.api.tidyr.expand import _flatten_at
 from ..conftest import assert_iterable_equal, assert_equal
 
@@ -91,9 +91,11 @@ def test_expand_accepts_expressions():
 def test_expand_respects_groups():
     df = tibble(a=[1, 1, 2], b=[1, 2, 1], c=[2, 1, 1])
     out = df >> group_by(f.a) >> expand(f.b, f.c) >> nest(data=c(f.b, f.c))
-    assert_frame_equal(out.data.obj.values[0], crossing(b=[1, 2], c=[1, 2]))
     assert_frame_equal(
-        out.data.obj.values[1].reset_index(drop=True), tibble(b=1, c=1)
+        get_obj(out.data).values[0], crossing(b=[1, 2], c=[1, 2])
+    )
+    assert_frame_equal(
+        get_obj(out.data).values[1].reset_index(drop=True), tibble(b=1, c=1)
     )
 
 

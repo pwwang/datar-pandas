@@ -12,10 +12,13 @@ def pytest_sessionstart(session):
     from datar import options
     from datar.core import plugin  # noqa: F401
 
-    modin = session.config.getoption("modin")
+    use_modin = session.config.getoption("modin")
+    if use_modin:
+        from modin import config
+        config.Engine.put("Dask")
 
     options(
-        use_modin=modin,
+        use_modin=use_modin,
         import_names_conflict="silent",
         backends=["numpy", "pandas"],
     )

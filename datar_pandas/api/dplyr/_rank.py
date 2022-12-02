@@ -11,6 +11,7 @@ from ...pandas import (
     GroupBy,
     SeriesGroupBy,
     NDFrame,
+    get_obj,
 )
 from ...common import is_scalar
 from ...tibble import TibbleGrouped
@@ -177,7 +178,7 @@ def _(x, na_last="keep"):
     maxs = ranking.transform("max")
     mins = ranking.transform("min")
     ret = ranking.transform(lambda r: (r - mins) / (maxs - mins))
-    ret[ranking.obj.isna()] = np.nan
+    ret[get_obj(ranking).isna()] = np.nan
     return ret
 
 

@@ -35,7 +35,7 @@ from datar.tibble import (
 )
 
 from datar_pandas import pandas as pd
-from datar_pandas.pandas import assert_frame_equal
+from datar_pandas.pandas import assert_frame_equal, get_obj
 from datar_pandas.tibble import TibbleGrouped, TibbleRowwise
 
 from ..conftest import assert_, assert_equal, assert_iterable_equal, assert_not
@@ -545,7 +545,7 @@ def test_add_row_for_rowwise_df():
     df = tibble(x=[1, 2, 3]) >> rowwise()
     df2 = add_row(df, x=4)
     assert isinstance(df2, TibbleRowwise)
-    assert_iterable_equal(df2.x.obj, [1, 2, 3, 4])
+    assert_iterable_equal(get_obj(df2.x), [1, 2, 3, 4])
 
 
 # add_column for rowwise df
