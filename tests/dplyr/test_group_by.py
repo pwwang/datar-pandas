@@ -7,7 +7,6 @@ import numpy
 from datar import f
 from datar.core.names import NameNonUniqueError
 from datar.data import mtcars, iris
-from datar_pandas.tibble import TibbleGrouped, TibbleRowwise
 from datar.dplyr import (
     count,
     group_by,
@@ -55,6 +54,8 @@ from datar.base import (
 )
 from datar.base import runif
 from datar_pandas.pandas import Series
+from datar_pandas.tibble import TibbleGrouped, TibbleRowwise
+from datar_pandas.utils import pandas_version
 from ..conftest import assert_iterable_equal, assert_equal
 
 
@@ -382,12 +383,12 @@ def test_na_last():
     )
 
     x = res.x.fillna("")
-    # assert x.tolist() == ["apple", "banana", ""]
-    assert x.tolist() == ["apple", "", "banana"]
-
-    out = res
-    # assert_iterable_equal(out._rows, [[0], [2], [1]])
-    assert_iterable_equal(out._rows, [[0], [1], [2]])
+    if pandas_version() < (1, 5):
+        assert_iterable_equal(x, ["apple", "banana", ""])
+        assert_iterable_equal(res._rows, [[0], [2], [1]])
+    else:
+        assert_iterable_equal(x, ["apple", "", "banana"])
+        assert_iterable_equal(res._rows, [[0], [1], [2]])
 
 
 def test_auto_splicing():

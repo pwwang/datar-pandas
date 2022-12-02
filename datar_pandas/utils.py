@@ -14,6 +14,7 @@ from .pandas import DataFrame, Series, SeriesGroupBy
 
 if TYPE_CHECKING:
     from pipda import ContextType
+    from datar_numpy.utils import Version
 
 # Specify a "no default" value so that None can be used as a default value
 NO_DEFAULT = object()
@@ -158,3 +159,11 @@ def as_series(x: Any) -> Series:
     with warnings.catch_warnings():
         warnings.simplefilter("ignore", category=FutureWarning)
         return Series(x)
+
+
+def pandas_version() -> Version:
+    """Get pandas version"""
+    import pandas as pd
+    from datar_numpy.utils import Version
+
+    return Version(*map(int, pd.__version__.split(".")[:3]))

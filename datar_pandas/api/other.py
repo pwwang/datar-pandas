@@ -89,7 +89,12 @@ class _MethodAccessor:
             lambda x: getattr(getattr(x, self.accessor.name), self.method)(
                 *args, **kwds
             )
-        ).droplevel(-1)
+        )
+
+        try:
+            out = out.droplevel(-1)
+        except ValueError:  # pragma: no cover
+            pass
 
         try:
             return out.groupby(
