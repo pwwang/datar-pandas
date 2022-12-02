@@ -40,10 +40,10 @@ jobs:
           python -m pip install flake8
           python -m pip install poetry
           poetry config virtualenvs.create false
-          # reinstall pandas to specific version
-          poetry add "$PANDAS"
           poetry install -v
           pip install -U scipy wcwidth
+          # reinstall pandas to specific version
+          pip install -U "$PANDAS"
         env:
           PANDAS: ${{ matrix.pandas }}
       - name: Run flake8
@@ -93,10 +93,10 @@ jobs:
           python -m pip install flake8
           python -m pip install poetry
           poetry config virtualenvs.create false
-          # reinstall modin to specific version
-          poetry add "$MODIN"
           poetry install -v
           pip install -U scipy wcwidth
+          # reinstall modin to specific version
+          pip install -U "$MODIN"
         env:
           MODIN: ${{ matrix.modin }}
       - name: Show versions
