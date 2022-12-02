@@ -142,7 +142,11 @@ def _add_row(
     return out
 
 
-@add_column.register(DataFrame, context=Context.EVAL)
+@add_column.register(
+    DataFrame,
+    context=Context.EVAL,
+    kw_context={"_before": Context.SELECT, "_after": Context.SELECT},
+)
 def _add_column(
     _data,
     *args,
