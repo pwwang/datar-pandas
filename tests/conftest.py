@@ -10,6 +10,8 @@ def pytest_addoption(parser):
 
 def pytest_sessionstart(session):
     from datar import options
+    from datar.core import plugin  # noqa: F401
+
     modin = session.config.getoption("modin")
 
     options(
