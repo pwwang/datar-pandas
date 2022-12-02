@@ -12,10 +12,10 @@ python = "^3.7.1"
 pdtypes = "^0.0.4"
 datar = { version = "^0.10.0rc0", allow-prereleases = true }
 datar-numpy = { version = "^0.0.0rc0", allow-prereleases = true }
-modin = { version = "^0.10", optional = true }
+# modin = { version = "^0.10", optional = true }
 
-[tool.poetry.extras]
-modin = ["modin"]
+# [tool.poetry.extras]
+# modin = ["modin"]
 
 [tool.poetry.dev-dependencies]
 pytest = "^7"
@@ -29,7 +29,7 @@ requires = ["poetry-core"]
 build-backend = "poetry.core.masonry.api"
 
 [tool.pytest.ini_options]
-addopts = "-vv --assert=plain -p no:asyncio --tb=short --cov-config=.coveragerc --cov=datar_pandas --cov-report xml:cov.xml --cov-report term-missing"
+addopts = "-vv --assert=plain -p no:asyncio -p no:xdist --tb=short --cov-config=.coveragerc --cov=datar_pandas --cov-report xml:cov.xml --cov-report term-missing"
 # addopts = "-vv --assert=plain -p no:asyncio --tb=short -n 0"
 filterwarnings = [
     # "ignore::UserWarning",

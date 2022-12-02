@@ -3,19 +3,20 @@ import pytest
 import numpy as np
 from collections import namedtuple
 
+from datar import options
+from datar.core import plugin  # noqa: F401
+
 
 def pytest_addoption(parser):
     parser.addoption("--modin", action="store_true")
 
 
 def pytest_sessionstart(session):
-    from datar import options
-    from datar.core import plugin  # noqa: F401
 
     use_modin = session.config.getoption("modin")
     if use_modin:
-        from modin import config
-        config.Engine.put("Dask")
+        from os import environ
+        environ["MODIN_ENGINE"] = "Dask"
 
     options(
         use_modin=use_modin,
