@@ -91,9 +91,9 @@ func_bootstrap(
 )
 func_bootstrap(
     quantile,
-    # exclude={"na_rm", "names", "type_", "digits"},
+    exclude={"probs", "na_rm", "names", "type_", "digits"},
     func=quantile.dispatch(object, backend="numpy"),
-    kind="agg",
+    # kind="agg",
 )
 
 
