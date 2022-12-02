@@ -14,4 +14,4 @@ Float = Union[float, np.floating, Expression]
 Bool = Union[bool, np.bool_, Expression]
 Str = Union[str, np.str_, Expression]
 
-Data = Union[T, np.ndarray[T], Tuple[T, ...], List[T], Series, Expression]
+Data = Union[T, np.ndarray, Tuple[T, ...], List[T], Series, Expression]
