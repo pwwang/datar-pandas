@@ -41,6 +41,7 @@ jobs:
           python -m pip install poetry
           poetry config virtualenvs.create false
           poetry install -v
+          pip install -U scipy wcwidth
           # reinstall pandas to specific version
           pip install "$PANDAS"
         env:
@@ -93,6 +94,7 @@ jobs:
           python -m pip install poetry
           poetry config virtualenvs.create false
           poetry install -v
+          pip install -U scipy wcwidth
           # reinstall modin to specific version
           pip install "$MODIN"
         env:
