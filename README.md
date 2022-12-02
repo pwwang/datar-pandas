@@ -8,11 +8,6 @@ The pandas backend for [datar][1].
 pip install -U datar-pandas
 # or
 pip install -U datar[pandas]
-
-# To install modin support
-pip install -U datar[modin]
-# or
-pip install -U datar-pandas[modin]
 ```
 
 ## Usage
