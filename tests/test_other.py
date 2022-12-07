@@ -1,7 +1,7 @@
 import pytest  # noqa: F401
 
 import numpy as np
-from datar.other import itemgetter, attrgetter, pd_str, pd_cat, pd_dt
+from datar.other import itemgetter, attrgetter, pd_str, pd_cat, pd_dt, flatten
 from datar.tibble import tibble
 from datar_pandas.pandas import Series, Categorical, get_obj
 from datar_pandas.collections import Collection
@@ -104,3 +104,11 @@ def test_pd_dt():
     )
     out = pd_dt(s).year
     assert_iterable_equal(get_obj(out), [2019, 2019, 2019])
+
+
+def test_flatten():
+    df = tibble(x=[1, 2], y=[3, 4])
+    out = df >> flatten(True)
+    assert out == [1, 2, 3, 4]
+    out = df >> flatten()
+    assert out == [1, 3, 2, 4]

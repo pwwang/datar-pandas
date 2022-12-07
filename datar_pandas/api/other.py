@@ -1,7 +1,7 @@
 from pipda import register_verb, register_func
 from datar_numpy.utils import make_array
 
-from ..pandas import Series, PandasObject, SeriesGroupBy
+from ..pandas import DataFrame, Series, PandasObject, SeriesGroupBy
 from ..contexts import Context
 from ..utils import as_series
 from ..tibble import Tibble
@@ -184,3 +184,18 @@ def pd_dt(x):
     This is helpful when x is a SeriesGroupBy object
     """
     return attrgetter(x, "dt", __ast_fallback="normal", __backend="_default")
+
+
+@register_verb(DataFrame)
+def flatten(_data: DataFrame, bycol: bool = False):
+    """Flatten a dataframe into a 1-d python list
+
+    Args:
+        _data: The dataframe
+
+    Returns:
+        The flattened list
+    """
+    if bycol:
+        return _data.T.values.flatten().tolist()
+    return _data.values.flatten().tolist()

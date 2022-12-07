@@ -123,6 +123,7 @@ def other_api():
         pd_cat,
         pd_dt,
         pd_str,
+        flatten,
     )
     return {
         "itemgetter": itemgetter,
@@ -130,6 +131,7 @@ def other_api():
         "pd_cat": pd_cat,
         "pd_dt": pd_dt,
         "pd_str": pd_str,
+        "flatten": flatten,
     }
 
 
