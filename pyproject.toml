@@ -1,6 +1,6 @@
 [tool.poetry]
 name = "datar-pandas"
-version = "0.0.0"
+version = "0.1.0"
 description = "The pandas backend for datar"
 authors = ["pwwang <pwwang@pwwang.com>"]
 license = "MIT"
@@ -10,7 +10,7 @@ packages = [{include = "datar_pandas"}]
 [tool.poetry.dependencies]
 python = "^3.7.1"
 pdtypes = "^0.0.4"
-datar = "^0.10"
+datar = "^0.10.3rc0"
 datar-numpy = "^0.0"
 # modin = { version = "^0.10", optional = true }
 
