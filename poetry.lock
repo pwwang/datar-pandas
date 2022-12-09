@@ -36,7 +36,7 @@ toml = ["tomli"]
 
 [[package]]
 name = "datar"
-version = "0.10.3rc0"
+version = "0.10.3"
 description = "A Grammar of Data Manipulation in python"
 category = "main"
 optional = false
@@ -49,7 +49,7 @@ simplug = ">=0.2.2,<0.3.0"
 
 [package.extras]
 numpy = ["datar-numpy (>=0.0,<0.1)"]
-pandas = ["datar-pandas (>=0.0,<0.1)"]
+pandas = ["datar-pandas (>=0.1,<0.2)"]
 
 [[package]]
 name = "datar-numpy"
@@ -336,7 +336,7 @@ testing = ["flake8 (<5)", "func-timeout", "jaraco.functools", "jaraco.itertools"
 [metadata]
 lock-version = "1.1"
 python-versions = "^3.7.1"
-content-hash = "6d77809da8b19db5c3fbecfc9c077b1f4b3075c0c7c7e631a69006cfccc8fb1b"
+content-hash = "f32beed8f145eb38dc89279fa2df2fa23cdd71e2b227820413f630d7cfc21762"
 
 [metadata.files]
 attrs = [
@@ -400,8 +400,8 @@ coverage = [
     {file = "coverage-6.5.0.tar.gz", hash = "sha256:f642e90754ee3e06b0e7e51bce3379590e76b7f76b708e1a71ff043f87025c84"},
 ]
 datar = [
-    {file = "datar-0.10.3rc0-py3-none-any.whl", hash = "sha256:1c2725e4e0c2da505b3f899f99ef3e1f1d5d32f1df22eab4a1610640ed5f1686"},
-    {file = "datar-0.10.3rc0.tar.gz", hash = "sha256:803e0fc09811263381b9dd03345cbdb573c5a5e184a898e8e84b50b9511f418b"},
+    {file = "datar-0.10.3-py3-none-any.whl", hash = "sha256:855e1809b85c7c1cebe5a0772d3da44df92f94bab551544e39f20dfe8d479059"},
+    {file = "datar-0.10.3.tar.gz", hash = "sha256:1a1a5ca5c159971c6fe53f2d13bf501ef1d77e26908cbe31cc797ff078e084e3"},
 ]
 datar-numpy = [
     {file = "datar_numpy-0.0.0-py3-none-any.whl", hash = "sha256:40138aed93ee7691a2f14035ceb9450105ab0aebe449f16775dfa349c84ff798"},
