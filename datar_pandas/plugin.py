@@ -1,5 +1,12 @@
+from typing import TYPE_CHECKING, Mapping
+
 import pdtypes
 from simplug import Simplug
+
+from .pandas import read_csv
+
+if TYPE_CHECKING:
+    from .pandas import DataFrame
 
 plugin = Simplug("datar")
 
@@ -13,8 +20,15 @@ def setup():
 
 
 @plugin.impl
-def data_api():
-    from .api import data
+def load_dataset(name: str, metadata: Mapping) -> "DataFrame":
+    if name not in metadata:
+        raise AttributeError(
+            f"No such dataset: {name}. "
+            "Use datar.data.descr_datasets() to see all available datasets."
+        )
+
+    meta = metadata[name]
+    return read_csv(meta.source, index_col=0 if meta.index else False)
 
 
 @plugin.impl
