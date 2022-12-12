@@ -65,7 +65,13 @@ def _row_number(x):
 
 @_row_number.register(SeriesGroupBy)
 def _(x):
-    return x.transform(_row_number)
+    out = x.transform(_row_number)
+    return out.groupby(
+        x.grouper,
+        observed=x.observed,
+        sort=x.sort,
+        dropna=x.dropna,
+    )
 
 
 @_row_number.register(TibbleGrouped)
@@ -99,33 +105,34 @@ def _ntile(x, n):
 
 
 @_ntile.register(GeneratorType)
-def _(x, n):
+def _ntile_generator(x, n):
     return _ntile(np.array(list(x)), n)
 
 
 @_ntile.register(Series)
-def _(x, n):
+def _ntile_series(x, n):
     return Series(_ntile(x.values, n), index=x.index, name=x.name)
 
 
 @_ntile.register(DataFrame)
-def _(x, n):
+def _ntile_df(x, n):
     x = _row_number(x)
     return _ntile(x, n)
 
 
 @_ntile.register(TibbleGrouped)
-def _(x, n):
+def _ntile_tibblegrouped(x, n):
     grouped = x._datar["grouped"]
     if x.shape[1] == 0:  # pragma: no cover
         x = _row_number(grouped)
     else:
+        # Not using x.iloc[:, 0] to preserve the grouping structure
         x = x[x.columns[0]]
     return _ntile(x, n)
 
 
 @_ntile.register(np.ndarray)
-def _(x, n):
+def _ntile_ndarray(x, n):
     if x.size == 0:
         return Categorical([])
 
@@ -137,9 +144,9 @@ def _(x, n):
 
 
 @_ntile.register(GroupBy)
-def _(x, n):
+def _ntile_groupby(x, n):
     return x.transform(
-        lambda grup: pd.cut(
+        lambda grup: pd.qcut(
             grup,
             min(n, len(grup)),
             labels=np.arange(min(n, len(grup))) + 1,
