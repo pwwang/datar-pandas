@@ -133,7 +133,7 @@ def _(x, n):
         return Categorical([np.nan] * x.size)
 
     n = min(n, x.size)
-    return pd.cut(x, n, labels=np.arange(n) + 1)
+    return pd.qcut(x, n, labels=np.arange(n) + 1)
 
 
 @_ntile.register(GroupBy)
