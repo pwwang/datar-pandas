@@ -3,6 +3,8 @@ from typing import TYPE_CHECKING, Mapping
 import pdtypes
 from datar.core.plugin import plugin
 
+# Attach version to the plugin
+from .version import __version__  # noqa: F401
 from .pandas import read_csv
 
 if TYPE_CHECKING:
@@ -151,7 +153,6 @@ def misc_api():
 def get_versions():
     import pandas
     from datar.core.options import get_option
-    from .version import __version__
 
     out = {
         "datar-pandas": __version__,
