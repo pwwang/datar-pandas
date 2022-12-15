@@ -1,14 +1,12 @@
 from typing import TYPE_CHECKING, Mapping
 
 import pdtypes
-from simplug import Simplug
+from datar.core.plugin import plugin
 
 from .pandas import read_csv
 
 if TYPE_CHECKING:
     from .pandas import DataFrame
-
-plugin = Simplug("datar")
 
 
 @plugin.impl
@@ -130,8 +128,8 @@ def forcats_api():
 
 
 @plugin.impl
-def other_api():
-    from .api.other import (
+def misc_api():
+    from .api.misc import (
         itemgetter,
         attrgetter,
         pd_cat,

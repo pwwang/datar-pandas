@@ -1,7 +1,7 @@
 import pytest  # noqa: F401
 
 import numpy as np
-from datar.other import itemgetter, attrgetter, pd_str, pd_cat, pd_dt, flatten
+from datar.misc import itemgetter, attrgetter, pd_str, pd_cat, pd_dt, flatten
 from datar.tibble import tibble
 from datar_pandas.pandas import Series, Categorical, get_obj
 from datar_pandas.collections import Collection

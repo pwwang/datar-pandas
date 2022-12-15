@@ -14,7 +14,7 @@ from datar.apis.dplyr import order_by, with_order
 from ...factory import func_bootstrap
 from ...pandas import Series
 from ..base.seq import order as order_fun
-from ..other import itemgetter
+from ..misc import itemgetter
 
 
 @order_by.register(backend="pandas")

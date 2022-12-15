@@ -36,7 +36,7 @@ toml = ["tomli"]
 
 [[package]]
 name = "datar"
-version = "0.10.3"
+version = "0.11.0"
 description = "A Grammar of Data Manipulation in python"
 category = "main"
 optional = false
@@ -48,19 +48,19 @@ python-simpleconf = {version = ">=0.5,<0.6", extras = ["toml"]}
 simplug = ">=0.2.2,<0.3.0"
 
 [package.extras]
-numpy = ["datar-numpy (>=0.0,<0.1)"]
-pandas = ["datar-pandas (>=0.1,<0.2)"]
+numpy = ["datar-numpy (>=0.1,<0.2)"]
+pandas = ["datar-pandas (>=0.2,<0.3)"]
 
 [[package]]
 name = "datar-numpy"
-version = "0.0.0"
+version = "0.1.0"
 description = "The numpy backend for datar"
 category = "main"
 optional = false
 python-versions = ">=3.7.1,<4.0.0"
 
 [package.dependencies]
-datar = ">=0.10,<0.11"
+datar = ">=0.11,<0.12"
 numpy = ">=1.17,<2.0"
 
 [[package]]
@@ -336,7 +336,7 @@ testing = ["flake8 (<5)", "func-timeout", "jaraco.functools", "jaraco.itertools"
 [metadata]
 lock-version = "1.1"
 python-versions = "^3.7.1"
-content-hash = "f32beed8f145eb38dc89279fa2df2fa23cdd71e2b227820413f630d7cfc21762"
+content-hash = "63379ee9f007e68e4accc627cd1e973f6534e1467e6f084e43e759bc2caa237e"
 
 [metadata.files]
 attrs = [
@@ -400,12 +400,12 @@ coverage = [
     {file = "coverage-6.5.0.tar.gz", hash = "sha256:f642e90754ee3e06b0e7e51bce3379590e76b7f76b708e1a71ff043f87025c84"},
 ]
 datar = [
-    {file = "datar-0.10.3-py3-none-any.whl", hash = "sha256:855e1809b85c7c1cebe5a0772d3da44df92f94bab551544e39f20dfe8d479059"},
-    {file = "datar-0.10.3.tar.gz", hash = "sha256:1a1a5ca5c159971c6fe53f2d13bf501ef1d77e26908cbe31cc797ff078e084e3"},
+    {file = "datar-0.11.0-py3-none-any.whl", hash = "sha256:cab361768af77f7f5c0e35ecf7f76def86422382841f88b95f9f3cfd8a5b59c6"},
+    {file = "datar-0.11.0.tar.gz", hash = "sha256:6991a46bec8da4494524e67f1e2bced6ae0ac1933a2e053a658d9e655ed89372"},
 ]
 datar-numpy = [
-    {file = "datar_numpy-0.0.0-py3-none-any.whl", hash = "sha256:40138aed93ee7691a2f14035ceb9450105ab0aebe449f16775dfa349c84ff798"},
-    {file = "datar_numpy-0.0.0.tar.gz", hash = "sha256:d60f997ec6d36d4dfb726e8472d8fb21b41619af24c657a31b47a314a794d5c9"},
+    {file = "datar_numpy-0.1.0-py3-none-any.whl", hash = "sha256:aba6dd2bf638a94d1fbbc054a865e5cbb7a14eaaa5a528d9469524af9455477f"},
+    {file = "datar_numpy-0.1.0.tar.gz", hash = "sha256:94779f5352114070793c8ee9f4fa7224aa8d82e310bf1c2f4b07782e4f37aee7"},
 ]
 diot = [
     {file = "diot-0.1.6-py3-none-any.whl", hash = "sha256:1e7f97bbc92cbbdd51d8c535885f5e2a71762b364c1b2410dfc84f3a4572d551"},

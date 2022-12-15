@@ -4,7 +4,9 @@ import numpy as np
 from collections import namedtuple
 
 from datar import options
-from datar.core import plugin  # noqa: F401
+# from datar.core import plugin  # noqa: F401
+
+options(backends=["numpy", "pandas"], import_names_conflict="silent")
 
 
 def pytest_addoption(parser):
@@ -12,17 +14,15 @@ def pytest_addoption(parser):
 
 
 def pytest_sessionstart(session):
+    # make sure setup() hooks are called
+    from datar.core import load_plugins  # noqa: F401
 
     use_modin = session.config.getoption("modin")
     if use_modin:
         from os import environ
         environ["MODIN_ENGINE"] = "Dask"
 
-    options(
-        use_modin=use_modin,
-        import_names_conflict="silent",
-        backends=["numpy", "pandas"],
-    )
+    options(use_modin=use_modin)
     # set_seed(8888)
 
 

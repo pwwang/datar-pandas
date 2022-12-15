@@ -35,7 +35,7 @@ from datar.dplyr import (
     ungroup,
     where
 )
-from datar.other import itemgetter
+from datar.misc import itemgetter
 from datar.tibble import tibble
 
 from datar_pandas.pandas import DataFrame, Series, assert_frame_equal, get_obj

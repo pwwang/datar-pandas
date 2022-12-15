@@ -10,8 +10,8 @@ packages = [{include = "datar_pandas"}]
 [tool.poetry.dependencies]
 python = "^3.7.1"
 pdtypes = "^0.0.4"
-datar = "^0.10.3"
-datar-numpy = "^0.0"
+datar = "^0.11"
+datar-numpy = "^0.1"
 # modin = { version = "^0.10", optional = true }
 
 # [tool.poetry.extras]

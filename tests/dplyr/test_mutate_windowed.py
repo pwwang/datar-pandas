@@ -34,7 +34,7 @@ from datar.dplyr import (
     dense_rank,
     cume_dist,
 )
-from datar.other import itemgetter
+from datar.misc import itemgetter
 from datar.data import mtcars
 from datar_pandas.pandas import get_obj
 from ..conftest import assert_iterable_equal
