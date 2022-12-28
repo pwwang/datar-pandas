@@ -156,16 +156,12 @@ def _any_of(
     x: Sequence[int | str],
     vars: Sequence[str] = None,
 ) -> List[str]:
-    vars = vars or _data.columns
+    if vars is not None:  # pragma: no cover
+        vars = make_array(vars)
+    else:
+        vars = _data.columns
     x = vars_select(vars, x, raise_nonexists=False)
-    # exists = []
-    # for idx in x:
-    #     try:
-    #         exists.append(vars[idx])
-    #     except IndexError:
-    #         ...
-    # do we need intersect?
-    return list(intersect(vars, make_array(vars)[x]))
+    return list(vars[x])
 
 
 @num_range.register(str, backend="pandas")
