@@ -22,7 +22,7 @@ from datar.dplyr import (
 
 from ...pandas import DataFrame
 from ...contexts import Context
-from ...common import is_scalar, is_logical, setdiff, intersect
+from ...common import is_scalar, is_logical, setdiff  # , intersect
 from ...utils import vars_select
 
 

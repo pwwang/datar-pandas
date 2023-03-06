@@ -105,7 +105,7 @@ def _na_if_obj(x, y):
 
     try:
         eqs = np.equal(x, y)
-    except np.core._exceptions.UFuncTypeError:
+    except np.core._exceptions.UFuncTypeError:  # pragma: no cover
         eqs = np.equal(x.astype(object), y.astype(object))
 
     if eqs.any():
