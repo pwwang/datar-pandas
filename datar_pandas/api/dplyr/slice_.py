@@ -2,6 +2,8 @@
 
 https://github.com/tidyverse/dplyr/blob/master/R/slice.R
 """
+from __future__ import annotations
+
 import builtins
 from math import ceil, floor
 from typing import TYPE_CHECKING, Any, Iterable, Mapping, Union
