@@ -81,14 +81,6 @@ def _summarise(
     elif _groups == "rowwise":
         out = out.rowwise(gvars)
 
-    elif isinstance(_data, TibbleRowwise) and get_option(
-        "dplyr_summarise_inform"
-    ):
-        logger.info(
-            "`summarise()` has ungrouped output. "
-            "You can override using the `_groups` argument."
-        )
-
     # else: # drop
     return out
 
