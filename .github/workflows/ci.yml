@@ -21,7 +21,7 @@ jobs:
           # need to skip 1.5.0 because of pandas-dev/pandas#48645
           # pandas==1.5.1,
           # The latest version of pandas is v1+ is v1.5.3
-          pandas # lastest
+          pandas==1.5.3 # lastest
         ]
         exclude:
           - python-version: "3.10"
