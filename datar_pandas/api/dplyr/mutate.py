@@ -29,7 +29,7 @@ def _mutate(
     _after=None,
     **kwargs,
 ):
-    keep = arg_match(_keep, "_keep", ["all", "unused", "used", "none"])
+    keep = arg_match(_keep, "_keep", ["all", "unused", "used", "none", "trans"])
     gvars = group_vars(_data, __ast_fallback="normal", __backend="pandas")
     data = as_tibble(_data.copy(), __ast_fallback="normal", __backend="pandas")
     data._datar["used_refs"] = set()
@@ -115,10 +115,15 @@ def _mutate(
             data.columns,
             Collection(gvars, used_refs, mutated_cols),
         )
-    else:  # keep == 'none':
+    elif keep == "trans":
         keep = union(
             setdiff(gvars, mutated_cols),
             intersect(mutated_cols, data.columns),
+        )
+    else:  # keep == 'none':
+        keep = intersect(
+            data.columns,
+            Collection(gvars, mutated_cols),
         )
 
     data = data[keep]
@@ -144,7 +149,7 @@ def _transmute(
     return mutate(
         _data,
         *args,
-        _keep="none",
+        _keep="trans",
         _before=_before,
         _after=_after,
         __ast_fallback="normal",

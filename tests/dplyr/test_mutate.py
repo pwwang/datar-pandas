@@ -267,10 +267,12 @@ def test_keep_none_only_keeps_grouping_variables():
     assert out.columns.tolist() == ["x", "z"]
 
 
-def test_keep_none_prefers_new_order():
+# def test_keep_none_prefers_new_order():
+# https://github.com/tidyverse/dplyr/issues/6086
+def test_keep_none_prefers_new_order_no_more():
     df = tibble(x=1, y=2)
     out = df >> mutate(y=1, x=2, _keep="none")
-    assert out.columns.tolist() == ["y", "x"]
+    assert out.columns.tolist() == ["x", "y"]
 
 
 def test_can_use_before_and_after_to_control_column_position():
