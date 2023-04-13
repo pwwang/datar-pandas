@@ -3,6 +3,7 @@
 https://github.com/tidyverse/dplyr/blob/master/R/slice.R
 """
 import builtins
+from math import ceil, floor
 from typing import TYPE_CHECKING, Any, Iterable, Mapping, Union
 
 import numpy as np
@@ -128,7 +129,10 @@ def _slice_tail(
     n = _n_from_prop(_data.shape[0], n, prop)
     return slice_(
         _data,
-        builtins.slice(-n, None),
+        builtins.slice(
+            _data.shape[0] if n == 0 else -n,
+            None,
+        ),
         __ast_fallback="normal",
         __backend="pandas",
     )
@@ -254,21 +258,26 @@ def _slice_sample(
 
 def _n_from_prop(
     total: int,
-    n: int = None,
+    n: int | float = None,
     prop: float = None,
 ) -> int:
     """Get n from a proportion"""
     if n is None and prop is None:
         return 1
-    if n is not None and not isinstance(n, int):
-        raise TypeError(f"Expect `n` int type, got {type(n)}.")
+    if n is not None and not isinstance(n, (int, float)):
+        raise TypeError(f"Expect `n` a number, got {type(n)}.")
     if prop is not None and not isinstance(prop, (int, float)):
         raise TypeError(f"Expect `prop` a number, got {type(n)}.")
-    if (n is not None and n < 0) or (prop is not None and prop < 0):
-        raise ValueError("`n` and `prop` should not be negative.")
+    # if (n is not None and n < 0) or (prop is not None and prop < 0):
+    #     raise ValueError("`n` and `prop` should not be negative.")
     if prop is not None:
-        return int(float(total) * min(prop, 1.0))
-    return min(n, total)
+        if prop < 0:
+            return max(ceil((1.0 + prop) * total), 0)
+        return floor(float(total) * min(prop, 1.0))
+
+    if n < 0:
+        return max(ceil(total + n), 0)
+    return min(floor(n), total)
 
 
 def _sanitize_rows(

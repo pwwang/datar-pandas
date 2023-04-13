@@ -243,6 +243,16 @@ def test_functions_silently_truncate_results():
     assert out == 5
     out = df >> slice_max(f.x, n=6) >> nrow()
     assert out == 5
+    out = df >> slice_head(n=-6) >> nrow()
+    assert out == 0
+    out = df >> slice_tail(n=-6) >> nrow()
+    assert out == 0
+    out = df >> slice_sample(n=-6) >> nrow()
+    assert out == 0
+    out = df >> slice_min(f.x, n=-6) >> nrow()
+    assert out == 0
+    out = df >> slice_max(f.x, n=-6) >> nrow()
+    assert out == 0
 
 
 def test_proportion_computed_correctly():
@@ -383,10 +393,10 @@ def test_rename_errors_with_invalid_grouped_df():
         _n_from_prop(10, n="a")
     with pytest.raises(TypeError):
         _n_from_prop(10, prop="a")
-    with pytest.raises(ValueError):
-        _n_from_prop(10, n=-1)
-    with pytest.raises(ValueError):
-        _n_from_prop(10, prop=-1)
+    # with pytest.raises(ValueError):
+    #     _n_from_prop(10, n=-1)
+    # with pytest.raises(ValueError):
+    #     _n_from_prop(10, prop=-1)
     with pytest.raises(TypeError):
         _n_from_prop(10, n=n())
     with pytest.raises(TypeError):
@@ -441,6 +451,10 @@ def test_n_from_prop():
     assert _n_from_prop(1, prop=0.5) == 0
     assert _n_from_prop(2, prop=0.5) == 1
     assert _n_from_prop(4, prop=0.5) == 2
+    assert _n_from_prop(10, 1.6) == 1
+    assert _n_from_prop(10, prop=0.16) == 1
+    assert _n_from_prop(10, -1.6) == 9
+    assert _n_from_prop(10, prop=-0.16) == 9
 
 
 # slice_head/tail on grouped data
