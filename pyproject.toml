@@ -12,6 +12,7 @@ python = "^3.8"
 pdtypes = "^0.0.4"
 datar = "^0.12"
 datar-numpy = "^0.2"
+numpy = "^1.25.0"
 # modin = { version = "^0.10", optional = true }
 
 # [tool.poetry.extras]
