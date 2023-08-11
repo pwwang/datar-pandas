@@ -6,7 +6,7 @@ from collections import namedtuple
 from datar import options
 # from datar.core import plugin  # noqa: F401
 
-options(backends=["numpy", "pandas"], import_names_conflict="silent")
+options(backends=["numpy", "pandas"], allow_conflict_names=True)
 
 
 def pytest_addoption(parser):
