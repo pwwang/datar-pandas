@@ -21,6 +21,8 @@ from ...common import is_scalar, setdiff
 from ...contexts import Context
 from ..tibble.verbs import rownames_to_column
 
+_meta_args = {"__ast_fallback": "normal", "__backend": "pandas"}
+
 
 @rows_insert.register(DataFrame, context=Context.EVAL, backend="pandas")
 def _rows_insert(x, y, by=None, copy=True):
@@ -33,13 +35,7 @@ def _rows_insert(x, y, by=None, copy=True):
     if any(bad):
         raise ValueError("Attempting to insert duplicate rows.")
 
-    return bind_rows(
-        x,
-        y,
-        _copy=copy,
-        __ast_fallback="normal",
-        __backend="pandas",
-    )
+    return bind_rows(x, y, _copy=copy, **_meta_args)
 
 
 @rows_update.register(DataFrame, context=Context.EVAL, backend="pandas")
@@ -54,9 +50,18 @@ def _rows_update(x, y, by=None, copy=True):
         raise ValueError("Attempting to update missing rows.")
 
     idx = idx.astype(int)
+
     if copy:
         x = x.copy()
-    x.loc[idx, y.columns] = y.values
+
+    # Join at the beginning? NaNs will be produced and dtypes will be changed
+    # in y
+    # Try it in pandas2
+    y_joined = left_join(x.loc[idx, key], y, by=key, **_meta_args).set_index(
+        idx
+    )
+
+    x.loc[idx, y.columns] = y_joined
     return x
 
 
@@ -93,13 +98,7 @@ def _rows_upsert(x, y, by=None, copy=True):
     idx_existing = idx[~new]
 
     x.loc[idx_existing, y.columns] = y.loc[~new].values
-    return bind_rows(
-        x,
-        y.loc[new],
-        _copy=copy,
-        __ast_fallback="normal",
-        __backend="pandas",
-    )
+    return bind_rows(x, y.loc[new], _copy=copy, **_meta_args)
 
 
 @rows_delete.register(DataFrame, context=Context.EVAL, backend="pandas")
@@ -162,19 +161,9 @@ def _rows_check_key_df(df, by, df_name) -> None:
     #     raise ValueError(f"`{df_name}` key values are not unique.")
 
 
-def _rows_match(x, y):
+def _rows_match(x: pd.DataFrame, y: pd.DataFrame, for_: str = "x"):
     """Mimic vctrs::vec_match"""
     id_col = "__id__"
-    y_with_id = rownames_to_column(
-        y,
-        var=id_col,
-        __ast_fallback="normal",
-        __backend="pandas",
-    )
+    y_with_id = rownames_to_column(y, var=id_col, **_meta_args)
 
-    return left_join(
-        x,
-        y_with_id,
-        __ast_fallback="normal",
-        __backend="pandas",
-    )[id_col].values
+    return left_join(x, y_with_id, **_meta_args)[id_col].values

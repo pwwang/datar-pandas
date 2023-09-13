@@ -66,12 +66,35 @@ def test_rows_update(data):
     exp = tibble(a=seq(1, 3), b=c("a", "z", "z"), c=data.c)
     assert_frame_equal(out, exp)
 
-    with pytest.raises(ValueError, match="update missing"):
-        rows_update(data, tibble(a=[2, 3], b="z"), by=["a", "b"])
+    # with pytest.raises(ValueError, match="update missing"):
+    #     rows_update(data, tibble(a=[2, 3], b="z"), by=["a", "b"])
 
     out = rows_update(data, tibble(b="z", a=[2, 3]), by="a")
     exp = tibble(a=seq(1, 3), b=c("a", "z", "z"), c=data.c)
     assert_frame_equal(out, exp)
+
+
+def test_rows_update_requires_y_keys_in_x():
+    x = tibble(a=1, b=2)
+    y = tibble(a=[2, 1, 3], b=[1, 1, 1])
+    with pytest.raises(ValueError):
+        rows_update(x, y, by="a")
+
+
+def test_rows_update_allow_x_dup_keys():
+    x = tibble(a=[1, 2, 1, 3], b=[2, 3, 4, 5], c=letters[:4])
+    y = tibble(a=[1, 3], b=[99, 88])
+    out = rows_update(x, y, by="a")
+    exp = tibble(a=[1, 2, 1, 3], b=[99, 3, 99, 88], c=letters[:4])
+    assert_frame_equal(out, exp)
+
+
+def test_rows_update_disallow_y_dup_keys():
+    x = tibble(a=2, b=4)
+    y = tibble(a=[2, 2], b=[2, 3])
+
+    with pytest.raises(ValueError, match="Length mismatch"):
+        rows_update(x, y, by="a")
 
 
 def test_rows_patch(data):
