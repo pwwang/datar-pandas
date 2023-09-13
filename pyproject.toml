@@ -17,6 +17,9 @@ datar-numpy = "^0.2"
 # [tool.poetry.extras]
 # modin = ["modin"]
 
+[tool.poetry.build]
+generate-setup-file = true
+
 [tool.poetry.dev-dependencies]
 pytest = "^7"
 pytest-cov = "^4"
