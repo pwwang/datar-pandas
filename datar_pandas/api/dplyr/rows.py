@@ -158,8 +158,8 @@ def _rows_check_key_df(df, by, df_name) -> None:
     if len(y_miss) > 0:
         raise ValueError(f"All `by` columns must exist in `{df_name}`.")
 
-    if any(df.duplicated(by)):
-        raise ValueError(f"`{df_name}` key values are not unique.")
+    # if any(df.duplicated(by)):
+    #     raise ValueError(f"`{df_name}` key values are not unique.")
 
 
 def _rows_match(x, y):

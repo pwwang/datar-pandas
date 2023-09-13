@@ -32,6 +32,35 @@ def test_rows_insert(data):
         rows_insert(data, tibble(a=3, b="z"), by="a")
 
 
+def test_rows_insert_doesnt_allow_dup_key_values():
+    x = tibble(a=1, b=2)
+    y = tibble(a=1, b=3)
+
+    with pytest.raises(ValueError, match="insert duplicate"):
+        rows_insert(x, y, by="a")
+
+    y = tibble(a=[1, 1, 1], b=[3, 4, 5])
+    with pytest.raises(ValueError, match="insert duplicate"):
+        rows_insert(x, y, by="a")
+
+
+def test_rows_insert_allow_x_dup_keys():
+    x = tibble(a=[1, 1], b=[2, 3])
+    y = tibble(a=2, b=4)
+
+    out = rows_insert(x, y, by="a")
+    exp = tibble(a=[1, 1, 2], b=[2, 3, 4])
+    assert_frame_equal(out, exp)
+
+
+def test_rows_insert_allow_y_dup_keys():
+    x = tibble(a=2, b=4)
+    y = tibble(a=[1, 1], b=[2, 3])
+    out = rows_insert(x, y, by="a")
+    exp = tibble(a=[2, 1, 1], b=[4, 2, 3])
+    assert_frame_equal(out, exp)
+
+
 def test_rows_update(data):
     out = rows_update(data, tibble(a=[2, 3], b="z"), by="a")
     exp = tibble(a=seq(1, 3), b=c("a", "z", "z"), c=data.c)
@@ -87,13 +116,13 @@ def test_rows_errors(data):
     with pytest.raises(ValueError):
         data >> rows_insert(tibble(a=3, b="z"))
 
-    with pytest.raises(ValueError):
-        (
-            data.iloc[
-                [0, 0],
-            ]
-            >> rows_insert(tibble(a=3))
-        )
+    # with pytest.raises(ValueError):
+    #     (
+    #         data.iloc[
+    #             [0, 0],
+    #         ]
+    #         >> rows_insert(tibble(a=3))
+    #     )
 
     with pytest.raises(ValueError):
         data >> rows_insert(tibble(a=4, b="z"), by="e")
