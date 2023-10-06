@@ -36,6 +36,7 @@ from datar.dplyr import (
     desc,
     first,
     last,
+    consecutive_id,
 )
 from datar.tibble import tibble
 from datar_pandas import pandas as pd
@@ -308,3 +309,19 @@ def test_desc():
 
     out = desc(["a", "b", "c"])
     assert_iterable_equal(out, [-0.0, -1.0, -2.0])
+
+
+# consecutive_ids --------------------------------------------------
+def test_consecutive_ids_with_simple_vectors():
+    assert_iterable_equal(
+        consecutive_id([1, 1, 2, 1, 2]),
+        [1, 1, 2, 3, 4],
+    )
+
+
+def test_consecutive_ids_recycling():
+    assert_iterable_equal(consecutive_id([], 1), [])
+    assert_iterable_equal(consecutive_id([1, 2], 1), [1, 2])
+
+    with pytest.raises(ValueError):
+        consecutive_id([1, 2, 3], [1, 2, 3, 4])

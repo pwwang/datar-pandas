@@ -12,6 +12,7 @@ from datar.apis.dplyr import (
     nth,
     first,
     last,
+    consecutive_id,
 )
 from datar_numpy.utils import make_array
 
@@ -231,3 +232,9 @@ def _last(
         default=default,
         __args_raw=__args_raw,
     )
+
+
+@consecutive_id.register(object, backend="pandas")
+def _consecutive_id_obj(x, *args):
+    df = Tibble.from_args(x, *args)
+    return (df != df.shift(1)).agg(any, 1).cumsum()
