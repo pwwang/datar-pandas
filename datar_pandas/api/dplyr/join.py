@@ -1,6 +1,7 @@
 """Mutating joins"""
 from datar.apis.dplyr import (
     filter_,
+    ungroup,
     inner_join,
     left_join,
     right_join,
@@ -8,9 +9,11 @@ from datar.apis.dplyr import (
     semi_join,
     anti_join,
     nest_join,
+    cross_join,
 )
 
 from ... import pandas as pd
+from ...utils import meta_kwargs
 from ...typing import Data, Str
 from ...pandas import Categorical, DataFrame, SeriesGroupBy, get_obj
 from ...common import is_factor, is_scalar, intersect, setdiff, union
@@ -306,6 +309,18 @@ def _nest_join(
 
     out = pd.concat([newx, y_matched], axis=1)
     return reconstruct_tibble(out, x)
+
+
+@cross_join.register(DataFrame, backend="pandas")
+def _cross_join(
+    x,
+    y,
+    copy: bool = False,
+    suffix: Data[str] = ("_x", "_y"),
+):
+    x = ungroup(x, **meta_kwargs)
+    y = ungroup(y, **meta_kwargs)
+    return x.merge(y, how="cross", suffixes=suffix, copy=copy)
 
 
 def _merge_on(by):

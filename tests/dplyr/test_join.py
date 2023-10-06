@@ -16,10 +16,11 @@ from datar.dplyr import (
     group_vars,
     group_rows,
     rowwise,
+    cross_join,
 )
 from datar_pandas.tibble import TibbleGrouped
 from datar_pandas.pandas import DataFrame, assert_frame_equal
-from ..conftest import assert_equal
+from ..conftest import assert_equal, assert_iterable_equal
 
 
 def test_mutating_joins_preserve_row_and_column_order():
@@ -342,3 +343,23 @@ def test_columns_not_missing_after_join_by_same_columns_using_mapping_GH122():
     df1 = tibble(x=[1, 2, 3], y=[3, 4, 5])
     out = df1 >> left_join(df1, by={"x": "x", "y": "y"})
     assert_frame_equal(out, df1)
+
+
+# cross_join ---------------------------------------------------------------
+def test_cross_join_works():
+    df1 = tibble(x=c[1:3])
+    df2 = tibble(y=c[1:4])
+
+    out = cross_join(df1, df2)
+    assert_frame_equal(out, tibble(x=rep([1, 2], each=3), y=rep([1, 2, 3], 2)))
+
+
+def test_cross_join_suffix():
+    df1 = tibble(x=1, y=2)
+    df2 = tibble(x=2, z=3)
+
+    assert_iterable_equal(cross_join(df1, df2).columns, ["x_x", "y", "x_y", "z"])
+    assert_iterable_equal(
+        cross_join(df1, df2, suffix=["", "_y"]).columns,
+        ["x", "y", "x_y", "z"],
+    )
