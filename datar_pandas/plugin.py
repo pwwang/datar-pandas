@@ -33,7 +33,7 @@ def load_dataset(name: str, metadata: Mapping) -> "DataFrame":
 
 @plugin.impl
 def base_api():
-    from .api.base import (
+    from .api.base import (  # noqa: F401
         arithm,
         asis,
         bessel,
@@ -58,7 +58,7 @@ def base_api():
 
 @plugin.impl
 def dplyr_api():
-    from .api.dplyr import (
+    from .api.dplyr import (  # noqa: F401
         across,
         arrange,
         bind,
@@ -77,6 +77,7 @@ def dplyr_api():
         lead_lag,
         mutate,
         order_by,
+        pick,
         pull,
         rank,
         recode,
@@ -93,12 +94,12 @@ def dplyr_api():
 
 @plugin.impl
 def tibble_api():
-    from .api.tibble import tibble, verbs
+    from .api.tibble import tibble, verbs  # noqa: F401
 
 
 @plugin.impl
 def tidyr_api():
-    from .api.tidyr import (
+    from .api.tidyr import (  # noqa: F401
         chop,
         complete,
         drop_na,
@@ -119,7 +120,7 @@ def tidyr_api():
 
 @plugin.impl
 def forcats_api():
-    from .api.forcats import (
+    from .api.forcats import (  # noqa: F401
         fct_multi,
         lvl_addrm,
         lvl_order,

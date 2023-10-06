@@ -4,9 +4,10 @@ https://github.com/tidyverse/dplyr/blob/master/R/if_else.R
 https://github.com/tidyverse/dplyr/blob/master/R/case_when.R
 """
 import numpy as np
-from datar.apis.dplyr import if_else, case_when
+from datar.apis.dplyr import if_else, case_when, case_match
 
 from ... import pandas as pd
+from ...utils import meta_kwargs
 from ...pandas import Series, SeriesGroupBy, get_obj
 from ...tibble import Tibble, reconstruct_tibble
 from ..dplyr.group_by import ungroup
@@ -87,8 +88,7 @@ def _case_when(when, case, *when_cases):
         isinstance(wc, (Series, SeriesGroupBy)) for wc in when_cases
     )
     df = Tibble.from_args(*when_cases, _name_repair="minimal")
-
-    ungrouped = ungroup(df, __ast_fallback="normal", __backend="pandas")
+    ungrouped = ungroup(df, **meta_kwargs)
 
     value = Series(np.nan, index=ungrouped.index)
     for i in range(ungrouped.shape[1] - 1, 0, -2):
@@ -99,3 +99,31 @@ def _case_when(when, case, *when_cases):
     value = reconstruct_tibble(value, df)
     value = value["when_case_result"]
     return value if is_series else value.values
+
+
+@case_match.register(object, backend="pandas")
+def _case_match(_x, *args, _default=None, _dtypes=None):
+    if len(args) % 2 != 0 or len(args) == 0:
+        raise ValueError("condition-value not paired.")
+
+    x = ungroup(_x, **meta_kwargs) if isinstance(_x, SeriesGroupBy) else _x
+    cases = (
+        arg
+        if i % 2 == 1
+        else np.in1d(x, arg).astype(bool) | pd.isnull(x)
+        for i, arg in enumerate(args)
+    )
+    cases = (*cases, True, [None] if _default is None else _default)
+    out = case_when(*cases, **meta_kwargs)
+    if _dtypes is not None:
+        out = out.astype(_dtypes)
+
+    if not isinstance(_x, SeriesGroupBy):
+        return out
+
+    return out.groupby(
+        _x.grouper,
+        observed=_x.observed,
+        sort=_x.sort,
+        dropna=_x.dropna,
+    )
