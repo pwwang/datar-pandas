@@ -2,6 +2,7 @@
 
 https://github.com/tidyverse/dplyr/blob/master/R/sets.r
 """
+import numpy as np
 from datar.apis.dplyr import (
     ungroup,
     bind_rows,
@@ -10,11 +11,17 @@ from datar.apis.dplyr import (
     setdiff,
     union_all,
     setequal,
+    symdiff,
 )
 
 from ... import pandas as pd
+from ...utils import meta_kwargs
 from ...pandas import DataFrame
-from ...common import setdiff as _setdiff
+from ...common import (
+    setdiff as _setdiff,
+    union as _union,
+    intersect as _intersect,
+)
 from ...tibble import TibbleGrouped, reconstruct_tibble
 
 
@@ -52,13 +59,8 @@ def _intersect_df(x: DataFrame, y: DataFrame) -> DataFrame:
     from .distinct import distinct
 
     out = distinct(
-        pd.merge(
-            x,
-            ungroup(y, __ast_fallback="normal", __backend="pandas"),
-            how="inner",
-        ),
-        __ast_fallback="normal",
-        __backend="pandas",
+        pd.merge(x, ungroup(y, **meta_kwargs), how="inner"),
+        **meta_kwargs,
     )
     if isinstance(y, TibbleGrouped):
         return reconstruct_tibble(out, y)
@@ -67,8 +69,8 @@ def _intersect_df(x: DataFrame, y: DataFrame) -> DataFrame:
 
 @intersect.register(TibbleGrouped, backend="pandas")
 def _intersect_grouped(x, y):
-    newx = ungroup(x, __ast_fallback="normal", __backend="pandas")
-    newy = ungroup(y, __ast_fallback="normal", __backend="pandas")
+    newx = ungroup(x, **meta_kwargs)
+    newy = ungroup(y, **meta_kwargs)
     out = intersect.dispatch(DataFrame)(newx, newy)
     return reconstruct_tibble(out, x)
 
@@ -88,13 +90,8 @@ def _union_df(x, y):
     from .distinct import distinct
 
     out = distinct(
-        pd.merge(
-            x,
-            ungroup(y, __ast_fallback="normal", __backend="pandas"),
-            how="outer",
-        ),
-        __ast_fallback="normal",
-        __backend="pandas",
+        pd.merge(x, ungroup(y, **meta_kwargs), how="outer"),
+        **meta_kwargs,
     )
     out.reset_index(drop=True, inplace=True)
     if isinstance(y, TibbleGrouped):
@@ -105,8 +102,8 @@ def _union_df(x, y):
 @union.register(TibbleGrouped, backend="pandas")
 def _union_grouped(x, y):
     out = union.dispatch(DataFrame)(
-        ungroup(x, __ast_fallback="normal", __backend="pandas"),
-        ungroup(y, __ast_fallback="normal", __backend="pandas"),
+        ungroup(x, **meta_kwargs),
+        ungroup(y, **meta_kwargs),
     )
     return reconstruct_tibble(out, x)
 
@@ -126,7 +123,7 @@ def _setdiff_df(x, y):
     indicator = "__datar_setdiff__"
     out = pd.merge(
         x,
-        ungroup(y, __ast_fallback="normal", __backend="pandas"),
+        ungroup(y, **meta_kwargs),
         how="left",
         indicator=indicator,
     )
@@ -137,8 +134,7 @@ def _setdiff_df(x, y):
         out[out[indicator] == "left_only"]
         .drop(columns=[indicator])
         .reset_index(drop=True),
-        __ast_fallback="normal",
-        __backend="pandas",
+        **meta_kwargs,
     )
     if isinstance(y, TibbleGrouped):
         return reconstruct_tibble(out, y)
@@ -148,10 +144,15 @@ def _setdiff_df(x, y):
 @setdiff.register(TibbleGrouped, backend="pandas")
 def _setdiff_grouped(x, y):
     out = setdiff.dispatch(DataFrame)(
-        ungroup(x, __ast_fallback="normal", __backend="pandas"),
-        ungroup(y, __ast_fallback="normal", __backend="pandas"),
+        ungroup(x, **meta_kwargs),
+        ungroup(y, **meta_kwargs),
     )
     return reconstruct_tibble(out, x)
+
+
+@union_all.register(object, backend="pandas")
+def _union_all_obj(x, y):
+    return np.concatenate([x, y])
 
 
 @union_all.register(DataFrame, backend="pandas")
@@ -166,12 +167,7 @@ def _union_all(x, y):
         The dataframe of union of all rows of input dataframes
     """
     _check_xy(x, y)
-    out = bind_rows(
-        x,
-        ungroup(y, __ast_fallback="normal", __backend="pandas"),
-        __ast_fallback="normal",
-        __backend="pandas",
-    )
+    out = bind_rows(x, ungroup(y, **meta_kwargs), **meta_kwargs)
     if isinstance(y, TibbleGrouped):
         return reconstruct_tibble(out, y)
     return out
@@ -180,8 +176,8 @@ def _union_all(x, y):
 @union_all.register(TibbleGrouped, backend="pandas")
 def _union_all_grouped(x, y):
     out = union_all.dispatch(DataFrame)(
-        ungroup(x, __ast_fallback="normal", __backend="pandas"),
-        ungroup(y, __ast_fallback="normal", __backend="pandas"),
+        ungroup(x, **meta_kwargs),
+        ungroup(y, **meta_kwargs),
     )
     return reconstruct_tibble(out, x)
 
@@ -199,10 +195,31 @@ def _set_equal_df(x, y, equal_na=True):
     Returns:
         True if they equal else False
     """
-    x = ungroup(x, __ast_fallback="normal", __backend="pandas")
-    y = ungroup(y, __ast_fallback="normal", __backend="pandas")
+    x = ungroup(x, **meta_kwargs)
+    y = ungroup(y, **meta_kwargs)
     _check_xy(x, y)
 
     x = x.sort_values(by=x.columns.to_list()).reset_index(drop=True)
     y = y.sort_values(by=y.columns.to_list()).reset_index(drop=True)
     return x.equals(y)
+
+
+@symdiff.register(object, backend="pandas")
+def _symdiff(x, y):
+    """Symmetric difference of two vectors"""
+    return _setdiff(_union(x, y), _intersect(x, y))
+
+
+@symdiff.register(DataFrame, backend="pandas")
+def _symdiff_df(x, y):
+    """Symmetric difference of two dataframes"""
+    _x = ungroup(x, **meta_kwargs)
+    _y = ungroup(y, **meta_kwargs)
+    _check_xy(_x, _y)
+
+    out = setdiff(
+        union(_x, _y, **meta_kwargs),
+        intersect(_x, _y, **meta_kwargs),
+        **meta_kwargs,
+    )
+    return reconstruct_tibble(out, x)

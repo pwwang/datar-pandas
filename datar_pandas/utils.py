@@ -27,6 +27,8 @@ NA_compex_ = complex(NA_real_, NA_real_)
 
 DEFAULT_COLUMN_PREFIX = "_VAR_"
 
+meta_kwargs = {"__backend": "pandas", "__ast_fallback": "normal"}
+
 
 class ExpressionWrapper:
     """A wrapper around an expression to bypass evaluation"""

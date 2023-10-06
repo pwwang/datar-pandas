@@ -32,11 +32,43 @@ from datar.dplyr import (
     distinct,
     union_all,
     filter,
+    symdiff,
 )
 from datar.tibble import tibble
 from datar_pandas.pandas import assert_frame_equal
 
-from ..conftest import assert_equal, assert_
+from ..conftest import assert_equal, assert_, assert_iterable_equal
+
+
+def test_also_works_with_vectors():
+    assert_iterable_equal(intersect([1, 2, 3], [3, 4]), [3])
+    assert_iterable_equal(union([1, 2, 3], [3, 4]), [1, 2, 3, 4])
+    assert_iterable_equal(union_all([1, 2, 3], [3, 4]), [1, 2, 3, 3, 4])
+    assert_iterable_equal(setdiff([1, 2, 3], [3, 4]), [1, 2])
+    assert_iterable_equal(symdiff([1, 2, 3], [3, 4]), [1, 2, 4])
+    assert_iterable_equal(symdiff([1, 1, 2], [2, 2, 3]), [1, 3])
+
+
+def test_x_used_as_basis_of_output():
+    df1 = tibble(x=[1, 2, 3, 4], y=1)
+    df2 = tibble(y=1, x=[4, 2])
+
+    assert_frame_equal(intersect(df1, df2), tibble(x=[2, 4], y=1))
+    assert_frame_equal(union(df1, df2), tibble(x=[1, 2, 3, 4], y=1))
+    assert_frame_equal(union_all(df1, df2), tibble(x=[1, 2, 3, 4, 4, 2], y=1))
+    assert_frame_equal(setdiff(df1, df2), tibble(x=[1, 3], y=1))
+    assert_frame_equal(symdiff(df1, df2), tibble(x=[1, 3], y=1))
+
+
+def test_set_removes_duplicates_except_union_all():
+    df1 = tibble(x=[1, 1, 2])
+    df2 = tibble(x=2)
+
+    assert_frame_equal(intersect(df1, df2), tibble(x=2))
+    assert_frame_equal(union(df1, df2), tibble(x=[1, 2]))
+    assert_frame_equal(union_all(df1, df2), tibble(x=[1, 1, 2, 2]))
+    assert_frame_equal(setdiff(df1, df2), tibble(x=1))
+    assert_frame_equal(symdiff(df1, df2), tibble(x=1))
 
 
 def test_set_uses_coercion_rules():
@@ -46,6 +78,7 @@ def test_set_uses_coercion_rules():
     assert_equal(nrow(union(df1, df2)), 3)
     assert_equal(nrow(intersect(df1, df2)), 1)
     assert_equal(nrow(setdiff(df1, df2)), 1)
+    assert_equal(nrow(symdiff(df1, df2)), 2)
 
     df1 = tibble(x=factor(letters[:10]))
     df2 = tibble(x=letters[5:15])
@@ -103,6 +136,7 @@ def test_set_operations_reconstruct_grouping_metadata():
     exp = tibble(x=seq(1, 6), g=rep([1, 2, 3], each=2)) >> group_by(f.g)
     assert out.equals(exp)
     assert_equal(group_vars(out), group_vars(exp))
+    assert_equal(group_vars(symdiff(df1, df2)), ["g"])
 
     out = setdiff(df1, df2) >> group_rows()
     assert out == [[0, 1]]
