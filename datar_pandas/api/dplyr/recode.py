@@ -11,7 +11,7 @@ from ... import pandas as pd
 from ...pandas import (
     Categorical, Series, is_categorical_dtype, is_numeric_dtype,
 )
-from ...common import is_scalar, intersect
+from ...common import is_scalar, intersect, unique
 from ...factory import func_bootstrap
 from ...tibble import SeriesCategorical
 from ...collections import Collection
@@ -361,7 +361,7 @@ def _recode_factor_bootstrap(
 
     out_type = type(_get_first(recoded))
     _default = _recode_default(_x, _default, out_type)
-    all_levels = pd.unique(
+    all_levels = unique(
         Collection(
             list(values.values()),
             [] if _default is None else _default,
@@ -373,7 +373,7 @@ def _recode_factor_bootstrap(
     recoded_levels = (
         recoded.categories
         if isinstance(recoded, Categorical)
-        else pd.unique(recoded[pd.notnull(recoded)])
+        else unique(recoded[pd.notnull(recoded)])
     )
     levels = intersect(all_levels, recoded_levels)
 

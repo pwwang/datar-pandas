@@ -98,3 +98,9 @@ else:
 
     def get_obj(grouped):
         return grouped.obj
+
+    def is_categorical_dtype(x):  # noqa: F811
+        # pandas2.1
+        # is_categorical_dtype is deprecated and will be removed in a future version.
+        # Use isinstance(dtype, CategoricalDtype) instead
+        return isinstance(getattr(x, "dtype", None), CategoricalDtype)

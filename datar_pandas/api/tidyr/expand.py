@@ -12,7 +12,7 @@ from datar.apis.tidyr import expand, expand_grid, nesting, crossing
 
 from ... import pandas as pd
 from ...pandas import DataFrame, Series, Categorical
-from ...common import is_scalar
+from ...common import is_scalar, unique
 from ...contexts import Context
 from ...utils import DEFAULT_COLUMN_PREFIX
 from ...tibble import Tibble, TibbleGrouped, TibbleRowwise, reconstruct_tibble
@@ -380,13 +380,13 @@ def _sorted_unique(x: Iterable[Any]) -> Union[Categorical, np.ndarray]:
     # return np.sort(np.unique(x))
     # np.unique() will turn ['A', 'B', np.nan] to ['A', 'B', 'nan']
     try:
-        out = pd.unique(x)
+        out = unique(x)
     except TypeError:
         # unhashable type: 'list'
         # workaround for unhashable elements
         # using its stringified form as key, which has side-effects
         maps = {str(elem): elem for elem in x}
-        out = pd.unique(list(maps.keys()))
+        out = unique(list(maps.keys()))
         out = np.array([maps[elem] for elem in out], dtype=object)
 
     has_na = pd.isnull(out).any()

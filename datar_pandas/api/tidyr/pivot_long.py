@@ -10,7 +10,7 @@ from datar.apis.tidyr import extract, separate, pivot_longer
 
 from ... import pandas as pd
 from ...pandas import DataFrame
-from ...common import is_scalar, setdiff, union
+from ...common import is_scalar, setdiff, union, unique
 from ...contexts import Context
 from ...utils import DEFAULT_COLUMN_PREFIX, vars_select, apply_dtypes
 from ...tibble import reconstruct_tibble
@@ -209,7 +209,7 @@ def _pivot_longer(
         names_to = setdiff(names_to, na_names_to)
 
         # keep the order
-        value_columns = pd.unique(ret[".value"].values)
+        value_columns = unique(ret[".value"].values)
         ret.set_index(list(index_columns), inplace=True)
         ret.index = list(ret.index)
         ret2 = ret.pivot(columns=".value", values=values_to).reset_index()

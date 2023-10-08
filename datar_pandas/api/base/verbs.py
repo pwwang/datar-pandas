@@ -19,7 +19,6 @@ from datar.apis.base import (
     tail,
 )
 
-from ... import pandas as pd
 from ...pandas import DataFrame, Series, Index, SeriesGroupBy, get_obj
 from ...common import is_scalar, unique as _unique
 
@@ -147,7 +146,7 @@ def _t(_data, copy=False):
 
 @unique.register(SeriesGroupBy, backend="pandas")
 def _unique_sgb(x):
-    return x.apply(pd.unique).explode().astype(get_obj(x).dtype)
+    return x.apply(_unique).explode().astype(get_obj(x).dtype)
 
 
 @duplicated.register(DataFrame, backend="pandas")

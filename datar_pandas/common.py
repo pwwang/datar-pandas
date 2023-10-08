@@ -1,3 +1,4 @@
+import warnings
 from typing import Any
 
 from datar.apis.base import (
@@ -14,10 +15,18 @@ from datar_numpy.api import asis as _  # noqa: F401
 from datar_numpy.api import sets as _  # noqa: F401, F811
 
 from . import pandas as pd
-from .pandas import unique  # noqa: F401
+from .pandas import unique as _unique
 from .typing import Data, Bool
 
 np_meta_kwargs = {"__backend": "numpy", "__ast_fallback": "normal"}
+
+
+def unique(x: Any) -> Any:
+    with warnings.catch_warnings():
+        # unique with argument that is not not a Series, Index, ExtensionArray,
+        # or np.ndarray is deprecated and will raise in a future version.
+        warnings.simplefilter("ignore", FutureWarning)
+        return _unique(x)
 
 
 def is_null(x: Any) -> Data[Bool]:

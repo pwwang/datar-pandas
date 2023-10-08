@@ -90,6 +90,7 @@ def _table(x, *more, exclude=None, use_na="no", dnn=None, deparse_level=1):
         kwargs["colnames"] = [dn2]
 
     tab = pd.crosstab(obj1, obj2, **kwargs)
+    tab = tab.loc[~pd.isnull(tab.index), :]
     if obj1 is obj2:
         tab = DataFrame(dict(count=np.diag(tab)), index=tab.columns).T
         tab.index.name = dn1
