@@ -10,7 +10,7 @@ from datar.core.names import repair_names
 from .pandas import DataFrame, Index, Series, SeriesGroupBy, GroupBy, get_obj
 
 from .common import is_scalar, intersect, setdiff, union
-from .utils import apply_dtypes, name_of
+from .utils import apply_dtypes, name_of, is_pd2
 
 if TYPE_CHECKING:
     from pandas._typing import Dtype
@@ -295,6 +295,9 @@ class TibbleGrouped(Tibble):
                 DataFrame.__setitem__(self, colname, value[col])
         else:
             DataFrame.__setitem__(self, key, value)
+
+        if is_pd2:  # pragma: no cover
+            self.regroup(hard=False, inplace=True)
 
     def regroup(self, hard=True, inplace=True) -> "TibbleGrouped":
         """Apply my grouping settings to another data frame"""

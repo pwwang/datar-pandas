@@ -3,7 +3,7 @@ import pytest
 
 import numpy as np
 from datar import f
-from datar.base import NA, c
+from datar.base import NA
 from datar_pandas.pandas import (
     DataFrame,
     Series,
@@ -138,7 +138,7 @@ def test_pmax():
 
 
 def test_cov():
-    df = tibble(x=c[1:4], y=c[4:7])
+    df = tibble(x=[1, 2, 3], y=[5, 6, 7])
     out = df >> cov()
     assert_frame_equal(
         out.reset_index(drop=True), tibble(x=[1.0, 1.0], y=[1.0, 1.0])

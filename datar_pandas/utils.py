@@ -8,6 +8,7 @@ from functools import singledispatch
 import numpy as np
 from pipda import Expression, evaluate_expr
 
+from . import pandas as pd
 from .common import is_null, unique
 from .collections import Collection
 from .pandas import DataFrame, Series, SeriesGroupBy, get_obj
@@ -28,6 +29,7 @@ NA_compex_ = complex(NA_real_, NA_real_)
 DEFAULT_COLUMN_PREFIX = "_VAR_"
 
 meta_kwargs = {"__backend": "pandas", "__ast_fallback": "normal"}
+is_pd2 = pd.__version__.startswith("2.")
 
 
 class ExpressionWrapper:

@@ -9,7 +9,7 @@ from datar.dplyr import (
     summarise,
 )
 from datar_pandas.pandas import assert_frame_equal
-from tests.conftest import assert_iterable_equal
+from ..conftest import assert_iterable_equal
 
 
 def test_neg():

@@ -89,7 +89,7 @@ def test_pd_cat():
 
 
 def test_pd_dt():
-    s = Series(["2019-01-01", "2019-01-02", "2019-01-03"]).astype("datetime64")
+    s = Series(["2019-01-01", "2019-01-02", "2019-01-03"]).astype("datetime64[ns]")
     out = pd_dt(s).year
     assert_iterable_equal(out, [2019, 2019, 2019])
 
@@ -99,7 +99,7 @@ def test_pd_dt():
 
     s = (
         Series(["2019-01-01", "2019-01-02", "2019-01-03"])
-        .astype("datetime64")
+        .astype("datetime64[ns]")
         .groupby([1, 1, 2])
     )
     out = pd_dt(s).year

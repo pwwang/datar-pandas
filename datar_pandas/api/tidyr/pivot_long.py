@@ -170,7 +170,7 @@ def _pivot_longer(
     )
     if names_prefix:
         names_prefix = re.compile(f"^{re.escape(names_prefix)}")
-        ret[var_name] = ret[var_name].str.replace(names_prefix, "")
+        ret[var_name] = ret[var_name].str.replace(names_prefix, "", regex=True)
 
     if all(pd.is_categorical_dtype(_data[col]) for col in columns):
         ret[values_to] = ret[values_to].astype("category")

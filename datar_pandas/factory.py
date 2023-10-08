@@ -2,6 +2,7 @@
 from __future__ import annotations
 
 import inspect
+import warnings
 from functools import singledispatch, wraps
 from typing import (
     TYPE_CHECKING,
@@ -188,7 +189,13 @@ def _bootstrap_agg_func(
     @registered.register(SeriesGroupBy, backend="pandas")
     @_with_hooks(pre=pre, post=post)
     def _seriesgroupby_agg(*args, **kwargs):
-        return args[0].agg(func, *args[1:], **kwargs)
+        with warnings.catch_warnings():
+            # The provided callable <function sum at 0x14bb786d7b80> is currently using
+            # SeriesGroupBy.sum. In a future version of pandas,
+            # the provided callable will be used directly.
+            # To keep current behavior pass the string "sum" instead.
+            warnings.simplefilter("ignore", FutureWarning)
+            return args[0].agg(func, *args[1:], **kwargs)
 
     @registered.register(TibbleGrouped, backend="pandas")
     @_with_hooks(pre=pre, post=post)

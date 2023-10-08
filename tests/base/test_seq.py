@@ -165,7 +165,7 @@ def test_c():
     out = c(7, [8, 9], x)
     assert_iterable_equal(get_obj(out), [7, 8, 9, 1, 2, 7, 8, 9, 3, 4])
 
-    df = tibble(x=c[1:5], y=rep(c[1:3], each=2)) >> rowwise()
+    df = tibble(x=[1, 2, 3, 4], y=rep([1, 2], each=2)) >> rowwise()
     out = df >> mutate(z=mean(c(f.x, f.y)))
     assert_iterable_equal(get_obj(out.z), [1.0, 1.5, 2.5, 3.0])
 

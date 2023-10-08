@@ -27,6 +27,7 @@ right operand `[1, 2]`
 from __future__ import annotations
 
 import time
+import warnings
 from functools import singledispatch
 from typing import TYPE_CHECKING, Any, Tuple, Union
 
@@ -35,12 +36,13 @@ import numpy as np
 from .typing import Data, Int
 from .common import is_scalar
 from .tibble import Tibble, TibbleGrouped, TibbleRowwise
-from .utils import name_of, dict_get
+from .utils import name_of, dict_get, is_pd2
 from .pandas import (
     Categorical,
     DataFrame,
     Series,
     CategoricalIndex,
+    MultiIndex,
     Index,
     NDFrame,
     DataFrameGroupBy,
@@ -110,7 +112,14 @@ def _agg_result_compatible(index: Index, grouper: Grouper) -> bool:
     if isinstance(index, CategoricalIndex):
         index = index.remove_unused_categories()
 
-    size1 = index.value_counts(sort=False, dropna=False)
+    with warnings.catch_warnings():
+        # The default of observed=False is deprecated and will be changed to True
+        # in a future version of pandas.
+        # Pass observed=False to retain current behavior or observed=True to adopt the
+        # future default and silence this warning.
+        warnings.simplefilter("ignore", FutureWarning)
+        size1 = index.value_counts(sort=False, dropna=False)
+
     size2 = grouper.size()
     return (
         (size1.values == 1)
@@ -368,6 +377,10 @@ def _(
             val_sizes = value.index.remove_unused_categories().value_counts(
                 sort=False,
             )
+        elif is_pd2 and isinstance(value.index, MultiIndex):  # pragma: no cover
+            # Pandas 2 does convert MultiIndex to CategoricalIndex if all
+            # are CategoricalIndex
+            val_sizes = value.index.to_series().value_counts(sort=False)
         else:
             val_sizes = value.index.value_counts(sort=False)
 

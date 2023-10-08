@@ -1,3 +1,5 @@
+import warnings
+
 from pipda import register_verb, register_func
 from datar_numpy.utils import make_array
 
@@ -131,7 +133,12 @@ class _Accessor:
             return _MethodAccessor(self, name)
 
         # x.cat.categories
-        out = self.sgb.apply(lambda x: getattr(getattr(x, self.name), name))
+        with warnings.catch_warnings():
+            # Not prepending group keys to the result index of transform-like apply.
+            # In the future, the group keys will be included in the index,
+            # regardless of whether the applied function returns a like-indexed object.
+            warnings.simplefilter("ignore", FutureWarning)
+            out = self.sgb.apply(lambda x: getattr(getattr(x, self.name), name))
 
         try:
             return out.groupby(
