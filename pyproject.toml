@@ -12,6 +12,7 @@ python = "^3.8"
 # requires pandas v2+
 pdtypes = "^0.1"
 datar = "^0.14"
+pandas = "^1.4"
 # datar = { path = "../datar" }
 datar-numpy = { version = "^0.3", extras = ["all"] }
 # datar-numpy = { path = "../datar-numpy", extras = ["all"] }
