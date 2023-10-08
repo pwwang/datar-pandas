@@ -27,7 +27,7 @@ jobs:
           pandas
         ]
         exclude:
-          - python-version: 3.9
+          - python-version: 3.8
             pandas: pandas==2.1.0
 
     steps:
