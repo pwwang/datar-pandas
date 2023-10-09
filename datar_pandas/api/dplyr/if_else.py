@@ -40,6 +40,7 @@ def _if_else(condition, true, false, missing=None):
         true,  # 5
         True,  # 6
         missing,  # 7
+        **meta_kwargs,
     )
 
     if isinstance(condition, Series):
