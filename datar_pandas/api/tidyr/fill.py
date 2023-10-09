@@ -36,13 +36,16 @@ def _fill(
     """
     data = _data.copy()
     if not columns:
-        data = data.fillna(
-            method="ffill" if _direction.startswith("down") else "bfill",
-        )
+        if _direction.startswith("down"):
+            data = data.ffill()
+        else:
+            data = data.bfill()
+
         if _direction in ("updown", "downup"):
-            data = data.fillna(
-                method="ffill" if _direction.endswith("down") else "bfill",
-            )
+            if _direction.endswith("down"):
+                data = data.ffill()
+            else:
+                data = data.bfill()
     else:
         colidx = vars_select(data.columns, *columns)
         data[data.columns[colidx]] = fill(
