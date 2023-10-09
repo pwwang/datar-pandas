@@ -5,6 +5,7 @@ from datar.base import (
     outer,
     diff,
     rank,
+    set_seed,
 )
 from datar.base import table, pi, paste0, rnorm, cumsum, seq
 from datar_pandas.pandas import (
@@ -18,6 +19,7 @@ from ..conftest import assert_iterable_equal
 
 
 def test_cut():
+    set_seed(8525)
     z = rnorm(10000)
     tab = table(cut(z, breaks=range(-6, 7)))
     assert tab.shape == (1, 12)
