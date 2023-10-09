@@ -101,23 +101,23 @@ pandas = ["datar-pandas (>=0.5,<0.6)"]
 
 [[package]]
 name = "datar-numpy"
-version = "0.3.1"
+version = "0.3.2"
 description = "The numpy backend for datar"
 optional = false
 python-versions = ">=3.8,<4.0"
 files = [
-    {file = "datar_numpy-0.3.1-py3-none-any.whl", hash = "sha256:9c390ec958c8264224ac222c72b9f038b75f03d89ed996428c1f8ffbb246e2ba"},
-    {file = "datar_numpy-0.3.1.tar.gz", hash = "sha256:74cddb981ba52ab5e6e615c7d112a0973171ef3dc057a8b403f787095e9dc76f"},
+    {file = "datar_numpy-0.3.2-py3-none-any.whl", hash = "sha256:0d221d8b8dd4d2abc5df764e79901a39a55012dad5712aa8972a20e4912379af"},
+    {file = "datar_numpy-0.3.2.tar.gz", hash = "sha256:723320b813320571f7487c74594d85e6c9e16f9251f5da0ed60fb948a6292a47"},
 ]
 
 [package.dependencies]
 datar = ">=0.15,<0.16"
 numpy = ">=1.20,<2.0"
-scipy = {version = ">=1.6,<2.0", optional = true, markers = "extra == \"all\""}
+scipy = {version = ">=1.8,<2.0", optional = true, markers = "extra == \"all\""}
 wcwidth = {version = ">=0.2,<0.3", optional = true, markers = "extra == \"all\""}
 
 [package.extras]
-all = ["scipy (>=1.6,<2.0)", "wcwidth (>=0.2,<0.3)"]
+all = ["scipy (>=1.8,<2.0)", "wcwidth (>=0.2,<0.3)"]
 
 [[package]]
 name = "diot"
@@ -478,7 +478,7 @@ files = [
 name = "scipy"
 version = "1.9.3"
 description = "Fundamental algorithms for scientific computing in Python"
-optional = false
+optional = true
 python-versions = ">=3.8"
 files = [
     {file = "scipy-1.9.3-cp310-cp310-macosx_10_9_x86_64.whl", hash = "sha256:1884b66a54887e21addf9c16fb588720a8309a57b2e258ae1c7986d4444d3bc0"},
@@ -563,14 +563,17 @@ files = [
 name = "wcwidth"
 version = "0.2.8"
 description = "Measures the displayed width of unicode strings in a terminal"
-optional = false
+optional = true
 python-versions = "*"
 files = [
     {file = "wcwidth-0.2.8-py2.py3-none-any.whl", hash = "sha256:77f719e01648ed600dfa5402c347481c0992263b81a027344f3e1ba25493a704"},
     {file = "wcwidth-0.2.8.tar.gz", hash = "sha256:8705c569999ffbb4f6a87c6d1b80f324bd6db952f5eb0b95bc07517f4c1813d4"},
 ]
 
+[extras]
+all = ["datar-numpy", "datar-numpy"]
+
 [metadata]
 lock-version = "2.0"
 python-versions = "^3.8"
-content-hash = "d09e0bfc2fd11ac91ded71b636e6ad27afe8c115685411a6bc6eb3709e41bfa2"
+content-hash = "f282f54eae99b043cd7bfb19aa4a9f4f2b05a93d08580b5464722d0192ee0e63"
