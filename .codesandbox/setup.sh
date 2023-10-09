@@ -2,7 +2,6 @@ WORKSPACE="/workspace"
 
 # Install python dependencies
 poetry update && poetry install
-pip install -U scipy wcwidth
 cd $WORKSPACE
 
 # Install whichpy

@@ -13,14 +13,13 @@ python = "^3.8"
 pdtypes = "^0.2"
 datar = "^0.15"
 # datar = { path = "../datar" }
-datar-numpy = [
-    { version = "^0.3.2", optional = true, extras = ["all"] },
-    { version = "^0.3.2" }
-]
+datar-numpy = "^0.3.2"
 # datar-numpy = { path = "../datar-numpy", extras = ["all"] }
+scipy = { version = "^1.8", optional = true }
+wcwidth = { version = "^0.2", optional = true }
 
 [tool.poetry.extras]
-all = ["datar-numpy"]
+all = ["scipy", "wcwidth"]
 
 [tool.poetry.build]
 generate-setup-file = true
