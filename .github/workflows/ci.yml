@@ -42,8 +42,7 @@ jobs:
           python -m pip install flake8
           python -m pip install poetry
           poetry config virtualenvs.create false
-          poetry install -v
-          pip install -U scipy wcwidth
+          poetry install -v -E all
           # reinstall pandas to specific version
           pip install -U "$PANDAS"
         env:

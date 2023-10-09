@@ -13,12 +13,14 @@ python = "^3.8"
 pdtypes = "^0.2"
 datar = "^0.15"
 # datar = { path = "../datar" }
-datar-numpy = { version = "^0.3.1", extras = ["all"] }
+datar-numpy = [
+    { version = "^0.3.2", optional = true, extras = ["all"] },
+    { version = "^0.3.2" }
+]
 # datar-numpy = { path = "../datar-numpy", extras = ["all"] }
-# modin = { version = "^0.10", optional = true }
 
-# [tool.poetry.extras]
-# modin = ["modin"]
+[tool.poetry.extras]
+all = ["datar-numpy"]
 
 [tool.poetry.build]
 generate-setup-file = true
