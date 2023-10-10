@@ -1,6 +1,7 @@
 import warnings
 
 from pipda import register_verb, register_func
+from datar.apis.misc import array_ufunc
 from datar_numpy.utils import make_array
 
 from ..pandas import DataFrame, Series, PandasObject, SeriesGroupBy
@@ -206,3 +207,16 @@ def flatten(_data: DataFrame, bycol: bool = False):
     if bycol:
         return _data.T.values.flatten().tolist()
     return _data.values.flatten().tolist()
+
+
+@array_ufunc.register(SeriesGroupBy, backend="pandas")
+def _array_ufunc(x, ufunc, *args, kind, **kwargs):
+    if kind == "ufunc":
+        return x.transform(ufunc, *args, **kwargs)
+
+    if ufunc.__name__.startswith("nan"):
+        fun = ufunc.__name__[3:]
+        kwargs.setdefault("skipna", False)
+        return x.apply(lambda x: getattr(x, fun)(*args, **kwargs))
+
+    return x.apply(ufunc, *args, **kwargs)

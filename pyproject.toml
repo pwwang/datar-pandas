@@ -11,7 +11,7 @@ packages = [{include = "datar_pandas"}]
 python = "^3.8"
 # requires pandas v2+
 pdtypes = "^0.2"
-datar = "^0.15"
+datar = "^0.15.3"
 # datar = { path = "../datar" }
 datar-numpy = "^0.3.2"
 # datar-numpy = { path = "../datar-numpy", extras = ["all"] }
