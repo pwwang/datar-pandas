@@ -1,8 +1,10 @@
 import pytest  # noqa: F401
 
 import numpy as np
+from datar import f
 from datar.misc import itemgetter, attrgetter, pd_str, pd_cat, pd_dt, flatten
 from datar.tibble import tibble
+from datar.dplyr import mutate
 from datar_pandas.pandas import Series, Categorical, get_obj
 from datar_pandas.collections import Collection
 
@@ -112,3 +114,14 @@ def test_flatten():
     assert out == [1, 2, 3, 4]
     out = df >> flatten()
     assert out == [1, 3, 2, 4]
+
+
+def test_array_ufunc():
+    gf = tibble(x=[1, 4], g=[1, 2]).group_by("g") >> mutate(
+        y=np.sqrt(f.x),
+        z=np.nanmean(f.x),
+        w=np.mean(f.x),
+    )
+    assert_iterable_equal(gf.y.obj, [1, 2])
+    assert_iterable_equal(gf.z.obj, [1, 4])
+    assert_iterable_equal(gf.w.obj, [1, 4])
