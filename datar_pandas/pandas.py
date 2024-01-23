@@ -1,5 +1,6 @@
-from datar import get_option
+from contextlib import contextmanager as _contextmanager, nullcontext as _nullcontext
 
+from datar import get_option
 from pandas.testing import (  # noqa: F401
     assert_frame_equal,
     assert_index_equal,
@@ -86,7 +87,8 @@ else:
         read_csv,
         to_datetime,
         unique,
-        option_context,
+        get_option as pd_get_option,
+        option_context as pd_option_context,
     )
 
     from pandas.core.base import PandasObject  # noqa: F401
@@ -99,6 +101,19 @@ else:
 
     def get_obj(grouped):
         return grouped.obj
+
+    @_contextmanager
+    def option_context(key, val, *args):
+        from pandas._config.config import OptionError
+        try:
+            pd_get_option(key)
+        except OptionError:  # pragma: no cover
+            # some option not avialable in earlier pandas
+            # e.g. future.no_silent_downcasting
+            yield
+        else:
+            with pd_option_context(key, val, *args):
+                yield
 
     def is_categorical_dtype(x):  # noqa: F811
         # pandas2.1
