@@ -86,6 +86,7 @@ else:
         read_csv,
         to_datetime,
         unique,
+        option_context,
     )
 
     from pandas.core.base import PandasObject  # noqa: F401

@@ -8,7 +8,7 @@ from datar.apis.dplyr import if_else, case_when, case_match
 
 from ... import pandas as pd
 from ...utils import meta_kwargs
-from ...pandas import Series, SeriesGroupBy, get_obj
+from ...pandas import Series, SeriesGroupBy, get_obj, option_context
 from ...tibble import Tibble, reconstruct_tibble
 from ..dplyr.group_by import ungroup
 
@@ -92,9 +92,10 @@ def _case_when(when, case, *when_cases):
     ungrouped = ungroup(df, **meta_kwargs)
 
     value = Series(np.nan, index=ungrouped.index)
-    for i in range(ungrouped.shape[1] - 1, 0, -2):
-        condition = ungrouped.iloc[:, i - 1].fillna(False).values.astype(bool)
-        value[condition] = ungrouped.iloc[:, i][condition]
+    with option_context("future.no_silent_downcasting", True):
+        for i in range(ungrouped.shape[1] - 1, 0, -2):
+            condition = ungrouped.iloc[:, i - 1].fillna(False).values.astype(bool)
+            value[condition] = ungrouped.iloc[:, i][condition]
 
     value = value.to_frame(name="when_case_result")
     value = reconstruct_tibble(value, df)
