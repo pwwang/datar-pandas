@@ -1,6 +1,6 @@
 [tool.poetry]
 name = "datar-pandas"
-version = "0.5.3"
+version = "0.5.4"
 description = "The pandas backend for datar"
 authors = ["pwwang <pwwang@pwwang.com>"]
 license = "MIT"
