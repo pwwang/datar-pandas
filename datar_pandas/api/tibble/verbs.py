@@ -178,7 +178,7 @@ def _add_column(
 
     grouper = None
     if isinstance(_data, TibbleGrouped):
-        grouper = _data._datar["grouped"].grouper
+        grouper = _data._datar["grouped"]._grouper
     df = broadcast_to(df, _data.index, grouper)
     pos = _pos_from_before_after_names(_before, _after, _data.columns.tolist())
 

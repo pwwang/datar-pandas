@@ -53,7 +53,7 @@ def _group_keys(_data: DataFrame) -> Tibble:
 
 @group_keys.register(TibbleGrouped, context=Context.EVAL, backend="pandas")
 def _group_keys_grouped(_data: TibbleGrouped) -> Tibble:
-    grouper = _data._datar["grouped"].grouper
+    grouper = _data._datar["grouped"]._grouper
     return Tibble(grouper.result_index.to_frame(index=False), copy=False)
 
 
@@ -79,7 +79,7 @@ def _group_rows_grouped(_data: TibbleGrouped) -> List[List[int]]:
 
 @group_rows.register(GroupBy, context=Context.EVAL, backend="pandas")
 def _group_rows_groupby(_data: GroupBy) -> List[List[int]]:
-    grouper = _data.grouper
+    grouper = _data._grouper
     return [
         list(dict_get(grouper.indices, group_key))
         for group_key in grouper.result_index

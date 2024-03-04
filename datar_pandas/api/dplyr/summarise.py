@@ -102,7 +102,7 @@ def _summarise_build(
         if isinstance(_data, TibbleGrouped):
             grouped = _data._datar["grouped"]
             outframe = outframe.group_by(
-                grouped.grouper.names,
+                grouped._grouper.names,
                 drop=grouped.observed,
                 dropna=grouped.dropna,
                 sort=grouped.sort,

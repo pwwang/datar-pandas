@@ -67,7 +67,7 @@ def _row_number(x):
 def _(x):
     out = x.transform(_row_number)
     return out.groupby(
-        x.grouper,
+        x._grouper,
         observed=x.observed,
         sort=x.sort,
         dropna=x.dropna,
@@ -79,7 +79,7 @@ def _(x):
     grouped = x._datar["grouped"]
     return _row_number(
         Series(np.arange(x.shape[0]), index=x.index).groupby(
-            grouped.grouper,
+            grouped._grouper,
             observed=grouped.observed,
             sort=grouped.sort,
             dropna=grouped.dropna,
@@ -177,7 +177,7 @@ def _(x, na_last="keep"):
 @_percent_rank.register(GroupBy)
 def _(x, na_last="keep"):
     ranking = _rank(x, na_last, "min", True).groupby(
-        x.grouper,
+        x._grouper,
         observed=x.observed,
         sort=x.sort,
         dropna=x.dropna,

@@ -57,7 +57,7 @@ def _arithmetize1(op: str, operand: Any) -> Any:
     op_func = getattr(operator, op)
     if isinstance(operand, GroupBy):
         out = op_func(get_obj(operand)).groupby(
-            operand.grouper,
+            operand._grouper,
             observed=operand.observed,
             sort=operand.sort,
             dropna=operand.dropna,

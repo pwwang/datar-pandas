@@ -63,8 +63,8 @@ def _slice_grouped(
     grouped = _data._datar["grouped"]
     indices = _sanitize_rows(
         rows,
-        grouped.grouper.indices,
-        grouped.grouper.result_index,
+        grouped._grouper.indices,
+        grouped._grouper.result_index,
     )
 
     return _data.take(indices)
@@ -94,13 +94,13 @@ def _slice_head_grouped(
     """Slice on grouped dataframe"""
     grouped = _data._datar["grouped"]
     # Calculate n's of each group
-    ns = grouped.grouper.size().transform(lambda x: _n_from_prop(x, n, prop))
+    ns = grouped._grouper.size().transform(lambda x: _n_from_prop(x, n, prop))
     # Get indices of each group
     # A better way?
     indices = np.concatenate(
         [
-            grouped.grouper.indices[key][: ns[key]]
-            for key in grouped.grouper.result_index
+            grouped._grouper.indices[key][: ns[key]]
+            for key in grouped._grouper.result_index
         ]
     )
 
@@ -148,13 +148,13 @@ def _slice_tail_grouped(
 ) -> TibbleGrouped:
     grouped = _data._datar["grouped"]
     # Calculate n's of each group
-    ns = grouped.grouper.size().transform(lambda x: _n_from_prop(x, n, prop))
+    ns = grouped._grouper.size().transform(lambda x: _n_from_prop(x, n, prop))
     # Get indices of each group
     # A better way?
     indices = np.concatenate(
         [
-            grouped.grouper.indices[key][-ns[key]:]
-            for key in grouped.grouper.result_index
+            grouped._grouper.indices[key][-ns[key]:]
+            for key in grouped._grouper.result_index
         ]
     )
 
@@ -303,7 +303,7 @@ def _sanitize_rows(
             if idx.size == 0:
                 continue
 
-            gidx = dict_get(rows.grouper.indices, key)
+            gidx = dict_get(rows._grouper.indices, key)
             out.extend(idx.take(get_obj(rows).take(gidx)))
     else:
         for key in result_index:

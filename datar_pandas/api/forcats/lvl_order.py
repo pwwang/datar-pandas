@@ -121,7 +121,7 @@ def _fct_inorder(_f, ordered: bool = None) -> Categorical:
         return out
 
     return Series(out, get_obj(_f).index).groupby(
-        _f.grouper,
+        _f._grouper,
         observed=_f.observed,
         sort=_f.sort,
         dropna=_f.dropna,

@@ -132,7 +132,7 @@ def _with_hooks(
                 is_rowwise = getattr(grouped, "is_rowwise", False)
 
             out = out.groupby(
-                grouped.grouper,
+                grouped._grouper,
                 sort=grouped.sort,
                 observed=grouped.observed,
                 dropna=grouped.dropna,

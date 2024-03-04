@@ -107,7 +107,7 @@ def _paste(frame, sep, collapse):
     if isinstance(frame, TibbleGrouped):
         grouped = frame._datar["grouped"]
         out = out.groupby(
-            grouped.grouper,
+            grouped._grouper,
             sort=grouped.sort,
             observed=grouped.observed,
             dropna=grouped.dropna,
@@ -154,7 +154,7 @@ def _sprintf_apply_df(data, bound, exclude, func):
     if isinstance(data, TibbleGrouped):
         grouped = data._datar["grouped"]
         out = out.groupby(
-            grouped.grouper,
+            grouped._grouper,
             sort=grouped.sort,
             observed=grouped.observed,
             dropna=grouped.dropna,

@@ -215,7 +215,7 @@ class Glimpse:
                 f"Rows: {self.x.shape[0]}",
                 f"Columns: {self.x.shape[1]}",
                 f"{group_title}: {groups} "
-                f"[{self.x._datar['grouped'].grouper.ngroups}]",
+                f"[{self.x._datar['grouped']._grouper.ngroups}]",
             )
 
         return (

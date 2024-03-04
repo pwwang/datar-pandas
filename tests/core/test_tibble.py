@@ -135,7 +135,7 @@ def test_tibble_rowwise():
     # reindex
     df2 = df.reindex([0, 0, 1, 1, 2, 2])
     assert isinstance(df2, TibbleRowwise)
-    assert df2._datar["grouped"].grouper.size().tolist() == [1] * 6
+    assert df2._datar["grouped"]._grouper.size().tolist() == [1] * 6
 
     # # take
     # df3 = df2.take([0, 2, 4])

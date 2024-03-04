@@ -75,7 +75,7 @@ def _match(x, table, nomatch=-1):
                 sort=table.sort,
                 dropna=table.dropna,
             )
-            if not _grouper_compatible(x1.grouper, t1.grouper):
+            if not _grouper_compatible(x1._grouper, t1._grouper):
                 raise ValueError("Grouping of x and table are not compatible")
             df["table"] = get_obj(t1)
         elif isinstance(table, Series):
@@ -91,7 +91,7 @@ def _match(x, table, nomatch=-1):
                 sort=x1.sort,
                 dropna=x1.dropna,
             )
-            if not _grouper_compatible(x1.grouper, t1.grouper):
+            if not _grouper_compatible(x1._grouper, t1._grouper):
                 df["table"] = [make_array(table)] * df.shape[0]
             else:
                 df["table"] = get_obj(t1)
@@ -106,7 +106,7 @@ def _match(x, table, nomatch=-1):
             .explode()
             .astype(int)
         ).groupby(
-            x.grouper,
+            x._grouper,
             observed=x.observed,
             sort=x.sort,
             dropna=x.dropna,
@@ -129,7 +129,7 @@ def _order_post(out, x, decreasing=False, na_last=True):
         out.explode()
         .astype(int)
         .groupby(
-            x.grouper,
+            x._grouper,
             observed=x.observed,
             sort=x.sort,
             dropna=x.dropna,

@@ -56,7 +56,7 @@ def _atan2_post(__out, y, x):
         return __out
 
     out = __out.groupby(
-        sgb.grouper,
+        sgb._grouper,
         sort=sgb.sort,
         dropna=sgb.dropna,
         observed=sgb.observed,

@@ -101,7 +101,7 @@ class _MethodAccessor:
 
         try:
             return out.groupby(
-                self.accessor.sgb.grouper,
+                self.accessor.sgb._grouper,
                 observed=self.accessor.sgb.observed,
                 sort=self.accessor.sgb.sort,
                 dropna=self.accessor.sgb.dropna,
@@ -143,7 +143,7 @@ class _Accessor:
 
         try:
             return out.groupby(
-                self.sgb.grouper,
+                self.sgb._grouper,
                 observed=self.sgb.observed,
                 sort=self.sgb.sort,
                 dropna=self.sgb.dropna,

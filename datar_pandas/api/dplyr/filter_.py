@@ -34,7 +34,7 @@ def _filter(
 
     grouper = None
     if isinstance(_data, TibbleGrouped):
-        grouper = _data._datar["grouped"].grouper
+        grouper = _data._datar["grouped"]._grouper
 
     condition = broadcast_to(condition, _data.index, grouper)
     if isinstance(condition, np.bool_):

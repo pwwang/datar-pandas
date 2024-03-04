@@ -37,9 +37,9 @@ def _n_grouped(_data: TibbleGrouped) -> Data[Int]:
     _data = _data._datar.get("summarise_source", _data)
     grouped = _data._datar["grouped"]
 
-    out = grouped.grouper.size().to_frame().reset_index()
+    out = grouped._grouper.size().to_frame().reset_index()
     out = out.groupby(
-        grouped.grouper.names,
+        grouped._grouper.names,
         sort=grouped.sort,
         observed=grouped.observed,
         dropna=grouped.dropna,
@@ -60,12 +60,12 @@ def _cur_data_all_grouped(_data: TibbleGrouped) -> Series:
     grouped = _data._datar["grouped"]
     return Series(
         [
-            get_obj(grouped).loc[dict_get(grouped.grouper.groups, key), :]
-            for key in grouped.grouper.result_index
+            get_obj(grouped).loc[dict_get(grouped._grouper.groups, key), :]
+            for key in grouped._grouper.result_index
         ],
         name="cur_data_all",
         dtype=object,
-        index=grouped.grouper.result_index,
+        index=grouped._grouper.result_index,
     )
 
 
@@ -97,7 +97,7 @@ def _cur_group_grouped(_data: TibbleGrouped) -> Series:
     out = group_keys(_data, __ast_fallback="normal", __backend="pandas")
     # split each row as a df
     out = out.apply(lambda row: row.to_frame().T, axis=1)
-    out.index = _data._datar["grouped"].grouper.result_index
+    out.index = _data._datar["grouped"]._grouper.result_index
     return out
 
 
@@ -109,7 +109,7 @@ def _cur_group_id(_data: DataFrame) -> int:
 @cur_group_id.register(TibbleGrouped, context=Context.EVAL, backend="pandas")
 def _cur_group_id_grouped(_data: TibbleGrouped) -> Series:
     _data = _data._datar.get("summarise_source", _data)
-    grouper = _data._datar["grouped"].grouper
+    grouper = _data._datar["grouped"]._grouper
     return Series(np.arange(grouper.ngroups), index=grouper.result_index)
 
 

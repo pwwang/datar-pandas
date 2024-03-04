@@ -54,11 +54,11 @@ def test_itemgetter():
 def test_attrgetter():
     s = Series(["aa", "bb", "cc"]).groupby([1, 1, 2], group_keys=True)
     out = attrgetter(s, "str").upper()
-    assert_iterable_equal(out.grouper.result_index, [1, 2])
+    assert_iterable_equal(out._grouper.result_index, [1, 2])
     assert_iterable_equal(get_obj(out), ["AA", "BB", "CC"])
 
     out = attrgetter(s, "str")[0]
-    assert_iterable_equal(out.grouper.result_index, [1, 2])
+    assert_iterable_equal(out._grouper.result_index, [1, 2])
     assert_iterable_equal(get_obj(out), ["a", "b", "c"])
 
     s = Series(Categorical(["aa", "bb", "cc"]))

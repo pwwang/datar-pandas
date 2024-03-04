@@ -85,7 +85,7 @@ def _factor(
             __ast_fallback="normal",
         )
         return Series(out, index=get_obj(x).index).groupby(
-            x.grouper,
+            x._grouper,
             observed=x.observed,
             sort=x.sort,
             dropna=x.dropna,

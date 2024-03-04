@@ -236,7 +236,7 @@ def _scale_seriesgroupby(
         center=center,
         scale_=scale_,
     ).groupby(
-        x.grouper,
+        x._grouper,
         sort=x.sort,
         dropna=x.dropna,
         observed=x.observed,
@@ -265,7 +265,7 @@ def _pmin_grouped(
     out = gf.min(axis=1, skipna=na_rm)
     g = gf._datar["grouped"]
     return out.groupby(
-        g.grouper,
+        g._grouper,
         sort=g.sort,
         observed=g.observed,
         dropna=g.dropna,
@@ -294,7 +294,7 @@ def _pmax_grouped(
     out = gf.max(axis=1, skipna=na_rm)
     g = gf._datar["grouped"]
     return out.groupby(
-        g.grouper,
+        g._grouper,
         sort=g.sort,
         observed=g.observed,
         dropna=g.dropna,

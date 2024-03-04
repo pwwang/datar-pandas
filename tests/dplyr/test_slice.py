@@ -101,7 +101,7 @@ def test_slice_works_with_grouped_data():
     assert out.shape[0] == 2
 
     out = gf >> slice(
-        Series([1, 0, 0]).groupby(gf._datar["grouped"].grouper.result_index)
+        Series([1, 0, 0]).groupby(gf._datar["grouped"]._grouper.result_index)
     )
     assert_iterable_equal(get_obj(out.x), [2, 3])
 

@@ -71,7 +71,7 @@ def _if_else_sgb(condition, true, false, missing=None):
         get_obj(grouped).iloc[:, 3],
     )
     return out.groupby(
-        condition.grouper,
+        condition._grouper,
         observed=condition.observed,
         sort=condition.sort,
         dropna=condition.dropna,
@@ -124,7 +124,7 @@ def _case_match(_x, *args, _default=None, _dtypes=None):
         return out
 
     return out.groupby(
-        _x.grouper,
+        _x._grouper,
         observed=_x.observed,
         sort=_x.sort,
         dropna=_x.dropna,

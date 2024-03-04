@@ -240,7 +240,7 @@ class TibbleGrouped(Tibble):
         groups = ", ".join((str(name) for name in self.group_vars))
         return (
             f"<p>{self.__class__.__name__}: {groups} "
-            f"(n={self._datar['grouped'].grouper.ngroups})"
+            f"(n={self._datar['grouped']._grouper.ngroups})"
         )
 
     @property
@@ -248,7 +248,7 @@ class TibbleGrouped(Tibble):
         groups = ", ".join((str(name) for name in self.group_vars))
         return (
             f"[{self.__class__.__name__}: {groups} "
-            f"(n={self._datar['grouped'].grouper.ngroups})]"
+            f"(n={self._datar['grouped']._grouper.ngroups})]"
         )
 
     @classmethod
@@ -266,7 +266,7 @@ class TibbleGrouped(Tibble):
                 else get_obj(grouped).to_frame()
             )
             grouped = frame.groupby(
-                grouped.grouper,
+                grouped._grouper,
                 observed=grouped.observed,
                 sort=grouped.sort,
                 dropna=grouped.dropna,
@@ -286,7 +286,7 @@ class TibbleGrouped(Tibble):
         if isinstance(result, DataFrame):
             newmeta = self._datar.copy()
             newmeta["grouped"] = result.groupby(
-                grouped.grouper,
+                grouped._grouper,
                 sort=grouped.sort,
                 observed=grouped.observed,
                 dropna=grouped.dropna,
@@ -299,7 +299,7 @@ class TibbleGrouped(Tibble):
         from .broadcast import broadcast_to
 
         grouped = self._datar["grouped"]
-        value = broadcast_to(value, self.index, grouped.grouper)
+        value = broadcast_to(value, self.index, grouped._grouper)
 
         if isinstance(key, str) and isinstance(value, DataFrame):
             for col in value.columns:
@@ -348,7 +348,7 @@ class TibbleGrouped(Tibble):
         grouped = self._datar["grouped"]
         return self.__class__.from_groupby(
             get_obj(grouped).groupby(
-                grouped.grouper,
+                grouped._grouper,
                 observed=grouped.observed,
                 sort=grouped.sort,
                 dropna=grouped.dropna,
@@ -403,7 +403,7 @@ class TibbleGrouped(Tibble):
     def group_vars(self) -> Sequence[str]:
         # When column names changed, we save the new group vars
         return self._datar.get(
-            "group_vars", self._datar["grouped"].grouper.names
+            "group_vars", self._datar["grouped"]._grouper.names
         )
 
 

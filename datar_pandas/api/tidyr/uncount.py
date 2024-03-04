@@ -36,7 +36,7 @@ def _uncount(
     weights = broadcast_to(
         weights,
         data.index,
-        None if grouped is None else grouped.grouper,
+        None if grouped is None else grouped._grouper,
     )
     if is_scalar(weights):
         weights = Series(weights, index=data.index)
