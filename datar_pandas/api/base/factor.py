@@ -11,6 +11,7 @@ from datar.apis.base import (
     droplevels,
 )
 
+from ...utils import get_grouper
 from ...common import is_scalar
 from ...factory import func_bootstrap
 from ...pandas import (
@@ -85,7 +86,7 @@ def _factor(
             __ast_fallback="normal",
         )
         return Series(out, index=get_obj(x).index).groupby(
-            x._grouper,
+            get_grouper(x),
             observed=x.observed,
             sort=x.sort,
             dropna=x.dropna,

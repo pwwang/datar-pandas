@@ -15,6 +15,7 @@ from datar.apis.tibble import (
 """Functions ported from tidyverse-tibble"""
 from ...common import is_scalar, setdiff
 from ...contexts import Context
+from ...utils import get_grouper
 from ...pandas import DataFrame, Series, RangeIndex
 
 from ...broadcast import broadcast_to
@@ -178,7 +179,7 @@ def _add_column(
 
     grouper = None
     if isinstance(_data, TibbleGrouped):
-        grouper = _data._datar["grouped"]._grouper
+        grouper = get_grouper(_data._datar["grouped"])
     df = broadcast_to(df, _data.index, grouper)
     pos = _pos_from_before_after_names(_before, _after, _data.columns.tolist())
 

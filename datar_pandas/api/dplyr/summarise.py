@@ -18,7 +18,7 @@ from ...pandas import DataFrame, Series
 from ...common import setdiff
 from ...contexts import Context
 from ...broadcast import add_to_tibble
-from ...utils import name_of
+from ...utils import name_of, get_grouper
 from ...tibble import Tibble, TibbleGrouped, TibbleRowwise
 
 
@@ -102,7 +102,7 @@ def _summarise_build(
         if isinstance(_data, TibbleGrouped):
             grouped = _data._datar["grouped"]
             outframe = outframe.group_by(
-                grouped._grouper.names,
+                get_grouper(grouped).names,
                 drop=grouped.observed,
                 dropna=grouped.dropna,
                 sort=grouped.sort,

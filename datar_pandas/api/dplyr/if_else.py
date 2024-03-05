@@ -7,7 +7,7 @@ import numpy as np
 from datar.apis.dplyr import if_else, case_when, case_match
 
 from ... import pandas as pd
-from ...utils import meta_kwargs
+from ...utils import meta_kwargs, get_grouper
 from ...pandas import Series, SeriesGroupBy, get_obj, option_context
 from ...tibble import Tibble, reconstruct_tibble
 from ..dplyr.group_by import ungroup
@@ -71,7 +71,7 @@ def _if_else_sgb(condition, true, false, missing=None):
         get_obj(grouped).iloc[:, 3],
     )
     return out.groupby(
-        condition._grouper,
+        get_grouper(condition),
         observed=condition.observed,
         sort=condition.sort,
         dropna=condition.dropna,
@@ -124,7 +124,7 @@ def _case_match(_x, *args, _default=None, _dtypes=None):
         return out
 
     return out.groupby(
-        _x._grouper,
+        get_grouper(_x),
         observed=_x.observed,
         sort=_x.sort,
         dropna=_x.dropna,

@@ -45,6 +45,7 @@ from datar.apis.base import (
     row_medians,
 )
 
+from ...utils import get_grouper
 from ...typing import Data, Int, Number, Bool
 from ...common import is_null
 from ...pandas import (
@@ -236,7 +237,7 @@ def _scale_seriesgroupby(
         center=center,
         scale_=scale_,
     ).groupby(
-        x._grouper,
+        get_grouper(x),
         sort=x.sort,
         dropna=x.dropna,
         observed=x.observed,
@@ -265,7 +266,7 @@ def _pmin_grouped(
     out = gf.min(axis=1, skipna=na_rm)
     g = gf._datar["grouped"]
     return out.groupby(
-        g._grouper,
+        get_grouper(g),
         sort=g.sort,
         observed=g.observed,
         dropna=g.dropna,
@@ -294,7 +295,7 @@ def _pmax_grouped(
     out = gf.max(axis=1, skipna=na_rm)
     g = gf._datar["grouped"]
     return out.groupby(
-        g._grouper,
+        get_grouper(g),
         sort=g.sort,
         observed=g.observed,
         dropna=g.dropna,

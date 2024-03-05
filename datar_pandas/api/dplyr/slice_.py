@@ -26,7 +26,7 @@ from ...common import is_integer, is_scalar
 from ...collections import Collection
 from ...broadcast import _ungroup
 from ...contexts import Context
-from ...utils import dict_get
+from ...utils import dict_get, get_grouper
 from ...tibble import Tibble, TibbleGrouped, TibbleRowwise
 from ..base.seq import c_
 
@@ -61,11 +61,8 @@ def _slice_grouped(
         logger.warning("`slice()` doesn't support `_preserve` argument yet.")
 
     grouped = _data._datar["grouped"]
-    indices = _sanitize_rows(
-        rows,
-        grouped._grouper.indices,
-        grouped._grouper.result_index,
-    )
+    grouper = get_grouper(grouped)
+    indices = _sanitize_rows(rows, grouper.indices, grouper.result_index)
 
     return _data.take(indices)
 
@@ -93,14 +90,15 @@ def _slice_head_grouped(
 ) -> TibbleGrouped:
     """Slice on grouped dataframe"""
     grouped = _data._datar["grouped"]
+    grouper = get_grouper(grouped)
     # Calculate n's of each group
-    ns = grouped._grouper.size().transform(lambda x: _n_from_prop(x, n, prop))
+    ns = grouper.size().transform(lambda x: _n_from_prop(x, n, prop))
     # Get indices of each group
     # A better way?
     indices = np.concatenate(
         [
-            grouped._grouper.indices[key][: ns[key]]
-            for key in grouped._grouper.result_index
+            grouper.indices[key][: ns[key]]
+            for key in grouper.result_index
         ]
     )
 
@@ -147,14 +145,15 @@ def _slice_tail_grouped(
     prop: float = None,
 ) -> TibbleGrouped:
     grouped = _data._datar["grouped"]
+    grouper = get_grouper(grouped)
     # Calculate n's of each group
-    ns = grouped._grouper.size().transform(lambda x: _n_from_prop(x, n, prop))
+    ns = grouper.size().transform(lambda x: _n_from_prop(x, n, prop))
     # Get indices of each group
     # A better way?
     indices = np.concatenate(
         [
-            grouped._grouper.indices[key][-ns[key]:]
-            for key in grouped._grouper.result_index
+            grouper.indices[key][-ns[key]:]
+            for key in grouper.result_index
         ]
     )
 
@@ -298,12 +297,13 @@ def _sanitize_rows(
     out = []
     if any(isinstance(row, SeriesGroupBy) for row in rows):
         rows = c_(*rows)
+        grouper = get_grouper(rows)
         for key in result_index:
             idx = dict_get(indices, key)
             if idx.size == 0:
                 continue
 
-            gidx = dict_get(rows._grouper.indices, key)
+            gidx = dict_get(grouper.indices, key)
             out.extend(idx.take(get_obj(rows).take(gidx)))
     else:
         for key in result_index:

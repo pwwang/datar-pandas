@@ -8,6 +8,7 @@ from datar.base import (
     set_seed,
 )
 from datar.base import table, pi, paste0, rnorm, cumsum, seq
+from datar_pandas.utils import get_grouper
 from datar_pandas.pandas import (
     Interval,
     DataFrame,
@@ -79,7 +80,7 @@ def test_diff():
     x = Series([1, 2, 3, 4, 5]).groupby([1, 2, 2, 3, 3])
     out = diff(x)
     assert_iterable_equal(get_obj(out), [1, 1])
-    assert out._grouper.ngroups == 3
+    assert get_grouper(out).ngroups == 3
 
 
 def test_outer():

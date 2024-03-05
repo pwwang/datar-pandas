@@ -7,6 +7,7 @@ from functools import singledispatch
 
 import numpy as np
 from pipda import Expression, evaluate_expr
+from datar_numpy.utils import Version
 
 from . import pandas as pd
 from .common import is_null, unique
@@ -15,7 +16,6 @@ from .pandas import DataFrame, Series, SeriesGroupBy, get_obj
 
 if TYPE_CHECKING:
     from pipda import ContextType
-    from datar_numpy.utils import Version
 
 # Specify a "no default" value so that None can be used as a default value
 NO_DEFAULT = object()
@@ -27,9 +27,9 @@ NA_real_ = np.nan
 NA_compex_ = complex(NA_real_, NA_real_)
 
 DEFAULT_COLUMN_PREFIX = "_VAR_"
+PANDAS_VERSION = Version(*map(int, pd.__version__.split(".")[:3]))
 
 meta_kwargs = {"__backend": "pandas", "__ast_fallback": "normal"}
-is_pd2 = pd.__version__.startswith("2.")
 
 
 class ExpressionWrapper:
@@ -165,9 +165,7 @@ def as_series(x: Any) -> Series:
         return Series(x)
 
 
-def pandas_version() -> Version:
-    """Get pandas version"""
-    import pandas as pd
-    from datar_numpy.utils import Version
-
-    return Version(*map(int, pd.__version__.split(".")[:3]))
+def get_grouper(grouped):
+    if PANDAS_VERSION < (2, 2):  # pragma: no cover
+        return grouped.grouper
+    return grouped._grouper

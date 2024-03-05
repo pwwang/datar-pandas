@@ -51,7 +51,7 @@ from ...pandas import (
     get_obj,
 )
 from ...common import is_scalar
-from ...utils import as_series
+from ...utils import as_series, get_grouper
 from ...factory import func_bootstrap, func_factory
 from ...tibble import Tibble
 
@@ -144,7 +144,7 @@ def _as_factor_series(x):
 @as_factor.register(SeriesGroupBy, backend="pandas")
 def _as_factor_series_groupby(x):
     return get_obj(x).astype("category").groupby(
-        x._grouper,
+        get_grouper(x),
         sort=x.sort,
         observed=x.observed,
         dropna=x.dropna,
@@ -169,7 +169,7 @@ def _as_ordered_series(x):
 @as_ordered.register(SeriesGroupBy, backend="pandas")
 def _as_ordered_series_groupby(x):
     return get_obj(x).astype("category").cat.as_ordered().groupby(
-        x._grouper,
+        get_grouper(x),
         sort=x.sort,
         observed=x.observed,
         dropna=x.dropna,
@@ -194,7 +194,7 @@ def _as_integer_sgb(x: SeriesGroupBy):
     out = as_series(out)
     out.index = get_obj(x).index
     out = out.groupby(
-        x._grouper,
+        get_grouper(x),
         sort=x.sort,
         observed=x.observed,
         dropna=x.dropna,
@@ -217,7 +217,7 @@ def _is_element(x, y):
 
     if isinstance(x, SeriesGroupBy):
         out = x.transform(np.isin, test_elements=y).groupby(
-            x._grouper,
+            get_grouper(x),
             observed=x.observed,
             sort=x.sort,
             dropna=x.dropna,

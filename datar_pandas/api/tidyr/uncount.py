@@ -5,6 +5,7 @@ from datar.apis.tidyr import uncount
 
 from ...pandas import DataFrame, Series, is_number
 from ...common import is_scalar
+from ...utils import get_grouper
 from ...broadcast import broadcast_to
 from ...contexts import Context
 from ...tibble import reconstruct_tibble
@@ -36,7 +37,7 @@ def _uncount(
     weights = broadcast_to(
         weights,
         data.index,
-        None if grouped is None else grouped._grouper,
+        None if grouped is None else get_grouper(grouped),
     )
     if is_scalar(weights):
         weights = Series(weights, index=data.index)

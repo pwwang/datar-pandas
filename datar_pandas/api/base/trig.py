@@ -21,6 +21,7 @@ from datar.apis.base import (
 )
 from datar_numpy.api import trig as _  # noqa: F401
 
+from ...utils import get_grouper
 from ...factory import func_bootstrap
 from ...pandas import DataFrame, SeriesGroupBy
 from ...tibble import Tibble, TibbleRowwise
@@ -56,7 +57,7 @@ def _atan2_post(__out, y, x):
         return __out
 
     out = __out.groupby(
-        sgb._grouper,
+        get_grouper(sgb),
         sort=sgb.sort,
         dropna=sgb.dropna,
         observed=sgb.observed,

@@ -4,6 +4,7 @@ from functools import singledispatch
 import numpy as np
 
 from ... import pandas as pd
+from ...utils import get_grouper
 from ...pandas import (
     Categorical,
     DataFrame,
@@ -67,7 +68,7 @@ def _row_number(x):
 def _(x):
     out = x.transform(_row_number)
     return out.groupby(
-        x._grouper,
+        get_grouper(x),
         observed=x.observed,
         sort=x.sort,
         dropna=x.dropna,
@@ -79,7 +80,7 @@ def _(x):
     grouped = x._datar["grouped"]
     return _row_number(
         Series(np.arange(x.shape[0]), index=x.index).groupby(
-            grouped._grouper,
+            get_grouper(grouped),
             observed=grouped.observed,
             sort=grouped.sort,
             dropna=grouped.dropna,
@@ -177,7 +178,7 @@ def _(x, na_last="keep"):
 @_percent_rank.register(GroupBy)
 def _(x, na_last="keep"):
     ranking = _rank(x, na_last, "min", True).groupby(
-        x._grouper,
+        get_grouper(x),
         observed=x.observed,
         sort=x.sort,
         dropna=x.dropna,

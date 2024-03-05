@@ -9,6 +9,7 @@ from datar.core.utils import logger
 from datar.apis.dplyr import ungroup, filter_
 
 from ...typing import Data, Bool
+from ...utils import get_grouper
 from ...pandas import DataFrame, Series
 from ...contexts import Context
 from ...broadcast import broadcast_to
@@ -34,7 +35,7 @@ def _filter(
 
     grouper = None
     if isinstance(_data, TibbleGrouped):
-        grouper = _data._datar["grouped"]._grouper
+        grouper = get_grouper(_data._datar["grouped"])
 
     condition = broadcast_to(condition, _data.index, grouper)
     if isinstance(condition, np.bool_):

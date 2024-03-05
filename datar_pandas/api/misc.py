@@ -6,7 +6,7 @@ from datar_numpy.utils import make_array
 
 from ..pandas import DataFrame, Series, PandasObject, SeriesGroupBy
 from ..contexts import Context
-from ..utils import as_series
+from ..utils import as_series, get_grouper
 from ..tibble import Tibble
 from ..collections import Collection
 
@@ -101,7 +101,7 @@ class _MethodAccessor:
 
         try:
             return out.groupby(
-                self.accessor.sgb._grouper,
+                get_grouper(self.accessor.sgb),
                 observed=self.accessor.sgb.observed,
                 sort=self.accessor.sgb.sort,
                 dropna=self.accessor.sgb.dropna,
@@ -143,7 +143,7 @@ class _Accessor:
 
         try:
             return out.groupby(
-                self.sgb._grouper,
+                get_grouper(self.sgb),
                 observed=self.sgb.observed,
                 sort=self.sgb.sort,
                 dropna=self.sgb.dropna,

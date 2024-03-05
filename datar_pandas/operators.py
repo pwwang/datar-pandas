@@ -4,6 +4,7 @@ from typing import Any, Callable
 
 from pipda.operator import OPERATORS
 
+from .utils import get_grouper
 from .pandas import Series, GroupBy, get_obj
 from .collections import Collection, Inverted, Negated, Intersect
 
@@ -57,7 +58,7 @@ def _arithmetize1(op: str, operand: Any) -> Any:
     op_func = getattr(operator, op)
     if isinstance(operand, GroupBy):
         out = op_func(get_obj(operand)).groupby(
-            operand._grouper,
+            get_grouper(operand),
             observed=operand.observed,
             sort=operand.sort,
             dropna=operand.dropna,

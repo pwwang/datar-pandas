@@ -19,7 +19,7 @@ import numpy as np
 from pipda import register_func
 from datar.core.utils import arg_match
 
-from .utils import NO_DEFAULT
+from .utils import NO_DEFAULT, get_grouper
 from .pandas import DataFrame, Series, PandasObject, SeriesGroupBy
 from .tibble import Tibble, TibbleGrouped, TibbleRowwise
 
@@ -132,7 +132,7 @@ def _with_hooks(
                 is_rowwise = getattr(grouped, "is_rowwise", False)
 
             out = out.groupby(
-                grouped._grouper,
+                get_grouper(grouped),
                 sort=grouped.sort,
                 observed=grouped.observed,
                 dropna=grouped.dropna,

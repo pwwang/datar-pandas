@@ -24,6 +24,7 @@ from datar.dplyr import (
     filter,
     n,
 )
+from datar_pandas.utils import get_grouper
 from datar_pandas.tibble import TibbleRowwise
 from datar_pandas.api.dplyr.slice_ import _n_from_prop
 from datar_pandas.pandas import (
@@ -101,7 +102,7 @@ def test_slice_works_with_grouped_data():
     assert out.shape[0] == 2
 
     out = gf >> slice(
-        Series([1, 0, 0]).groupby(gf._datar["grouped"]._grouper.result_index)
+        Series([1, 0, 0]).groupby(get_grouper(gf._datar["grouped"]).result_index)
     )
     assert_iterable_equal(get_obj(out.x), [2, 3])
 

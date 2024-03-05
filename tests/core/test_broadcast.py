@@ -2,6 +2,7 @@ import pytest
 
 from datar.base import factor
 from datar.tibble import tibble
+from datar_pandas.utils import get_grouper
 from datar_pandas.tibble import TibbleGrouped, TibbleRowwise
 from datar_pandas.pandas import (
     Categorical,
@@ -253,13 +254,14 @@ def test_broadcast_to_factor():
     # empty
     x = factor([], levels=list("abc"))
     base = Series([], dtype=object).groupby([])
-    out = broadcast_to(x, get_obj(base).index, base._grouper)
+    grouper = get_grouper(base)
+    out = broadcast_to(x, get_obj(base).index, grouper)
     assert_factor_equal(out.values, x)
 
     # grouped
     x = factor(["a", "b"], levels=list("abc"))
     base = Series([1, 2, 3, 4], index=[4, 5, 6, 7]).groupby([1, 1, 2, 2])
-    out = broadcast_to(x, get_obj(base).index, base._grouper)
+    out = broadcast_to(x, get_obj(base).index, get_grouper(base))
     assert_iterable_equal(out.index, [4, 5, 6, 7])
     assert_iterable_equal(out, ["a", "b"] * 2)
 
@@ -277,13 +279,13 @@ def test_broadcast_to_arrays_ndframe():
 
 def test_broadcast_to_arrays_groupby():
     df = tibble(x=[]).groupby("x")
-    value = broadcast_to([], get_obj(df).index, df._grouper)
+    value = broadcast_to([], get_obj(df).index, get_grouper(df))
     assert value.size == 0
 
     df = tibble(x=[2, 1, 2, 1])
     df.index = [4, 5, 6, 7]
     df = df.groupby("x", sort=False)
-    value = broadcast_to(["a", "b"], get_obj(df).index, df._grouper)
+    value = broadcast_to(["a", "b"], get_obj(df).index, get_grouper(df))
     assert value.tolist() == ["a", "a", "b", "b"]
 
 
@@ -299,32 +301,35 @@ def test_broadcast_to_ndframe_ndframe():
 
 def test_broadcast_to_ndframe_groupby():
     df = tibble(x=[1, 2, 2, 1, 1, 2]).groupby("x", sort=True)
+    grouper = get_grouper(df)
     value = Series([8, 10], index=[1, 2])
     value.index.name = "x"
-    out = broadcast_to(value, get_obj(df).index, df._grouper)
+    out = broadcast_to(value, get_obj(df).index, grouper)
     assert out.tolist() == [8, 10, 10, 8, 8, 10]
 
-    out = broadcast_to(value.to_frame(name="x"), get_obj(df).index, df._grouper)
+    out = broadcast_to(value.to_frame(name="x"), get_obj(df).index, grouper)
     assert out.x.tolist() == [8, 10, 10, 8, 8, 10]
 
 
 def test_broadcast_to_groupby_ndframe():
     df = tibble(x=[1, 2, 2, 1, 1, 2]).groupby("x")
+    grouper = get_grouper(df)
     with pytest.raises(ValueError, match=r"Can't broadcast grouped"):
         broadcast_to(df, get_obj(df).index)
 
-    out = broadcast_to(df.x, get_obj(df).index, df._grouper)
+    out = broadcast_to(df.x, get_obj(df).index, grouper)
     assert_iterable_equal(out, get_obj(df.x))
 
-    out = broadcast_to(df, get_obj(df).index, df._grouper)
+    out = broadcast_to(df, get_obj(df).index, grouper)
     assert_frame_equal(out, get_obj(df))
 
     df = tibble(x=[1, 2, 2, 1, 1, 2]).group_by("x")
-    out = broadcast_to(df, df.index, df._datar["grouped"]._grouper)
+    grouper2 = get_grouper(df._datar["grouped"])
+    out = broadcast_to(df, df.index, grouper2)
     assert_frame_equal(df, out)
 
-    nn = df.x._grouper.size().to_frame("size").reset_index().groupby("x")
-    out = broadcast_to(nn, df.index, df._datar["grouped"]._grouper)
+    nn = get_grouper(df.x).size().to_frame("size").reset_index().groupby("x")
+    out = broadcast_to(nn, df.index, grouper2)
     assert_iterable_equal(out["size"], [3] * 6)
 
 
@@ -442,7 +447,7 @@ def test_catindex():
         [5, 6],
         index=Index(Categorical([1, 2], categories=[1, 2, 3]), name="g"),
     )
-    out = broadcast_to(x, df.index, df.g._grouper)
+    out = broadcast_to(x, df.index, get_grouper(df.g))
     assert_iterable_equal(out, [5, 5, 6, 6])
 
     df = tibble(g=[1, 2]).group_by("g")
@@ -492,13 +497,13 @@ def test_incompatible_index():
         broadcast_to(s1, get_obj(s2).index)
 
     with pytest.raises(ValueError):
-        broadcast_to(s1, get_obj(s2).index, s2._grouper)
+        broadcast_to(s1, get_obj(s2).index, get_grouper(s2))
 
 
 def test_nongrouped_value_with_equal_index_gets_recycled():
     s1 = Series([1, 2], index=[3, 4]).groupby([1, 2])
     s2 = Series([3, 4], index=[3, 4])
-    out = broadcast_to(s2, get_obj(s1).index, s1._grouper)
+    out = broadcast_to(s2, get_obj(s1).index, get_grouper(s1))
     assert out is s2
 
 

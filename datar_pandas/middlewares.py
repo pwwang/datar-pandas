@@ -11,7 +11,7 @@ from pipda import Context, evaluate_expr
 from .common import is_scalar
 from .broadcast import add_to_tibble
 from .pandas import DataFrame, SeriesGroupBy
-from .utils import vars_select
+from .utils import vars_select, get_grouper
 from .tibble import Tibble, TibbleGrouped, TibbleRowwise
 from .api.dplyr.tidyselect import everything
 
@@ -215,7 +215,7 @@ class Glimpse:
                 f"Rows: {self.x.shape[0]}",
                 f"Columns: {self.x.shape[1]}",
                 f"{group_title}: {groups} "
-                f"[{self.x._datar['grouped']._grouper.ngroups}]",
+                f"[{get_grouper(self.x._datar['grouped']).ngroups}]",
             )
 
         return (

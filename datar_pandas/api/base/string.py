@@ -21,6 +21,7 @@ from datar.apis.base import (
 )
 from datar_numpy.api import string as _  # noqa: F401
 
+from ...utils import get_grouper
 from ...factory import func_bootstrap
 from ...tibble import Tibble, TibbleGrouped, TibbleRowwise
 
@@ -107,7 +108,7 @@ def _paste(frame, sep, collapse):
     if isinstance(frame, TibbleGrouped):
         grouped = frame._datar["grouped"]
         out = out.groupby(
-            grouped._grouper,
+            get_grouper(grouped),
             sort=grouped.sort,
             observed=grouped.observed,
             dropna=grouped.dropna,
@@ -154,7 +155,7 @@ def _sprintf_apply_df(data, bound, exclude, func):
     if isinstance(data, TibbleGrouped):
         grouped = data._datar["grouped"]
         out = out.groupby(
-            grouped._grouper,
+            get_grouper(grouped),
             sort=grouped.sort,
             observed=grouped.observed,
             dropna=grouped.dropna,

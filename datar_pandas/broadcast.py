@@ -36,7 +36,7 @@ import numpy as np
 from .typing import Data, Int
 from .common import is_scalar
 from .tibble import Tibble, TibbleGrouped, TibbleRowwise
-from .utils import name_of, dict_get, is_pd2
+from .utils import PANDAS_VERSION, name_of, dict_get, get_grouper
 from .pandas import (
     Categorical,
     DataFrame,
@@ -60,14 +60,15 @@ GroupedType = Union[GroupBy, TibbleGrouped]
 
 def _regroup(x: GroupBy, new_sizes: Data[Int]) -> GroupBy:
     """Regroup grouped object if some groups get broadcasted"""
-    base_sizes = x._grouper.size()
+    xgrouper = get_grouper(x)
+    base_sizes = xgrouper.size()
     base_sizes1 = base_sizes == 1
     repeats = np.ones(get_obj(x).shape[0], dtype=int)
     # If any group is 1-sized, try to broadcast it
     if base_sizes1.any():
         # better way?
         idx_to_broadcast = np.concatenate(
-            [x._grouper.indices[i] for i in base_sizes[base_sizes1].index]
+            [xgrouper.indices[i] for i in base_sizes[base_sizes1].index]
         )
         if isinstance(new_sizes, int):
             # broadcast all 1-sized groups to given size
@@ -80,10 +81,10 @@ def _regroup(x: GroupBy, new_sizes: Data[Int]) -> GroupBy:
         return x
 
     indices = np.arange(get_obj(x).shape[0]).repeat(repeats)
-    gdata = get_obj(x._grouper.groupings[0])
+    gdata = get_obj(xgrouper.groupings[0])
     gdata = gdata.take(indices)
     grouped = gdata.groupby(
-        x._grouper.names,
+        xgrouper.names,
         dropna=x.dropna,
         observed=x.observed,
         sort=x.sort,
@@ -92,7 +93,7 @@ def _regroup(x: GroupBy, new_sizes: Data[Int]) -> GroupBy:
         get_obj(x)
         .take(indices)
         .groupby(
-            grouped._grouper,
+            get_grouper(grouped),
             observed=grouped.observed,
             sort=grouped.sort,
             dropna=grouped.dropna,
@@ -153,8 +154,9 @@ def _realign_indexes(value: GroupBy, grouper: Grouper) -> np.ndarray:
     """Realign indexes of a value to a grouper"""
     v_new_indices = []
     g_indices = []
-    for key in value._grouper.result_index:
-        v_ind = dict_get(value._grouper.indices, key)
+    vgrouper = get_grouper(value)
+    for key in vgrouper.result_index:
+        v_ind = dict_get(vgrouper.indices, key)
         g_ind = dict_get(grouper.indices, key)
         if v_ind.size == 1 and g_ind.size > 1:
             v_new_indices.extend(v_ind.repeat(g_ind.size))
@@ -189,7 +191,7 @@ def _broadcast_base(
     name = name or name_of(value) or str(value)
 
     if isinstance(base, GroupBy):
-        sizes = base._grouper.size()
+        sizes = get_grouper(base).size()
         usizes = sizes.unique()
 
         # Broadcast each group into size len(value)
@@ -270,15 +272,16 @@ def _(
 ) -> Tuple[Any, BroadcastingBaseType]:
     """Broadcast grouped object when value is a grouped object"""
     name = name or name_of(value) or str(value)
+    vgrouper = get_grouper(value)
 
     if isinstance(base, GroupBy):
-        if not _grouper_compatible(value._grouper, base._grouper):
+        if not _grouper_compatible(vgrouper, get_grouper(base)):
             raise ValueError(f"`{name}` has an incompatible grouper.")
 
         if getattr(base, "is_rowwise", False):
             return base
 
-        if (value._grouper.size() == 1).all():
+        if (vgrouper.size() == 1).all():
             # Don't modify base when values are 1-size groups
             # Leave it to broadcast_to() to broadcast to values
             # No need to broadcast the base
@@ -289,12 +292,10 @@ def _(
             return base
 
         # Broadcast size-1 groups in base
-        return _regroup(base, value._grouper.size())
+        return _regroup(base, vgrouper.size())
 
     if isinstance(base, TibbleRowwise):
-        if not _grouper_compatible(
-            value._grouper, base._datar["grouped"]._grouper
-        ):
+        if not _grouper_compatible(vgrouper, get_grouper(base._datar["grouped"])):
             raise ValueError(f"`{name}` has an incompatible grouper.")
         # Don't broadcast rowwise
         return base
@@ -311,7 +312,7 @@ def _(
 
     # df >> group_by(f.a) >> mutate(new_col=tibble(x=1, y=f.a))
     #                                              ^^^^^^^^^^
-    val_sizes = value._grouper.size()
+    val_sizes = vgrouper.size()
 
     if base.shape[0] == 1 or (val_sizes == base.shape[0]).all():
         if base.shape[0] == 1:
@@ -322,7 +323,7 @@ def _(
         base_is_df = isinstance(base, DataFrame)
         is_rowwise = getattr(value, "is_rowwise", False)
         base = base.reindex(base.index.repeat(repeats)).groupby(
-            value._grouper,
+            vgrouper,
             observed=value.observed,
             sort=value.sort,
             dropna=value.dropna,
@@ -369,7 +370,7 @@ def _(
             return base
 
         # Now the index of value works more like grouping data
-        if not _agg_result_compatible(value.index, base._grouper):
+        if not _agg_result_compatible(value.index, get_grouper(base)):
             name = name or name_of(value) or str(value)
             raise ValueError(f"`{name}` is an incompatible aggregated result.")
 
@@ -377,7 +378,7 @@ def _(
             val_sizes = value.index.remove_unused_categories().value_counts(
                 sort=False,
             )
-        elif is_pd2 and isinstance(value.index, MultiIndex):  # pragma: no cover
+        elif PANDAS_VERSION[0] == 2 and isinstance(value.index, MultiIndex):
             # Pandas 2 does convert MultiIndex to CategoricalIndex if all
             # are CategoricalIndex
             val_sizes = value.index.to_series().value_counts(sort=False)
@@ -505,7 +506,7 @@ def broadcast_to(
         return out.reindex(index)
 
     # recode index
-    index_dict = out.index.to_frame().groupby(out.index)._grouper.indices
+    index_dict = get_grouper(out.index.to_frame().groupby(out.index)).indices
     new_idx = Index(range(out.size))
     new_index = np.ones(out.size, dtype=int)
 
@@ -628,9 +629,10 @@ def _(
             "Can't broadcast grouped object to a non-grouped object."
         )
 
+    vgrouper = get_grouper(value)
     # Compatibility has been checked in _broadcast_base
     if isinstance(value, SeriesGroupBy):
-        if np.array_equal(grouper.group_info[0], value._grouper.group_info[0]):
+        if np.array_equal(grouper.group_info[0], vgrouper.group_info[0]):
             return Series(
                 get_obj(value).values, index=index, name=get_obj(value).name
             )
@@ -640,7 +642,7 @@ def _(
         revalue = _realign_indexes(value, grouper)
         return Series(revalue, index=index, name=get_obj(value).name)
 
-    if np.array_equal(grouper.group_info[0], value._grouper.group_info[0]):
+    if np.array_equal(grouper.group_info[0], vgrouper.group_info[0]):
         return Tibble(
             get_obj(value).values, index=index, columns=get_obj(value).columns
         )
@@ -671,7 +673,7 @@ def _get_index_grouper(value) -> Tuple[Index, Grouper]:
 
 @_get_index_grouper.register(TibbleGrouped)
 def _(value):
-    return value.index, value._datar["grouped"]._grouper
+    return value.index, get_grouper(value._datar["grouped"])
 
 
 @_get_index_grouper.register(NDFrame)
@@ -681,7 +683,7 @@ def _(value):
 
 @_get_index_grouper.register(GroupBy)
 def _(value):
-    return get_obj(value).index, value._grouper
+    return get_obj(value).index, get_grouper(value)
 
 
 @singledispatch

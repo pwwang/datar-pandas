@@ -20,6 +20,7 @@ from datar.base import (
 )
 from datar.dplyr import rowwise, mutate
 from datar.tibble import tibble
+from datar_pandas.utils import get_grouper
 from datar_pandas.pandas import Series, assert_frame_equal, get_obj
 from datar_pandas.tibble import TibbleGrouped
 from ..conftest import assert_iterable_equal, assert_equal, pd_data
@@ -129,7 +130,7 @@ def test_rep_sgb_param(caplog):
     assert "first element" in caplog.text
 
     assert_iterable_equal(get_obj(out), [1, 2, 2, 1, 2, 2, 1])
-    assert_iterable_equal(out._grouper.size(), [3, 4])
+    assert_iterable_equal(get_grouper(out).size(), [3, 4])
 
     df2 = tibble(x=[1, 2], each=[1, 1]).group_by("x")
     out = rep(df2.x, each=df2.each)
@@ -157,7 +158,7 @@ def test_rep_grouped_df():
     out = rep(df, 2, length=5)
     assert isinstance(out, TibbleGrouped)
     assert_iterable_equal(get_obj(out.x), [0, 1, 2, 0, 1])
-    assert out._datar["grouped"]._grouper.ngroups == 2
+    assert get_grouper(out._datar["grouped"]).ngroups == 2
 
 
 def test_c():

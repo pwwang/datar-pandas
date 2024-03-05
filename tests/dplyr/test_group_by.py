@@ -55,7 +55,7 @@ from datar.base import (
 from datar.base import runif
 from datar_pandas.pandas import Series, get_obj
 from datar_pandas.tibble import TibbleGrouped, TibbleRowwise
-from datar_pandas.utils import pandas_version
+from datar_pandas.utils import PANDAS_VERSION
 from ..conftest import assert_iterable_equal, assert_equal
 
 
@@ -383,7 +383,7 @@ def test_na_last():
     )
 
     x = res.x.fillna("")
-    if pandas_version() < (1, 5):
+    if PANDAS_VERSION < (1, 5):
         assert_iterable_equal(x, ["apple", "banana", ""])
         assert_iterable_equal(res._rows, [[0], [2], [1]])
     else:

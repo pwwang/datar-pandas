@@ -10,7 +10,7 @@ from datar.core.names import repair_names
 from .pandas import DataFrame, Index, Series, SeriesGroupBy, GroupBy, get_obj
 
 from .common import is_scalar, intersect, setdiff, union
-from .utils import apply_dtypes, name_of, is_pd2
+from .utils import PANDAS_VERSION, apply_dtypes, name_of, get_grouper
 
 if TYPE_CHECKING:
     from pandas._typing import Dtype
@@ -240,7 +240,7 @@ class TibbleGrouped(Tibble):
         groups = ", ".join((str(name) for name in self.group_vars))
         return (
             f"<p>{self.__class__.__name__}: {groups} "
-            f"(n={self._datar['grouped']._grouper.ngroups})"
+            f"(n={get_grouper(self._datar['grouped']).ngroups})"
         )
 
     @property
@@ -248,7 +248,7 @@ class TibbleGrouped(Tibble):
         groups = ", ".join((str(name) for name in self.group_vars))
         return (
             f"[{self.__class__.__name__}: {groups} "
-            f"(n={self._datar['grouped']._grouper.ngroups})]"
+            f"(n={get_grouper(self._datar['grouped']).ngroups})]"
         )
 
     @classmethod
@@ -266,7 +266,7 @@ class TibbleGrouped(Tibble):
                 else get_obj(grouped).to_frame()
             )
             grouped = frame.groupby(
-                grouped._grouper,
+                get_grouper(grouped),
                 observed=grouped.observed,
                 sort=grouped.sort,
                 dropna=grouped.dropna,
@@ -286,7 +286,7 @@ class TibbleGrouped(Tibble):
         if isinstance(result, DataFrame):
             newmeta = self._datar.copy()
             newmeta["grouped"] = result.groupby(
-                grouped._grouper,
+                get_grouper(grouped),
                 sort=grouped.sort,
                 observed=grouped.observed,
                 dropna=grouped.dropna,
@@ -299,7 +299,7 @@ class TibbleGrouped(Tibble):
         from .broadcast import broadcast_to
 
         grouped = self._datar["grouped"]
-        value = broadcast_to(value, self.index, grouped._grouper)
+        value = broadcast_to(value, self.index, get_grouper(grouped))
 
         if isinstance(key, str) and isinstance(value, DataFrame):
             for col in value.columns:
@@ -308,7 +308,7 @@ class TibbleGrouped(Tibble):
         else:
             DataFrame.__setitem__(self, key, value)
 
-        if is_pd2:  # pragma: no cover
+        if PANDAS_VERSION[0] == 2:
             self.regroup(hard=False, inplace=True)
 
     def regroup(self, hard=True, inplace=True) -> "TibbleGrouped":
@@ -348,7 +348,7 @@ class TibbleGrouped(Tibble):
         grouped = self._datar["grouped"]
         return self.__class__.from_groupby(
             get_obj(grouped).groupby(
-                grouped._grouper,
+                get_grouper(grouped),
                 observed=grouped.observed,
                 sort=grouped.sort,
                 dropna=grouped.dropna,
@@ -403,7 +403,7 @@ class TibbleGrouped(Tibble):
     def group_vars(self) -> Sequence[str]:
         # When column names changed, we save the new group vars
         return self._datar.get(
-            "group_vars", self._datar["grouped"]._grouper.names
+            "group_vars", get_grouper(self._datar["grouped"]).names
         )
 
 

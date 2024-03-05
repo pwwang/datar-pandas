@@ -12,7 +12,7 @@ from datar.apis.dplyr import (
     n_groups,
 )
 
-from ...utils import dict_get
+from ...utils import dict_get, get_grouper
 from ...contexts import Context
 from ...tibble import Tibble, TibbleGrouped, TibbleRowwise
 from ...pandas import DataFrame, GroupBy
@@ -53,7 +53,7 @@ def _group_keys(_data: DataFrame) -> Tibble:
 
 @group_keys.register(TibbleGrouped, context=Context.EVAL, backend="pandas")
 def _group_keys_grouped(_data: TibbleGrouped) -> Tibble:
-    grouper = _data._datar["grouped"]._grouper
+    grouper = get_grouper(_data._datar["grouped"])
     return Tibble(grouper.result_index.to_frame(index=False), copy=False)
 
 
@@ -79,7 +79,7 @@ def _group_rows_grouped(_data: TibbleGrouped) -> List[List[int]]:
 
 @group_rows.register(GroupBy, context=Context.EVAL, backend="pandas")
 def _group_rows_groupby(_data: GroupBy) -> List[List[int]]:
-    grouper = _data._grouper
+    grouper = get_grouper(_data)
     return [
         list(dict_get(grouper.indices, group_key))
         for group_key in grouper.result_index

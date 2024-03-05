@@ -23,6 +23,7 @@ from ...pandas import Categorical, DataFrame, Series, SeriesGroupBy, get_obj
 from ...common import is_scalar, intersect, setdiff
 from ...collections import Collection
 from ...contexts import Context
+from ...utils import get_grouper
 from ..base.arithm import median
 from ..base.asis import as_integer
 from ..base.factor import levels, nlevels
@@ -121,7 +122,7 @@ def _fct_inorder(_f, ordered: bool = None) -> Categorical:
         return out
 
     return Series(out, get_obj(_f).index).groupby(
-        _f._grouper,
+        get_grouper(_f),
         observed=_f.observed,
         sort=_f.sort,
         dropna=_f.dropna,

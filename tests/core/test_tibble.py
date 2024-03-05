@@ -10,6 +10,7 @@ from datar_pandas.pandas import (
     assert_frame_equal,
     get_obj,
 )
+from datar_pandas.utils import get_grouper
 from datar_pandas.tibble import Tibble, TibbleRowwise, TibbleGrouped
 
 from ..conftest import assert_iterable_equal, is_installed
@@ -135,7 +136,7 @@ def test_tibble_rowwise():
     # reindex
     df2 = df.reindex([0, 0, 1, 1, 2, 2])
     assert isinstance(df2, TibbleRowwise)
-    assert df2._datar["grouped"]._grouper.size().tolist() == [1] * 6
+    assert get_grouper(df2._datar["grouped"]).size().tolist() == [1] * 6
 
     # # take
     # df3 = df2.take([0, 2, 4])
