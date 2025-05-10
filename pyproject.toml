@@ -8,7 +8,7 @@ readme = "README.md"
 packages = [{include = "datar_pandas"}]
 
 [tool.poetry.dependencies]
-python = "^3.8"
+python = "^3.9"
 # requires pandas v2+
 pdtypes = "^0.2.3"
 datar = "^0.15.3"
