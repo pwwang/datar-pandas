@@ -9,7 +9,7 @@ on:
 jobs:
 
   build:
-    runs-on: ubuntu-20.04
+    runs-on: ubuntu-latest
     strategy:
       fail-fast: false
       matrix:
@@ -99,7 +99,7 @@ jobs:
   deploy:
     needs: [build]
     # needs: [build, build-modin]
-    runs-on: ubuntu-20.04
+    runs-on: ubuntu-latest
     if: github.event_name == 'release'
     strategy:
       matrix:
