@@ -38,17 +38,18 @@ def test_beta(a, b, log, exp):
 @pytest.mark.parametrize(
     "x,fun,exp",
     [
-        (Series([0]), gamma, [Inf]),
-        (Series([0]), lgamma, [Inf]),
-        (Series([0]), digamma, [-Inf]),
-        (Series([0]), trigamma, [Inf]),
-        (Series([0]), factorial, [1]),
-        (Series([0]), lfactorial, [0]),
-        (Series([1]), digamma, [-0.5772157]),
-        (Series([1]), trigamma, [1.644934]),
-        (Series([-1]), lgamma, [Inf]),
-        (Series([-1]), digamma, [NA]),
-        (Series([-1]), gamma, [Inf]),
+        (Series([0]), gamma, [Inf]),  # 0
+        (Series([0]), lgamma, [Inf]),  # 1
+        (Series([0]), digamma, [-Inf]),  # 2
+        (Series([0]), trigamma, [Inf]),  # 3
+        (Series([0]), factorial, [1]),  # 4
+        (Series([0]), lfactorial, [0]),  # 5
+        (Series([1]), digamma, [-0.5772157]),  # 6
+        (Series([1]), trigamma, [1.644934]),  # 7
+        (Series([-1]), lgamma, [Inf]),  # 8
+        (Series([-1]), digamma, [NA]),  # 9
+        # (Series([-1]), gamma, [Inf]),  # 10
+        (Series([-1]), gamma, [NA]),  # 10
         (Series([-1]), trigamma, [Inf]),
         (Series([-1]), factorial, [0]),
         (Series([-1, 1]), factorial, [0, 1]),

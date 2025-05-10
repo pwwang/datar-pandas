@@ -20,11 +20,6 @@ jobs:
           pandas==2.2.0,
           pandas
         ]
-        exclude:
-          - python-version: 3.8
-            pandas: pandas==2.1.0
-          - python-version: 3.8
-            pandas: pandas==2.2.0
 
     steps:
       - uses: actions/checkout@v4
@@ -113,6 +108,8 @@ jobs:
       - uses: actions/checkout@v4
       - name: Setup Python # Set Python version
         uses: actions/setup-python@v5
+        with:
+          python-version: ${{ matrix.python-version }}
       - name: Install dependencies
         run: |
           python -m pip install --upgrade pip

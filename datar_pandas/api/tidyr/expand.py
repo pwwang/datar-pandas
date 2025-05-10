@@ -54,7 +54,7 @@ def _expand_grid(
     dots = _dots_cols(*args, **kwargs)
     named = dots.pop("__named__")
     ns = {key: len(val) for key, val in dots.items()}
-    n = np.product(list(ns.values()))
+    n = np.prod(list(ns.values()))
 
     if n == 0:
         out = {

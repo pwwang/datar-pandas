@@ -25,9 +25,9 @@ def _if_else(condition, true, false, missing=None):
     if isinstance(condition, Series):
         newcond = condition.fillna(False)
     elif isinstance(condition, np.ndarray):
-        newcond = np.nan_to_num(condition)
+        newcond = np.nan_to_num(condition, copy=True)
     else:
-        newcond = np.nan_to_num(condition, 0.0)
+        newcond = np.nan_to_num(condition, copy=True, nan=0.0)
 
     newcond = newcond.astype(bool)
 

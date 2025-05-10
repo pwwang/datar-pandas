@@ -112,7 +112,7 @@ def _na_if_obj(x, y):
     if eqs.any():
         if np.issubdtype(x.dtype, np.int_):
             x = x.astype(float)
-        elif not np.issubdtype(x.dtype, np.float_):
+        elif not np.issubdtype(x.dtype, np.float64):
             x = x.astype(object)
         x[eqs] = np.nan
 
