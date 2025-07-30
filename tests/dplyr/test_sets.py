@@ -35,7 +35,7 @@ from datar.dplyr import (
     symdiff,
 )
 from datar.tibble import tibble
-from datar_pandas.pandas import assert_frame_equal
+from datar_pandas.pandas import assert_frame_equal, SeriesGroupBy
 
 from ..conftest import assert_equal, assert_, assert_iterable_equal
 
@@ -119,6 +119,39 @@ def test_intersect_does_not_unnecessarily_coerce():
     df = tibble(a=1)
     res = intersect(df, df)
     assert numpy.issubdtype(res.a.dtype, numpy.integer)
+
+
+def test_intersect_with_series_groupby():
+    # test_that("intersect with SeriesGroupBy", {
+    df = tibble(x=[1, 2, 3, 4], g=[1, 1, 2, 2])
+    gdf = group_by(df, f.g)
+    gdf2 = group_by(df, f.x)
+
+    with pytest.raises(ValueError, match="not compatible"):
+        intersect(gdf.x, gdf2.g)
+
+    res = intersect(gdf.x, gdf.x)
+    assert isinstance(res, SeriesGroupBy)
+    assert_iterable_equal(res.obj, [1, 2, 3, 4])
+
+    res = intersect(gdf.x, [2, 3])
+    assert isinstance(res, SeriesGroupBy)
+    assert_iterable_equal(res.obj, [2, 3])
+
+    res = intersect([2, 3], gdf.x)
+    assert isinstance(res, SeriesGroupBy)
+    assert_iterable_equal(res.obj, [2, 3])
+
+
+def test_intersect_with_compatible_series_groupby():
+    df1 = tibble(x=[1, 2, 3, 4], g=[1, 1, 2, 2])
+    df2 = tibble(x=[1, 10, 11, 4, 12, 13], g=[1, 1, 1, 2, 2, 2])
+    gdf1 = group_by(df1, f.g)
+    gdf2 = group_by(df2, f.g)
+
+    res = intersect(gdf1.x, gdf2.x)
+    assert isinstance(res, SeriesGroupBy)
+    assert_iterable_equal(res.obj, [1, 4])
 
 
 def test_set_operations_reconstruct_grouping_metadata():

@@ -16,7 +16,8 @@ from datar.apis.dplyr import (
 
 from ... import pandas as pd
 from ...utils import meta_kwargs
-from ...pandas import DataFrame
+from ...broadcast import get_grouper, _grouper_compatible
+from ...pandas import DataFrame, SeriesGroupBy
 from ...common import (
     setdiff as _setdiff,
     union as _union,
@@ -73,6 +74,44 @@ def _intersect_grouped(x, y):
     newy = ungroup(y, **meta_kwargs)
     out = intersect.dispatch(DataFrame)(newx, newy)
     return reconstruct_tibble(out, x)
+
+
+@intersect.register(SeriesGroupBy, backend="pandas")
+def _intersect_sg(x, y) -> SeriesGroupBy:
+    """Intersect of two SeriesGroupBy objects"""
+    if isinstance(x, SeriesGroupBy) and isinstance(y, SeriesGroupBy):
+        xgrouper = get_grouper(x)
+        ygrouper = get_grouper(y)
+        if not _grouper_compatible(xgrouper, ygrouper, broadcastable=False):
+            raise ValueError(
+                "Groupby objects are not compatible for intersection."
+            )
+
+        # intersect each group
+        x = (
+            x
+            .apply(lambda s: intersect(s, y.get_group(s.name)))
+            .explode(ignore_index=False)
+            .convert_dtypes()
+        )
+        return x.groupby(x.index)
+
+    if isinstance(x, SeriesGroupBy):
+        x = (
+            x
+            .apply(lambda s: intersect(s, y))
+            .explode(ignore_index=False)
+            .convert_dtypes()
+        )
+        return x.groupby(x.index)
+
+    y = (
+        y
+        .apply(lambda s: intersect(x, s))
+        .explode(ignore_index=False)
+        .convert_dtypes()
+    )
+    return y.groupby(y.index)
 
 
 @union.register(DataFrame, backend="pandas")
