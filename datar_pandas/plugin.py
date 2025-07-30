@@ -81,6 +81,7 @@ def dplyr_api():
         pull,
         rank,
         recode,
+        reframe,
         relocate,
         rename,
         rows,
