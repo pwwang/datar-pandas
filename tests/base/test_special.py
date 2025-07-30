@@ -49,7 +49,7 @@ def test_beta(a, b, log, exp):
         (Series([1]), trigamma, [1.644934]),  # 7
         (Series([-1]), lgamma, [Inf]),  # 8
         (Series([-1]), digamma, [NA]),  # 9
-        (Series([-1]), gamma, [Inf if sys.version_info < (3, 10) else NA]),  # 10
+        (Series([-1]), gamma, [Inf if sys.version_info < (3, 11) else NA]),  # 10
         (Series([-1]), trigamma, [Inf]),
         (Series([-1]), factorial, [0]),
         (Series([-1, 1]), factorial, [0, 1]),
