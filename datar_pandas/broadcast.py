@@ -24,6 +24,7 @@ base should also be broadcasted. For example:
 In the above example, `f.x` is broadcasted into `[1, 1, 2, 2]` based on the
 right operand `[1, 2]`
 """
+
 from __future__ import annotations
 
 import time
@@ -123,13 +124,15 @@ def _agg_result_compatible(index: Index, grouper: Grouper) -> bool:
 
     size2 = grouper.size()
     return (
-        (size1.values == 1)
-        | (size2.values == 1)
-        | (size1.values == size2.values)
+        (size1.values == 1) | (size2.values == 1) | (size1.values == size2.values)
     ).all()
 
 
-def _grouper_compatible(grouper1: Grouper, grouper2: Grouper) -> bool:
+def _grouper_compatible(
+    grouper1: Grouper,
+    grouper2: Grouper,
+    broadcastable: bool = True,
+) -> bool:
     """Check if two groupers are compatible"""
     if grouper1 is grouper2:
         return True
@@ -137,10 +140,11 @@ def _grouper_compatible(grouper1: Grouper, grouper2: Grouper) -> bool:
     if grouper1.names != grouper2.names:
         return False
 
-    if not grouper1.result_index.symmetric_difference(
-        grouper2.result_index
-    ).empty:
+    if not grouper1.result_index.symmetric_difference(grouper2.result_index).empty:
         return False
+
+    if not broadcastable:
+        return True
 
     # also check the size
     size1 = grouper1.size()
@@ -202,9 +206,7 @@ def _broadcast_base(
         if usizes.size == 1:
             if usizes[0] == 1:
                 if getattr(base, "is_rowwise", False):
-                    raise ValueError(
-                        f"`{name}` must be size 1, not {len(value)}."
-                    )
+                    raise ValueError(f"`{name}` must be size 1, not {len(value)}.")
 
                 return _regroup(base, len(value))
 
@@ -219,8 +221,7 @@ def _broadcast_base(
             if set(usizes) != set([1, len(value)]):
                 size_tip = usizes[usizes != len(value)][0]
                 raise ValueError(
-                    f"Cannot recycle `{name}` with size "
-                    f"{len(value)} to {size_tip}."
+                    f"Cannot recycle `{name}` with size " f"{len(value)} to {size_tip}."
                 )
 
             if not get_obj(base).index.is_unique:
@@ -259,9 +260,7 @@ def _broadcast_base(
         base.index = range(len(value))
         return base
 
-    raise ValueError(
-        f"`{name}` must be size [1 {base.shape[0]}], not {len(value)}."
-    )
+    raise ValueError(f"`{name}` must be size [1 {base.shape[0]}], not {len(value)}.")
 
 
 @_broadcast_base.register(GroupBy)
@@ -329,9 +328,7 @@ def _(
             dropna=value.dropna,
         )
         if base_is_df:
-            base = (
-                TibbleRowwise if is_rowwise else TibbleGrouped
-            ).from_groupby(base)
+            base = (TibbleRowwise if is_rowwise else TibbleGrouped).from_groupby(base)
         return base
 
     # Otherwise
@@ -480,6 +477,8 @@ def broadcast_to(
         if len(value) == 0:
             return Series(value, index=index, dtype=object)
 
+        if len(value) == 1:
+            value = value * len(index)
         # Series will raise the length problem
         return Series(value, index=index)
 
@@ -492,9 +491,7 @@ def broadcast_to(
     # A better way to distribute the value to each group?
     # TODO: NA in grouper_index?
     # See also https://github.com/pandas-dev/pandas/issues/35202
-    idx = np.concatenate(
-        [grouper.groups[gdata] for gdata in grouper.result_index]
-    )
+    idx = np.concatenate([grouper.groups[gdata] for gdata in grouper.result_index])
     # make np.tile([[3, 4]], 2) to be [[3, 4], [3, 4]],
     # instead of [[3, 4, 3, 4]]
     repeats = (grouper.ngroups,) + (1,) * (np.ndim(value) - 1)
@@ -545,9 +542,7 @@ def _(
     # broadcast value to each group
     # length of each group is checked in _broadcast_base
     # A better way to distribute the value to each group?
-    idx = np.concatenate(
-        [grouper.groups[gdata] for gdata in grouper.result_index]
-    )
+    idx = np.concatenate([grouper.groups[gdata] for gdata in grouper.result_index])
     # make np.tile([[3, 4]], 2) to be [[3, 4], [3, 4]],
     # instead of [[3, 4, 3, 4]]
     repeats = grouper.ngroups
@@ -578,9 +573,7 @@ def _(
             value.index = index
 
         # if not value.index.equals(index):
-        if not value.index.equals(index) and frozenset(
-            value.index
-        ) != frozenset(index):
+        if not value.index.equals(index) and frozenset(value.index) != frozenset(index):
             raise ValueError("Value has incompatible index.")
 
         if isinstance(value, Series):
@@ -625,17 +618,13 @@ def _(
 ) -> Union[Series, Tibble]:
     """Broadcast pandas grouped object"""
     if not grouper:
-        raise ValueError(
-            "Can't broadcast grouped object to a non-grouped object."
-        )
+        raise ValueError("Can't broadcast grouped object to a non-grouped object.")
 
     vgrouper = get_grouper(value)
     # Compatibility has been checked in _broadcast_base
     if isinstance(value, SeriesGroupBy):
         if np.array_equal(grouper.group_info[0], vgrouper.group_info[0]):
-            return Series(
-                get_obj(value).values, index=index, name=get_obj(value).name
-            )
+            return Series(get_obj(value).values, index=index, name=get_obj(value).name)
 
         # broadcast size-one groups and
         # realign the index

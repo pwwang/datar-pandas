@@ -470,6 +470,12 @@ def test_recycle_len1_list_gets_scalar():
     assert broadcast_to([1], None, None) == 1
 
 
+def test_recycle_len1_list_gets_series():
+    s = broadcast_to([[1]], Index([1, 2]), None)
+    assert_iterable_equal(s, [[1], [1]])
+    assert_iterable_equal(s.index, [1, 2])
+
+
 def test_recycle_same_index_ndframe():
     index = Index([1, 2])
     s1 = Series([1, 2], index=index)
