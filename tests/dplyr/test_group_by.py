@@ -6,7 +6,7 @@ import pytest
 import numpy
 from datar import f
 from datar.core.names import NameNonUniqueError
-from datar.data import mtcars, iris
+from datar.data import mtcars, iris, economics_long
 from datar.dplyr import (
     count,
     group_by,
@@ -53,7 +53,7 @@ from datar.base import (
     sqrt,
 )
 from datar.base import runif
-from datar_pandas.pandas import Series, get_obj
+from datar_pandas.pandas import Series, Grouper, get_obj
 from datar_pandas.tibble import TibbleGrouped, TibbleRowwise
 from datar_pandas.utils import PANDAS_VERSION
 from ..conftest import assert_iterable_equal, assert_equal
@@ -577,3 +577,19 @@ def test_group_by_keeps_the_right_order_of_subdfs():
     ) >> mutate(x=range(9))
     out = df >> group_by(f.g1, f.g2) >> mutate(x=f.x)
     assert_iterable_equal(get_obj(out.x), range(9))
+
+
+# https://github.com/pwwang/datar/issues/215
+def test_group_by_pandas_grouper():
+    df = economics_long
+    df['date'] = df['date'].astype('datetime64[ns]')
+    gf = group_by(df, Grouper(key="date", freq="5M"))
+    assert_equal(group_vars(gf), ["date"])
+    res = gf >> summarise(avg_value=mean(f.value))
+    assert_equal(res.columns.tolist(), ["date", "avg_value"])
+
+    with pytest.raises(ValueError):
+        group_by(df, Grouper(key="date", freq="5M"), f.value)
+
+    with pytest.raises(ValueError):
+        group_by(gf, f.date, Grouper(key="date", freq="5M"))

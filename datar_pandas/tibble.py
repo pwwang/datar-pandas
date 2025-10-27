@@ -7,7 +7,7 @@ import numpy as np
 from pipda import evaluate_expr
 from datar.core.names import repair_names
 
-from .pandas import DataFrame, Index, Series, SeriesGroupBy, GroupBy, get_obj
+from .pandas import DataFrame, Index, Series, SeriesGroupBy, GroupBy, Grouper, get_obj
 
 from .common import is_scalar, intersect, setdiff, union
 from .utils import PANDAS_VERSION, apply_dtypes, name_of, get_grouper
@@ -180,7 +180,13 @@ class Tibble(DataFrame):
         if drop is None:
             drop = False
 
-        cols = [cols] if is_scalar(cols) else list(cols)
+        cols = (
+            cols[0]
+            if len(cols) == 1 and isinstance(cols[0], Grouper)
+            else [cols]
+            if is_scalar(cols)
+            else list(cols)
+        )
         grouped = self.groupby(
             cols,
             observed=drop,

@@ -13,7 +13,7 @@ from datar.apis.dplyr import (
     group_by_drop_default,
 )
 
-from ...pandas import DataFrame, GroupBy, get_obj
+from ...pandas import DataFrame, GroupBy, get_obj, Grouper
 from ...tibble import Tibble, TibbleGrouped, TibbleRowwise
 from ...contexts import Context
 from ...utils import vars_select
@@ -32,6 +32,19 @@ def _group_by(
     _dropna: bool = False,
     **kwargs: Any,
 ) -> TibbleGrouped:
+
+    if _drop is None:
+        _drop = group_by_drop_default(_data)
+
+    if any([isinstance(arg, Grouper) for arg in args]):
+        if len(args) + len(kwargs) > 1:
+            raise ValueError(
+                "When using `pandas.Grouper`, it must be the only argument "
+                "to `group_by()`."
+            )
+
+        return Tibble(_data).group_by([args[0]], drop=_drop, sort=_sort, dropna=_dropna)
+
     _data = mutate(
         _data,
         *args,
@@ -40,10 +53,6 @@ def _group_by(
         **kwargs,
     )
     _data.reset_index(drop=True, inplace=True)
-
-    if _drop is None:
-        _drop = group_by_drop_default(_data)
-
     new_cols = _data._datar["mutated_cols"]
     if len(new_cols) == 0:
         return _data
@@ -61,6 +70,12 @@ def _group_by_grouped(
     _dropna: bool = False,
     **kwargs: Any,
 ) -> TibbleGrouped:
+    if (
+        any([isinstance(arg, Grouper) for arg in args])
+        or any([isinstance(v, Grouper) for v in kwargs.values()])
+    ):
+        raise ValueError("Can't use `pandas.Grouper` when the data is already grouped.")
+
     if _drop is None:
         _drop = group_by_drop_default(_data)
 
