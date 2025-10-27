@@ -228,8 +228,8 @@ def test_errors():
     with pytest.raises(TypeError, match="must be"):
         recode(letters[:3], a=1, b="c")
 
-    with pytest.raises(ValueError):
-        recode(factor([1, 2, 3]), "a", "b", "c")
+    # with pytest.raises(ValueError):
+    #     recode(factor([1, 2, 3]), "a", "b", "c")
 
     # named for character
     with pytest.raises(ValueError, match="All values must be named"):

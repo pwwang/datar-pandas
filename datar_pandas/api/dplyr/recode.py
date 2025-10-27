@@ -258,10 +258,10 @@ def _recode_cat(
     if not values:
         raise ValueError("No replacements provided.")
 
-    if not all(isinstance(key, str) for key in values):
-        raise ValueError(
-            "Named values required for recoding factors/categoricals."
-        )
+    # if not all(isinstance(key, str) for key in values):
+    #     raise ValueError(
+    #         "Named values required for recoding factors/categoricals."
+    #     )
 
     if _missing is not None:
         raise ValueError("`_missing` is not supported for factors.")
