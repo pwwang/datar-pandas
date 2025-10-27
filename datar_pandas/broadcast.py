@@ -122,6 +122,10 @@ def _agg_result_compatible(index: Index, grouper: Grouper) -> bool:
         warnings.simplefilter("ignore", FutureWarning)
         size1 = index.value_counts(sort=False, dropna=False)
 
+        # https://github.com/pwwang/datar/issues/214
+        if isinstance(index, MultiIndex):
+            size1 = size1.reindex(grouper.result_index, fill_value=0)
+
     size2 = grouper.size()
     return (
         (size1.values == 1) | (size2.values == 1) | (size1.values == size2.values)
