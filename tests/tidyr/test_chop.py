@@ -38,9 +38,7 @@ def test_can_chop_empty_frame():
 def test_chop_with_all_column_vals():
     df = tibble(x=[1, 1, 2], a=[1, 2, 3], b=[1, 2, 3])
     out = chop(df, ["x", "a", "b"])
-    assert_frame_equal(
-        out, tibble(x=[[1, 1, 2]], a=[[1, 2, 3]], b=[[1, 2, 3]])
-    )
+    assert_frame_equal(out, tibble(x=[[1, 1, 2]], a=[[1, 2, 3]], b=[[1, 2, 3]]))
 
 
 def test_chop_with_all_column_keys():
@@ -74,9 +72,7 @@ def test_unchopping_null_inputs_are_dropped():
     out = df >> unchop(c(f.y, f.z), dtypes=float)
     assert_frame_equal(
         out,
-        tibble(
-            x=[2, 2, 3, 4], y=[1, 2, 4, NA], z=[1, 2, NA, 5], _dtypes=float
-        ),
+        tibble(x=[2, 2, 3, 4], y=[1, 2, 4, NA], z=[1, 2, NA, 5], _dtypes=float),
     )
 
 
@@ -88,9 +84,7 @@ def test_unchop_optionally_keep_empty_rows():
         # z = [tibble(x=[]), tibble(x=[1,2])]
     )
     out = df >> unchop(f.y, keep_empty=True)
-    assert_frame_equal(
-        out, tibble(x=[1, 2, 2], y=[None, 1, 2], _dtypes={"y": object})
-    )
+    assert_frame_equal(out, tibble(x=[1, 2, 2], y=[None, 1, 2], _dtypes={"y": object}))
 
 
 #   out <- df %>% unchop(z, keep_empty = TRUE)

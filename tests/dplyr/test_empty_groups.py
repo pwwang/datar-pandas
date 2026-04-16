@@ -34,7 +34,7 @@ def df():
         e=1,
         f=factor(c(1, 1, 2, 2), levels=[1, 2, 3]),
         g=c(1, 1, 2, 2),
-        x=c(1, 2, 1, 4)
+        x=c(1, 2, 1, 4),
         # group_by(..., _drop=False) only works for a
         # single categorical columns
     ) >> group_by(f.f, _drop=FALSE)
@@ -87,12 +87,12 @@ def test_bind_rows(df):
 
 
 def test_join_respect_zero_len_groups():
-    df1 = tibble(
-        f=factor([1, 1, 2, 2], levels=[1, 2, 3]), x=[1, 2, 1, 4]
-    ) >> group_by(f.f, _sort=True)
-    df2 = tibble(
-        f=factor([2, 2, 3, 3], levels=[1, 2, 3]), x=[1, 2, 3, 4]
-    ) >> group_by(f.f, _sort=True)
+    df1 = tibble(f=factor([1, 1, 2, 2], levels=[1, 2, 3]), x=[1, 2, 1, 4]) >> group_by(
+        f.f, _sort=True
+    )
+    df2 = tibble(f=factor([2, 2, 3, 3], levels=[1, 2, 3]), x=[1, 2, 3, 4]) >> group_by(
+        f.f, _sort=True
+    )
 
     gsize = group_size(left_join(df1, df2, by=f.f))
     assert gsize == [2, 4]
@@ -105,12 +105,12 @@ def test_join_respect_zero_len_groups():
     gsize = group_size(inner_join(df1, df2, by=f.f))
     assert gsize == [4]
 
-    df1 = tibble(
-        f=factor([1, 1, 2, 2], levels=[1, 2, 3]), x=[1, 2, 1, 4]
-    ) >> group_by(f.f, _drop=False)
-    df2 = tibble(
-        f=factor([2, 2, 3, 3], levels=[1, 2, 3]), x=[1, 2, 3, 4]
-    ) >> group_by(f.f, _drop=False)
+    df1 = tibble(f=factor([1, 1, 2, 2], levels=[1, 2, 3]), x=[1, 2, 1, 4]) >> group_by(
+        f.f, _drop=False
+    )
+    df2 = tibble(f=factor([2, 2, 3, 3], levels=[1, 2, 3]), x=[1, 2, 3, 4]) >> group_by(
+        f.f, _drop=False
+    )
 
     gsize = group_size(left_join(df1, df2, by=f.f))
     assert gsize == [2, 4, 0]
@@ -125,9 +125,7 @@ def test_join_respect_zero_len_groups():
 
 
 def test_n_groups_respect_zero_len_groups():
-    df = tibble(x=factor([1, 2, 3], levels=[1, 2, 3, 4])) >> group_by(
-        f.x, _drop=False
-    )
+    df = tibble(x=factor([1, 2, 3], levels=[1, 2, 3, 4])) >> group_by(f.x, _drop=False)
     assert_equal(n_groups(df), 4)
 
 

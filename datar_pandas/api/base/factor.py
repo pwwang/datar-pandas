@@ -3,6 +3,9 @@
 The huge difference:
 R's factors support NAs in levels but Categorical cannot have NAs in categories.
 """
+
+from typing import Any, cast
+
 from datar.apis.base import (
     factor,
     ordered,
@@ -39,6 +42,7 @@ def _levels(x):
         return None
 
     import numpy as np
+
     return np.asarray(x.cat.categories)
 
 
@@ -50,12 +54,13 @@ def _levels_object(x):
 @levels.register(Categorical, backend="pandas")
 def _levels_cat(x):
     import numpy as np
+
     return np.asarray(x.categories)
 
 
 @func_bootstrap(nlevels, kind="agg")
 def _nlevels_bootstrap(x) -> int:
-    lvls = levels(x, __ast_fallback="normal", __backend="pandas")
+    lvls = levels(x, __ast_fallback="normal", __backend="pandas")  # type: ignore
     return 0 if lvls is None else len(lvls)
 
 
@@ -85,7 +90,7 @@ def _factor(
             levels=levels,
             exclude=exclude,
             ordered=ordered,
-            __ast_fallback="normal",
+            __ast_fallback="normal",  # type: ignore
         )
         return Series(out, index=get_obj(x).index).groupby(
             get_grouper(x),
@@ -103,10 +108,10 @@ def _factor(
     if is_scalar(x):
         x = [x]
 
-    if is_categorical_dtype(x):
-        x = x.to_numpy()
+    if is_categorical_dtype(x) and hasattr(x, "to_numpy"):
+        x = cast(Any, x).to_numpy()
 
-    ret = Categorical(x, categories=levels, ordered=ordered)
+    ret = Categorical(cast(Any, x), categories=levels, ordered=ordered)
     if exclude in [False, None]:
         return ret
 

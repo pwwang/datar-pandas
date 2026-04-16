@@ -208,9 +208,7 @@ def test_mixed_collections(s):
     cs = Collection(1, 2, s[3:5], -Collection(1, 2))
     assert cs == [1, 2, 3, 4, -1, -2]
 
-    cs = Collection(
-        3, Collection(5), s[6:7], -Collection(1), pool=10
-    )
+    cs = Collection(3, Collection(5), s[6:7], -Collection(1), pool=10)
     assert list(cs) == [3, 5, 6, 9]
 
 

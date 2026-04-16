@@ -4,6 +4,7 @@ See source https://github.com/tidyverse/dplyr/blob/master/R/mutate.R
 """
 
 from contextlib import suppress
+from typing import Any, cast
 
 from pipda import evaluate_expr, ReferenceAttr, ReferenceItem
 
@@ -30,8 +31,16 @@ def _mutate(
     **kwargs,
 ):
     keep = arg_match(_keep, "_keep", ["all", "unused", "used", "none", "trans"])
-    gvars = group_vars(_data, __ast_fallback="normal", __backend="pandas")
-    data = as_tibble(_data.copy(), __ast_fallback="normal", __backend="pandas")
+    gvars = group_vars(
+        _data,
+        __ast_fallback="normal",  # type: ignore
+        __backend="pandas",  # type: ignore
+    )
+    data = as_tibble(
+        _data.copy(),
+        __ast_fallback="normal",  # type: ignore
+        __backend="pandas",  # type: ignore
+    )
     data._datar["used_refs"] = set()
     all_columns = data.columns
 
@@ -46,20 +55,20 @@ def _mutate(
             continue
 
         bkup_name = name_of(val)
-        val = evaluate_expr(val, data, Context.EVAL)
+        val = evaluate_expr(val, data, cast(Any, Context.EVAL))
         if val is None:
             continue
 
         if isinstance(val, DataFrame):
             mutated_cols.extend(val.columns)
-            data = add_to_tibble(data, None, val, broadcast_tbl=False)
+            data = add_to_tibble(data, cast(Any, None), val, broadcast_tbl=False)
         else:
             key = name_of(val) or bkup_name
             mutated_cols.append(key)
             data = add_to_tibble(data, key, val, broadcast_tbl=False)
 
     for key, val in kwargs.items():
-        val = evaluate_expr(val, data, Context.EVAL)
+        val = evaluate_expr(val, data, cast(Any, Context.EVAL))
         if val is None:
             with suppress(KeyError):
                 data.drop(columns=[key], inplace=True)
@@ -75,9 +84,7 @@ def _mutate(
     tmp_cols = [
         mcol
         for mcol in mutated_cols
-        if mcol.startswith("_")
-        and mcol in used_refs
-        and mcol not in _data.columns
+        if mcol.startswith("_") and mcol in used_refs and mcol not in _data.columns
     ]
     # columns can be removed later
     # df >> mutate(Series(1, name="z"), z=None)
@@ -96,10 +103,10 @@ def _mutate(
         data = relocate(
             data,
             *new_cols,
-            _before=_before,
-            _after=_after,
-            __ast_fallback="normal",
-            __backend="pandas",
+            _before=cast(Any, _before),
+            _after=cast(Any, _after),
+            __ast_fallback="normal",  # type: ignore
+            __backend="pandas",  # type: ignore
         )
 
     if keep == "all":
@@ -152,7 +159,7 @@ def _transmute(
         _keep="trans",
         _before=_before,
         _after=_after,
-        __ast_fallback="normal",
-        __backend="pandas",
+        __ast_fallback="normal",  # type: ignore
+        __backend="pandas",  # type: ignore
         **kwargs,
     )

@@ -2,23 +2,28 @@
 
 https://github.com/tidyverse/tidyr/blob/HEAD/R/complete.R
 """
-from typing import Iterable, Mapping, Any
+
+from typing import Iterable, Mapping, Any, Optional, cast
 
 from datar.apis.tidyr import replace_na, expand, complete
 
 from ...pandas import DataFrame
 
 from ...contexts import Context
+from ...utils import meta_kwargs
 from ...tibble import reconstruct_tibble
 from ..dplyr.group_by import ungroup
 from ..dplyr.join import full_join
+
+
+meta_pd = cast(Any, meta_kwargs)
 
 
 @complete.register(DataFrame, context=Context.PENDING, backend="pandas")
 def _complete(
     data: DataFrame,
     *args: Iterable[Any],
-    fill: Mapping[str, Any] = None,
+    fill: Optional[Mapping[str, Any]] = None,
     **kwargs: Iterable[Any],
 ) -> DataFrame:
     """Turns implicit missing values into explicit missing values.
@@ -40,11 +45,10 @@ def _complete(
         Data frame with missing values completed
     """
     full = expand(
-        ungroup(data, __ast_fallback="normal", __backend="pandas"),
+        ungroup(data, **meta_pd),
         *args,
-        **kwargs,
-        __ast_fallback="normal",
-        __backend="pandas",
+        **cast(Any, kwargs),
+        **meta_pd,
     )
     if full.shape[0] == 0:
         return data.copy()
@@ -53,9 +57,8 @@ def _complete(
         full,
         data,
         by=full.columns.tolist(),
-        __ast_fallback="normal",
-        __backend="pandas",
+        **meta_pd,
     )
-    full = replace_na(full, fill, __ast_fallback="normal", __backend="pandas")
+    full = replace_na(full, fill, **meta_pd)
 
     return reconstruct_tibble(full, data)

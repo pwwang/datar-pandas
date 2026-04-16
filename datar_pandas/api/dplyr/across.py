@@ -2,7 +2,8 @@
 
 See source https://github.com/tidyverse/dplyr/blob/master/R/across.R
 """
-from typing import Any, Sequence
+
+from typing import Any, Optional, Sequence, cast
 
 from pipda import evaluate_expr
 from datar.apis.dplyr import across, c_across, if_all, if_any
@@ -20,7 +21,7 @@ from .tidyselect import everything
 def _across(
     _data: DataFrame,
     *args: Any,
-    _names: str = None,
+    _names: Optional[str] = None,
     _fn_context: Context = Context.EVAL,
     **kwargs: Any,
 ) -> DataFrame:
@@ -30,43 +31,48 @@ def _across(
         args = (None, None)
     elif len(args) == 1:
         args = (args[0], None)
-    _cols, _fns, *args = args
-    _cols = evaluate_expr(_cols, _data, Context.SELECT)
+    _cols, _fns, *rest = args
+    other_args = tuple(rest)
+    _cols = evaluate_expr(_cols, _data, cast(Any, Context.SELECT))
 
     return Across(
         _data,
         _cols,
         _fns,
         _names,
-        args,
+        other_args,
         kwargs,
     ).evaluate(_fn_context)
 
 
 @c_across.register(DataFrame, backend="pandas", context=Context.SELECT)
-def _c_across(_data: DataFrame, _cols: Sequence[str] = None) -> DataFrame:
+def _c_across(
+    _data: DataFrame,
+    _cols: Optional[Sequence[str]] = None,
+) -> DataFrame:
     _data = getattr(_data, "_datar", {}).get("summarise_source", _data)
 
     if not _cols and not isinstance(_cols, Collection):
         _cols = _data >> everything()
 
-    _cols = vars_select(_data.columns, _cols)
-    return reconstruct_tibble(_data.iloc[:, _cols], _data)
+    selected = vars_select(_data.columns, cast(Any, _cols))
+    return reconstruct_tibble(_data.iloc[:, cast(Any, selected)], _data)
 
 
 @if_any.register(DataFrame, backend="pandas", context=Context.SELECT)
 def _if_any(
     _data: DataFrame,
     *args: Any,
-    _names: Sequence[str] = None,
-    _context: Context = None,
+    _names: Optional[Sequence[str]] = None,
+    _context: Optional[Context] = None,
     **kwargs: Any,
 ) -> DataFrame:
     if not args:
         args = (None, None)
     elif len(args) == 1:
         args = (args[0], None)
-    _cols, _fns, *args = args
+    _cols, _fns, *rest = args
+    other_args = tuple(rest)
     _data = getattr(_data, "_datar", {}).get("summarise_source", _data)
 
     return IfAny(
@@ -74,7 +80,7 @@ def _if_any(
         _cols,
         _fns,
         _names,
-        args,
+        other_args,
         kwargs,
     ).evaluate(_context)
 
@@ -85,15 +91,16 @@ def _if_all(
     # _cols: Iterable[str] = None,
     # _fns: Union[Mapping[str, Callable]] = None,
     *args: Any,
-    _names: Sequence[str] = None,
-    _context: Context = None,
+    _names: Optional[Sequence[str]] = None,
+    _context: Optional[Context] = None,
     **kwargs: Any,
 ) -> DataFrame:
     if not args:
         args = (None, None)
     elif len(args) == 1:
         args = (args[0], None)
-    _cols, _fns, *args = args
+    _cols, _fns, *rest = args
+    other_args = tuple(rest)
     _data = getattr(_data, "_datar", {}).get("summerise_source", _data)
 
     return IfAll(
@@ -101,6 +108,6 @@ def _if_all(
         _cols,
         _fns,
         _names,
-        args,
+        other_args,
         kwargs,
     ).evaluate(_context)

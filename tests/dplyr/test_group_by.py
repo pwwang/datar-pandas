@@ -105,9 +105,7 @@ def test_tibble_keep_grouping(df):
 
 
 def test_mutate_does_not_loose_variables():
-    df = tibble(
-        a=rep([1, 2, 3, 4], 2), b=rep([1, 2, 3, 4], each=2), x=runif(8)
-    )
+    df = tibble(a=rep([1, 2, 3, 4], 2), b=rep([1, 2, 3, 4], each=2), x=runif(8))
     by_ab = df >> group_by(f.a, f.b)
     by_a = by_ab >> summarise(x=sum(f.x), _groups="drop_last")
     by_a_quantile = by_a >> group_by(quantile=ntile(f.x, n=4))
@@ -116,15 +114,11 @@ def test_mutate_does_not_loose_variables():
 
 
 def test_orders_by_groups():
-    df = tibble(a=sample(range(1, 11), 3000, replace=True)) >> group_by(
-        f.a, _sort=True
-    )
+    df = tibble(a=sample(range(1, 11), 3000, replace=True)) >> group_by(f.a, _sort=True)
     out = df >> count()
     assert_iterable_equal(get_obj(out.a), range(1, 11))
 
-    df = tibble(a=sample(letters[:10], 3000, replace=True)) >> group_by(
-        f.a, _sort=True
-    )
+    df = tibble(a=sample(letters[:10], 3000, replace=True)) >> group_by(f.a, _sort=True)
     out = df >> count()
     assert_iterable_equal(get_obj(out.a), letters[:10])
 
@@ -256,11 +250,7 @@ def test_0_vars(df):
 
 
 def test_drop():
-    res = (
-        iris
-        >> filter(f.Species == "setosa")
-        >> group_by(f.Species, _drop=True)
-    )
+    res = iris >> filter(f.Species == "setosa") >> group_by(f.Species, _drop=True)
     out = res >> count() >> nrow()
     assert out == 1
 
@@ -282,11 +272,7 @@ def test_remember_drop_True():
 
 
 def test_remember_drop_False():
-    res = (
-        iris
-        >> filter(f.Species == "setosa")
-        >> group_by(f.Species, _drop=False)
-    )
+    res = iris >> filter(f.Species == "setosa") >> group_by(f.Species, _drop=False)
     assert not group_by_drop_default(res)
 
     res2 = res >> group_by(f.Species)
@@ -425,11 +411,7 @@ def test_auto_splicing():
 
 def test_mutate_semantics():
     df1 = tibble(a=1, b=2) >> group_by(c=f.a * f.b, d=f.c + 1)
-    df2 = (
-        tibble(a=1, b=2)
-        >> mutate(c=f.a * f.b, d=f.c + 1)
-        >> group_by(f.c, f.d)
-    )
+    df2 = tibble(a=1, b=2) >> mutate(c=f.a * f.b, d=f.c + 1) >> group_by(f.c, f.d)
     assert df1.equals(df2)
 
 
@@ -578,7 +560,7 @@ def test_group_by_keeps_the_right_order_of_subdfs():
 # https://github.com/pwwang/datar/issues/215
 def test_group_by_pandas_grouper():
     df = economics_long
-    df['date'] = df['date'].astype('datetime64[ns]')
+    df["date"] = df["date"].astype("datetime64[ns]")
     gf = group_by(df, Grouper(key="date", freq="5ME"))
     assert_equal(group_vars(gf), ["date"])
     res = gf >> summarise(avg_value=mean(f.value))

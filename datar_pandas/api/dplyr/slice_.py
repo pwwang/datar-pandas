@@ -2,11 +2,12 @@
 
 https://github.com/tidyverse/dplyr/blob/master/R/slice.R
 """
+
 from __future__ import annotations
 
 import builtins
 from math import ceil, floor
-from typing import TYPE_CHECKING, Any, Iterable, Mapping, Union
+from typing import TYPE_CHECKING, Any, Iterable, Mapping, Optional, Union, cast
 
 import numpy as np
 from pipda import Expression
@@ -44,10 +45,10 @@ def _slice(
     #     logger.warning("`slice()` doesn't support `_preserve` argument yet.")
 
     if not rows:
-        return _data.copy()
+        return Tibble(_data.copy(), copy=False)
 
-    rows = _sanitize_rows(rows, _data.shape[0])
-    return _data.take(rows)
+    rows_idx = _sanitize_rows(rows, _data.shape[0])
+    return Tibble(_data.take(rows_idx), copy=False)
 
 
 @slice_.register(TibbleGrouped, context=Context.SELECT, backend="pandas")
@@ -70,23 +71,23 @@ def _slice_grouped(
 @slice_head.register(DataFrame, context=Context.EVAL, backend="pandas")
 def _slice_head(
     _data: DataFrame,
-    n: int = None,
-    prop: float = None,
+    n: Optional[int] = None,
+    prop: Optional[float] = None,
 ) -> Tibble:
     n = _n_from_prop(_data.shape[0], n, prop)
     return slice_(
         _data,
         builtins.slice(None, n),
-        __ast_fallback="normal",
-        __backend="pandas",
+        __ast_fallback="normal",  # type: ignore
+        __backend="pandas",  # type: ignore
     )
 
 
 @slice_head.register(TibbleGrouped, context=Context.EVAL, backend="pandas")
 def _slice_head_grouped(
     _data: DataFrame,
-    n: int = None,
-    prop: float = None,
+    n: Optional[int] = None,
+    prop: Optional[float] = None,
 ) -> TibbleGrouped:
     """Slice on grouped dataframe"""
     grouped = _data._datar["grouped"]
@@ -96,20 +97,17 @@ def _slice_head_grouped(
     # Get indices of each group
     # A better way?
     indices = np.concatenate(
-        [
-            grouper.indices[key][: ns[key]]
-            for key in grouper.result_index
-        ]
+        [grouper.indices[key][: ns[key]] for key in grouper.result_index]
     )
 
-    return _data.take(indices)
+    return cast(TibbleGrouped, _data.take(indices))
 
 
 @slice_head.register(TibbleRowwise, context=Context.EVAL, backend="pandas")
 def _slice_head_rowwise(
     _data: TibbleRowwise,
-    n: int = None,
-    prop: float = None,
+    n: Optional[int] = None,
+    prop: Optional[float] = None,
 ) -> TibbleRowwise:
     """Slice on grouped dataframe"""
     n = _n_from_prop(1, n, prop)
@@ -117,14 +115,14 @@ def _slice_head_rowwise(
     if n >= 1:
         return _data.copy()
 
-    return _data.take([])
+    return cast(TibbleRowwise, _data.take([]))
 
 
 @slice_tail.register(DataFrame, context=Context.EVAL, backend="pandas")
 def _slice_tail(
     _data: DataFrame,
     n: int = 1,
-    prop: float = None,
+    prop: Optional[float] = None,
 ) -> Tibble:
     n = _n_from_prop(_data.shape[0], n, prop)
     return slice_(
@@ -133,16 +131,16 @@ def _slice_tail(
             _data.shape[0] if n == 0 else -n,
             None,
         ),
-        __ast_fallback="normal",
-        __backend="pandas",
+        __ast_fallback="normal",  # type: ignore
+        __backend="pandas",  # type: ignore
     )
 
 
 @slice_tail.register(TibbleGrouped, context=Context.EVAL, backend="pandas")
 def _slice_tail_grouped(
     _data: DataFrame,
-    n: int = None,
-    prop: float = None,
+    n: Optional[int] = None,
+    prop: Optional[float] = None,
 ) -> TibbleGrouped:
     grouped = _data._datar["grouped"]
     grouper = get_grouper(grouped)
@@ -151,28 +149,25 @@ def _slice_tail_grouped(
     # Get indices of each group
     # A better way?
     indices = np.concatenate(
-        [
-            grouper.indices[key][-ns[key]:]
-            for key in grouper.result_index
-        ]
+        [grouper.indices[key][-ns[key] :] for key in grouper.result_index]
     )
 
-    return _data.take(indices)
+    return cast(TibbleGrouped, _data.take(indices))
 
 
 @slice_tail.register(TibbleRowwise, context=Context.PENDING, backend="pandas")
 def _slice_tail_rowwise(
     _data: TibbleRowwise,
-    n: int = None,
-    prop: float = None,
+    n: Optional[int] = None,
+    prop: Optional[float] = None,
 ) -> TibbleRowwise:
     """Slice on grouped dataframe"""
     return slice_head(
         _data,
         n=n,
         prop=prop,
-        __ast_fallback="normal",
-        __backend="pandas",
+        __ast_fallback="normal",  # type: ignore
+        __backend="pandas",  # type: ignore
     )
 
 
@@ -181,13 +176,11 @@ def _slice_min(
     _data: DataFrame,
     order_by: Expression,
     n: int = 1,
-    prop: float = None,
+    prop: Optional[float] = None,
     with_ties: Union[bool, str] = True,
-) -> Tibble:
+) -> DataFrame:
     if isinstance(_data, TibbleGrouped) and prop is not None:
-        raise ValueError(
-            "`slice_min()` doesn't support `prop` for grouped data yet."
-        )
+        raise ValueError("`slice_min()` doesn't support `prop` for grouped data yet.")
 
     if isinstance(_data, TibbleRowwise):
         n = _n_from_prop(1, n, prop)
@@ -202,22 +195,20 @@ def _slice_min(
 @slice_max.register(DataFrame, context=Context.EVAL, backend="pandas")
 def _slice_max(
     _data: DataFrame,
-    order_by: Iterable[Any],
+    order_by: Any,
     n: int = 1,
-    prop: float = None,
+    prop: Optional[float] = None,
     with_ties: Union[bool, str] = True,
 ) -> DataFrame:
     if isinstance(_data, TibbleGrouped) and prop is not None:
-        raise ValueError(
-            "`slice_max()` doesn't support `prop` for grouped data yet."
-        )
+        raise ValueError("`slice_max()` doesn't support `prop` for grouped data yet.")
 
     if isinstance(_data, TibbleRowwise):
         n = _n_from_prop(1, n, prop)
     else:
         n = _n_from_prop(_data.shape[0], n, prop)
 
-    sliced = order_by.nlargest(n, keep="all" if with_ties else "first")
+    sliced = cast(Any, order_by).nlargest(n, keep="all" if with_ties else "first")
     sliced = sliced[~pd.isnull(sliced)]
     return _data.reindex(sliced.index.get_level_values(-1))
 
@@ -226,8 +217,8 @@ def _slice_max(
 def _slice_sample(
     _data: DataFrame,
     n: int = 1,
-    prop: float = None,
-    weight_by: Iterable[Union[int, float]] = None,
+    prop: Optional[float] = None,
+    weight_by: Optional[Iterable[Union[int, float]]] = None,
     replace: bool = False,
     random_state: Any = None,
 ) -> DataFrame:
@@ -259,8 +250,8 @@ def _slice_sample(
 
 def _n_from_prop(
     total: int,
-    n: int | float = None,
-    prop: float = None,
+    n: Optional[int | float] = None,
+    prop: Optional[float] = None,
 ) -> int:
     """Get n from a proportion"""
     if n is None and prop is None:
@@ -276,30 +267,34 @@ def _n_from_prop(
             return max(ceil((1.0 + prop) * total), 0)
         return floor(float(total) * min(prop, 1.0))
 
-    if n < 0:
-        return max(ceil(total + n), 0)
-    return min(floor(n), total)
+    n_val = 1.0 if n is None else float(n)
+    if n_val < 0:
+        return max(ceil(total + n_val), 0)
+    return min(floor(n_val), total)
 
 
 def _sanitize_rows(
     rows: Iterable,
-    indices: Union[int, Mapping] = None,
-    result_index: "Index" = None,
+    indices: Optional[Union[int, Mapping]] = None,
+    result_index: Optional["Index"] = None,
 ) -> np.ndarray:
     """Sanitize rows passed to slice"""
 
     if is_scalar(indices) and is_integer(indices):
-        rows = Collection(*rows, pool=indices)
+        rows = Collection(*rows, pool=cast(int, indices))
         if rows.error:
             raise rows.error from None
         return np.array(rows, dtype=int)
+
+    if result_index is None or not isinstance(indices, Mapping):  # pragma: no cover
+        return np.array([], dtype=int)
 
     out = []
     if any(isinstance(row, SeriesGroupBy) for row in rows):
         rows = c_(*rows)
         grouper = get_grouper(rows)
         for key in result_index:
-            idx = dict_get(indices, key)
+            idx = dict_get(cast(Mapping[str, Any], indices), key)
             if idx.size == 0:
                 continue
 
@@ -307,7 +302,7 @@ def _sanitize_rows(
             out.extend(idx.take(get_obj(rows).take(gidx)))
     else:
         for key in result_index:
-            idx = dict_get(indices, key)
+            idx = dict_get(cast(Mapping[str, Any], indices), key)
             if idx.size == 0:
                 continue
             grows = Collection(*rows, pool=idx.size)

@@ -1,3 +1,5 @@
+from typing import Any, cast
+
 from datar.core.utils import logger
 from datar.apis.tibble import (
     tibble,
@@ -16,6 +18,7 @@ from datar.apis.tibble import (
 from ...common import is_scalar, setdiff
 from ...contexts import Context
 from ...utils import get_grouper
+from ...utils import meta_kwargs
 from ...pandas import DataFrame, Series, RangeIndex
 
 from ...broadcast import broadcast_to
@@ -25,6 +28,9 @@ from ...tibble import (
     Tibble,
     reconstruct_tibble,
 )
+
+
+meta_pd = cast(Any, meta_kwargs)
 
 
 @enframe.register(object, backend="pandas")
@@ -50,9 +56,11 @@ def _enframe(x, name="name", value="value"):
     if is_scalar(x):
         x = [x]
 
-    if len(getattr(x, "shape", ())) > 1:
+    x_shape = getattr(x, "shape", ())
+    x_dim = len(x_shape)
+    if x_dim > 1:
         raise ValueError(
-            f"`x` must not have more than one dimension, got {len(x.shape)}."
+            f"`x` must not have more than one dimension, got {x_dim}."
         )
 
     if not name and isinstance(x, dict):
@@ -71,7 +79,7 @@ def _enframe(x, name="name", value="value"):
 
 
 @deframe.register(DataFrame, context=Context.EVAL)
-def deframe(x):
+def _deframe(x):
     """Converts two-column data frames to a dictionary
     using the first column as name and the second column as value.
     If the input has only one column, a list.
@@ -86,9 +94,7 @@ def deframe(x):
         return x.iloc[:, 0].values
 
     if x.shape[1] != 2:
-        logger.warning(
-            "`x` must be a one- or two-column data frame in `deframe()`."
-        )
+        logger.warning("`x` must be a one- or two-column data frame in `deframe()`.")
 
     return dict(zip(x.iloc[:, 0], x.iloc[:, 1]))
 
@@ -117,9 +123,7 @@ def _add_row(
         The dataframe with the added rows
 
     """
-    if isinstance(_data, TibbleGrouped) and not isinstance(
-        _data, TibbleRowwise
-    ):
+    if isinstance(_data, TibbleGrouped) and not isinstance(_data, TibbleRowwise):
         raise ValueError("Can't add rows to grouped data frames.")
 
     if not args and not kwargs:
@@ -128,7 +132,9 @@ def _add_row(
         df = tibble(*args, **kwargs)
         if df.shape[0] == 0:
             for col in _data.columns:
-                df[col] = Series(dtype=_data[col].dtype)
+                col_data = _data[col]
+                if isinstance(col_data, Series):
+                    df[col] = Series(dtype=col_data.dtype)
 
     extra_vars = setdiff(df.columns, _data.columns)
     if extra_vars.size > 0:
@@ -251,13 +257,11 @@ def _rownames_to_column(_data, var="rowname"):
     return remove_rownames(
         mutate(
             _data,
-            **{var: _data.index},
+            **cast(Any, {var: _data.index}),
             _before=1,
-            __ast_fallback="normal",
-            __backend="pandas",
+            **meta_pd,
         ),
-        __ast_fallback="normal",
-        __backend="pandas",
+        **meta_pd,
     )
 
 
@@ -281,13 +285,11 @@ def _rowid_to_column(_data, var="rowid"):
     return remove_rownames(
         mutate(
             _data,
-            **{var: range(_data.shape[0])},
+            **cast(Any, {var: range(_data.shape[0])}),
             _before=1,
-            __ast_fallback="normal",
-            __backend="pandas",
+            **meta_pd,
         ),
-        __ast_fallback="normal",
-        __backend="pandas",
+        **meta_pd,
     )
 
 
@@ -304,7 +306,7 @@ def _column_to_rownames(_data, var="rowname"):
     Returns:
         The data frame with the column converted to rownames
     """
-    if has_rownames(_data, __ast_fallback="normal", __backend="pandas"):
+    if has_rownames(_data):
         raise ValueError("`_data` must be a data frame without row names.")
 
     from datar.dplyr import mutate
@@ -315,12 +317,12 @@ def _column_to_rownames(_data, var="rowname"):
         raise KeyError(f"Column `{var}` does not exist.") from None
     out = mutate(
         _data,
-        __ast_fallback="normal",
-        __backend="pandas",
-        **{var: None},
+        **meta_pd,
+        **cast(Any, {var: None}),
     )
     out.index = rownames
     return out
+
 
 # Helpers ------------------------------------------------------------------
 
@@ -355,8 +357,7 @@ def _cbind_at(data, df, pos: int, _name_repair):
         df,
         part2,
         _name_repair=_name_repair,
-        __ast_fallback="normal",
-        __backend="pandas",
+        **meta_pd,
     )
 
 
@@ -383,6 +384,5 @@ def _rbind_at(data, df, pos):
         part1,
         df,
         part2,
-        __ast_fallback="normal",
-        __backend="pandas",
+        **meta_pd,
     )

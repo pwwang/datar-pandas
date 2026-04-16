@@ -120,14 +120,14 @@ def test_ignores_null_empty():
     rows = out >> nrow()
     assert rows == 2
 
-    val = out.fillna(1234).loc[1, 'a']
+    val = out.fillna(1234).loc[1, "a"]
     assert val == 1234
 
     out = df_no_cols >> bind_rows(df)
     rows = out >> nrow()
     assert rows == 2
 
-    val = out.fillna(888).loc[0, 'a']
+    val = out.fillna(888).loc[0, "a"]
     assert val == 888
 
 
@@ -175,12 +175,12 @@ def test_bind_na_cols():
     df2 = tibble(x=NA)
 
     out = df1 >> bind_rows(df2)
-    res = out.loc[2, 'x']
+    res = out.loc[2, "x"]
     y = is_na(res)
     assert y
 
     out = df2 >> bind_rows(df1)
-    res = out.loc[0, 'x']
+    res = out.loc[0, "x"]
     y = is_na(res)
     assert y
 

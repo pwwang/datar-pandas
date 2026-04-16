@@ -53,9 +53,7 @@ def test_must_evaluate_to_integer():
     assert_equal(nrow(out), 0)
 
     df = tibble(x=1)
-    with pytest.raises(
-        ValueError, match="`weights` must evaluate to numerics"
-    ):
+    with pytest.raises(ValueError, match="`weights` must evaluate to numerics"):
         uncount(df, "W")
 
 

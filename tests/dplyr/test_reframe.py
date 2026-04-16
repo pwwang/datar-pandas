@@ -98,7 +98,7 @@ def test_doesnt_message_about_regrouping_when_multiple_group_columns():
     gdf = group_by(df, f.a, f.b)
 
     result = reframe(gdf, x=mean(f.x))
-    assert_iterable_equal(result.x, [1., 2., 3.5, 5.0])
+    assert_iterable_equal(result.x, [1.0, 2.0, 3.5, 5.0])
 
 
 def test_doesnt_message_about_regrouping_when_multiple_rows_per_group():

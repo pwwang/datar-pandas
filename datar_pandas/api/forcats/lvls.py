@@ -1,5 +1,6 @@
 """Lower-level APIs to manipulate the factors"""
-from typing import Iterable, List
+
+from typing import Any, Iterable, List, Optional, cast
 
 import numpy as np
 from datar.apis.forcats import (
@@ -20,31 +21,30 @@ from ..dplyr.sets import setequal
 from .utils import check_factor, ForcatsRegType
 
 
+meta_pd = cast(Any, {"__ast_fallback": "normal", "__backend": "pandas"})
+meta_np = cast(Any, {"__ast_fallback": "normal", "__backend": "numpy"})
+
+
 def lvls_seq(_f):
     """Get the index sequence of a factor levels"""
-    return (
-        seq_along(
-            levels(_f, __ast_fallback="normal", __backend="pandas"),
-            __ast_fallback="normal",
-            __backend="numpy",
-        )
-        - 1
-    )
+    return seq_along(levels(_f, **meta_pd), **meta_np) - 1
 
 
-def refactor(_f, new_levels: Iterable, ordered: bool = None) -> Categorical:
+def refactor(
+    _f,
+    new_levels: Iterable,
+    ordered: Optional[bool] = None,
+) -> Categorical:
     """Refactor using new levels"""
-    if ordered is None:
-        ordered = is_ordered(_f, __ast_fallback="normal", __backend="pandas")
+    ordered_flag = bool(is_ordered(_f, **meta_pd)) if ordered is None else ordered
 
     new_f = factor(
         _f,
         levels=new_levels,
         exclude=np.nan,
-        ordered=ordered,
-        __ast_fallback="normal",
-        __backend="pandas",
-    )
+        ordered=ordered_flag,
+        **meta_pd,
+    )  # type: ignore[arg-type]
     # keep attributes?
     return new_f
 
@@ -53,7 +53,7 @@ def refactor(_f, new_levels: Iterable, ordered: bool = None) -> Categorical:
 def _lvls_reorder(
     _f,
     idx,
-    ordered: bool = None,
+    ordered: Optional[bool] = None,
 ) -> Categorical:
     """Leaves values of a factor as they are, but changes the order by
     given indices
@@ -77,16 +77,13 @@ def _lvls_reorder(
     if not setequal(
         idx,
         seq_lvls,
-        __ast_fallback="normal",
-        __backend="numpy",
-    ) or len_idx != nlevels(_f, __ast_fallback="normal", __backend="pandas"):
-        raise ValueError(
-            "`idx` must contain one integer for each level of `f`"
-        )
+        **meta_np,
+    ) or len_idx != nlevels(_f, **meta_pd):
+        raise ValueError("`idx` must contain one integer for each level of `f`")
 
     return refactor(
         _f,
-        levels(_f, __ast_fallback="normal", __backend="pandas")[idx],
+        levels(_f, **meta_pd)[idx],
         ordered=ordered,
     )
 
@@ -107,15 +104,12 @@ def _lvls_revalue(
         The factor with the new levels
     """
     _f = check_factor(_f)
+    new_levels = list(new_levels)
 
-    if len(new_levels) != nlevels(
-        _f,
-        __ast_fallback="normal",
-        __backend="pandas",
-    ):
+    if len(new_levels) != nlevels(_f, **meta_pd):
         raise ValueError(
             "`new_levels` must be the same length as `levels(f)`: expected ",
-            f"{nlevels(_f, __ast_fallback='normal', __backend='pandas')} "
+            f"{nlevels(_f, **meta_pd)} "
             f"new levels, got {len(new_levels)}.",
         )
 
@@ -125,38 +119,27 @@ def _lvls_revalue(
         index = match(
             new_levels,
             u_levels,
-            __ast_fallback="normal",
-            __backend="numpy",
+            **meta_np,
         )
         out = factor(
-            as_character(
-                index[
-                    as_integer(_f, __ast_fallback="normal", __backend="pandas")
-                ]
-            ),
-            __ast_fallback="normal",
-            __backend="pandas",
+            as_character(index[as_integer(_f, **meta_pd)]),
+            **meta_pd,
         )
         return recode_factor(
             out,
             dict(
                 zip(
-                    levels(out, __ast_fallback="normal", __backend="pandas"),
+                    levels(out, **meta_pd),
                     u_levels,
                 )
             ),
-            __ast_fallback="normal",
-            __backend="pandas",
+            **meta_pd,
         ).values
 
     recodings = dict(
-        zip(
-            levels(_f, __ast_fallback="normal", __backend="pandas"), new_levels
-        )
+        zip(levels(_f, **meta_pd), new_levels)
     )
-    return recode_factor(
-        _f, recodings, __ast_fallback="normal", __backend="pandas"
-    ).values
+    return recode_factor(_f, recodings, **meta_pd).values
 
 
 @lvls_expand.register(ForcatsRegType, context=Context.EVAL, backend="pandas")
@@ -175,13 +158,12 @@ def _lvls_expand(
         The factor with the new levels
     """
     _f = check_factor(_f)
-    levs = levels(_f, __ast_fallback="normal", __backend="pandas")
+    new_levels = list(new_levels)
+    levs = levels(_f, **meta_pd)
 
     missing = setdiff(levs, new_levels)
     if len(missing) > 0:
-        raise ValueError(
-            "Must include all existing levels. Missing: {missing}"
-        )
+        raise ValueError("Must include all existing levels. Missing: {missing}")
 
     return refactor(_f, new_levels=new_levels)
 
@@ -201,6 +183,6 @@ def _lvls_union(
     out = []
     for fct in fs:
         fct = check_factor(fct)
-        levs = levels(fct, __ast_fallback="normal", __backend="pandas")
+        levs = levels(fct, **meta_pd)
         out = union(out, levs)
     return out

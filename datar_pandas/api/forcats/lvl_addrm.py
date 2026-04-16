@@ -1,5 +1,6 @@
 """Provides functions to add or remove levels"""
-from typing import Any, Iterable, List
+
+from typing import Any, Iterable, List, Optional
 
 from datar.apis.forcats import (
     lvls_expand,
@@ -14,6 +15,7 @@ from ... import pandas as pd
 from ...pandas import Categorical
 from ...common import is_scalar, union, intersect, setdiff
 from ...contexts import Context
+from ...utils import meta_kwargs
 from ..base.factor import levels
 from ..base.table import table
 from .lvls import refactor
@@ -44,8 +46,7 @@ def _fct_expand(_f, *additional_levels: Any) -> Categorical:
     return lvls_expand(
         _f,
         new_levels,
-        __ast_fallback="normal",
-        __backend="pandas",
+        **meta_kwargs,
     )
 
 
@@ -118,7 +119,7 @@ def _fct_drop(_f, only: Any = None) -> Categorical:
 @fct_unify.register(ForcatsRegType, context=Context.EVAL, backend="pandas")
 def _fct_unify(
     fs,
-    levels: Iterable = None,
+    levels: Optional[Iterable] = None,
 ) -> List[Categorical]:
     """Unify the levels in a list of factors
 
@@ -140,8 +141,7 @@ def _fct_unify(
             lvls_expand(
                 fct,
                 new_levels=levels,
-                __ast_fallback="normal",
-                __backend="pandas",
+                **meta_kwargs,
             )
         )
     return out

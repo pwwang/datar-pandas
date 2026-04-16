@@ -3,13 +3,16 @@
 https://github.com/tidyverse/tidyr/blob/HEAD/R/fill.R
 """
 
-from typing import Union
+from typing import Any, Union, cast
 from datar.apis.tidyr import fill
 
 from ...pandas import DataFrame
 from ...contexts import Context
-from ...utils import vars_select
+from ...utils import vars_select, meta_kwargs
 from ...tibble import TibbleGrouped, reconstruct_tibble
+
+
+meta_pd = cast(Any, meta_kwargs)
 
 
 @fill.register(DataFrame, context=Context.SELECT, backend="pandas")
@@ -51,8 +54,7 @@ def _fill(
         data[data.columns[colidx]] = fill(
             data.iloc[:, colidx],
             _direction=_direction,
-            __ast_fallback="normal",
-            __backend="pandas",
+            **meta_pd,
         )
     return data
 
@@ -62,7 +64,7 @@ def _fill_grouped(
     _data: TibbleGrouped,
     *columns: str,
     _direction: str = "down",
-) -> TibbleGrouped:
+) -> DataFrame:
     # Use transform instead of apply to avoid include_groups issue in pandas 3
     data = _data.copy()
     if not columns:  # pragma: no cover
@@ -82,7 +84,9 @@ def _fill_grouped(
 
         if len(_direction) > 4:  # pragma: no cover
             # Second pass with re-grouped data
-            sgb2 = data[col].groupby(data[group_vars] if group_vars else data.index)
+            sgb2 = data[col].groupby(
+                cast(Any, data[group_vars] if group_vars else data.index)
+            )
             if _direction.endswith("down"):
                 data[col] = sgb2.transform(lambda g: g.ffill())
             else:

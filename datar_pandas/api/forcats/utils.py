@@ -1,4 +1,5 @@
 """Utilities for forcats"""
+
 import numpy as np
 
 from ...common import is_scalar, is_factor

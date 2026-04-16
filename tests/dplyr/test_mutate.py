@@ -14,7 +14,7 @@ from datar.base import (
     nrow,
     rep,
     sample,
-    sum
+    sum,
 )
 from datar.data import iris, mtcars
 from datar.dplyr import (
@@ -33,7 +33,7 @@ from datar.dplyr import (
     select,
     transmute,
     ungroup,
-    where
+    where,
 )
 from datar.misc import itemgetter
 from datar.tibble import tibble
@@ -65,7 +65,7 @@ def test_rownames_preserved():
 
 def test_applied_progressively():
     df = tibble(x=1)
-    out = df >> mutate(y=f['x'] + 1, z=f.y + 1)
+    out = df >> mutate(y=f["x"] + 1, z=f.y + 1)
     assert_frame_equal(out, tibble(x=1, y=2, z=3))
 
     out = df >> mutate(y=f.x + 1, x=f.y + 1)
@@ -173,6 +173,7 @@ def test_named_data_frames_are_packed():
 
 # ...
 
+
 # output types ------------------------------------------------------------
 def test_preserves_grouping():
     gf = group_by(tibble(x=[1, 2], y=2), f.x)
@@ -220,9 +221,7 @@ def test_handles_0row_rowwise():
 
 
 def test_rowwise_mutate_as_expected():
-    res = (
-        tibble(x=[1, 2, 3]) >> rowwise() >> mutate(y=if_else(f.x < 2, NA, f.x))
-    )
+    res = tibble(x=[1, 2, 3]) >> rowwise() >> mutate(y=if_else(f.x < 2, NA, f.x))
     assert res.y.obj.fillna(0).tolist() == [0, 2, 3]
 
 
@@ -230,8 +229,10 @@ def test_rowwise_mutate_as_expected():
 # need sophosicated itemgetter to work with SeriesGropBy
 def test_rowwise_list_data():
     test = rowwise(tibble(x=[1, 2]))
-    out = test >> mutate(a=[[3, 4]]) >> mutate(
-        b=itemgetter(get_obj(f.a)[0], cur_group_id())
+    out = (
+        test
+        >> mutate(a=[[3, 4]])
+        >> mutate(b=itemgetter(get_obj(f.a)[0], cur_group_id()))
     )
     exp = test >> mutate(a=[[3, 4]]) >> ungroup() >> mutate(b=[3, 4])
 
@@ -325,9 +326,7 @@ def test_deals_with_0_groups():
 
 
 def test_mutate_None_preserves_correct_all_vars():
-    df = (
-        tibble(x=1, y=2) >> mutate(x=None, vars=cur_data_all()) >> pull(f.vars)
-    )
+    df = tibble(x=1, y=2) >> mutate(x=None, vars=cur_data_all()) >> pull(f.vars)
 
     exp = tibble(y=2)
     assert_frame_equal(df[0], exp)
@@ -476,13 +475,10 @@ def test_dup_keyword_args():
 def test_complex_expression_as_value():
     # https://stackoverflow.com/questions/30714810/
     # pandas-group-by-and-aggregate-column-1-with-condition-from-column-2
-    dat = (
-        tibble(
-            user=rep(c("1", 2, 3, 4), each=5),
-            cancel_date=rep(c(12, 5, 10, 11), each=5),
-        )
-        >> group_by(f.user)
-    )
+    dat = tibble(
+        user=rep(c("1", 2, 3, 4), each=5),
+        cancel_date=rep(c(12, 5, 10, 11), each=5),
+    ) >> group_by(f.user)
     out = dat >> mutate(
         # mulitple size not supported yet
         # login=sample(f[1 : ], size=n(), replace=True)

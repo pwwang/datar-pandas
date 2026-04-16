@@ -1,5 +1,6 @@
 """Provides other helper functions for factors"""
-from typing import Any, Iterable
+
+from typing import Any, Iterable, cast
 
 import numpy as np
 from datar import f
@@ -16,11 +17,15 @@ from ..base.table import tabulate
 from ..dplyr.mutate import mutate
 from ..dplyr.arrange import arrange
 from ..dplyr.desc import desc
+from ...utils import meta_kwargs
 from .utils import check_factor, ForcatsRegType
 
 
+meta_pd = cast(Any, meta_kwargs)
+
+
 @fct_count.register(ForcatsRegType, context=Context.EVAL, backend="pandas")
-def _fct_count(_f, sort: bool = False, prop=False) -> Categorical:
+def _fct_count(_f, sort: bool = False, prop: bool = False) -> DataFrame:
     """Count entries in a factor
 
     Args:
@@ -38,15 +43,13 @@ def _fct_count(_f, sort: bool = False, prop=False) -> Categorical:
     df = DataFrame(
         {
             "f": fct_inorder(
-                levels(f2, __ast_fallback="normal", __backend="pandas"),
-                __ast_fallback="normal",
-                __backend="pandas",
+                levels(f2, **meta_pd),
+                **meta_pd,
             ),
             "n": tabulate(
                 f2,
-                nlevels(f2, __ast_fallback="normal", __backend="pandas"),
-                __ast_fallback="normal",
-                __backend="pandas",
+                nlevels(f2, **meta_pd),
+                **meta_pd,
             ),
         }
     )
@@ -57,16 +60,14 @@ def _fct_count(_f, sort: bool = False, prop=False) -> Categorical:
     if sort:
         df = arrange(
             df,
-            desc(f.n, __ast_fallback="normal", __backend="pandas"),
-            __ast_fallback="normal",
-            __backend="pandas",
+            desc(f.n, **meta_pd),
+            **meta_pd,
         )
     if prop:
         df = mutate(
             df,
-            p=proportions(f.n, __ast_fallback="normal", __backend="pandas"),
-            __ast_fallback="normal",
-            __backend="pandas",
+            p=proportions(f.n, **meta_pd),
+            **meta_pd,
         )
 
     return df
@@ -92,7 +93,7 @@ def _fct_match(_f, lvls: Any) -> Iterable[bool]:
 
     bad_lvls = setdiff(
         lvls,
-        levels(_f, __ast_fallback="normal", __backend="pandas"),
+        levels(_f, **meta_pd),
     )
     if len(bad_lvls) > 0:
         bad_lvls = np.array(bad_lvls)[~pd.isnull(bad_lvls)]
@@ -112,12 +113,11 @@ def _fct_unique(_f) -> Categorical:
     Returns:
         The factor with the unique values in `_f`
     """
-    lvls = levels(_f, __ast_fallback="normal", __backend="pandas")
-    is_ord = is_ordered(_f, __ast_fallback="normal", __backend="pandas")
+    lvls = levels(_f, **meta_pd)
+    is_ord = is_ordered(_f, **meta_pd)
     return factor(
         lvls,
         levels=lvls,
         ordered=is_ord,
-        __ast_fallback="normal",
-        __backend="pandas",
-    )
+        **meta_pd,
+    )  # type: ignore[arg-type]

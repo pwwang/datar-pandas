@@ -1,4 +1,8 @@
 """Mutating joins"""
+from __future__ import annotations
+
+from typing import Any, Dict, Optional, cast
+
 from datar.apis.dplyr import (
     filter_,
     ungroup,
@@ -37,7 +41,7 @@ def _join(
     y = DataFrame(y, copy=False)
 
     if by is not None and not by:
-        ret = pd.merge(newx, y, how="cross", copy=copy, suffixes=suffix)
+        ret = pd.merge(newx, y, how="cross", suffixes=suffix)
 
     elif isinstance(by, dict):
         left_on = list(by)
@@ -48,7 +52,6 @@ def _join(
             left_on=left_on,
             right_on=right_on,
             how=how,
-            copy=copy,
             suffixes=suffix,
         )
         if not keep:
@@ -69,7 +72,6 @@ def _join(
             left_on=left_on,
             right_on=right_on,
             how=how,
-            copy=copy,
             suffixes=suffix,
         )
 
@@ -78,7 +80,7 @@ def _join(
             by = intersect(newx.columns, y.columns)
 
         by = [by] if is_scalar(by) else list(by)
-        ret = pd.merge(newx, y, on=by, how=how, copy=copy, suffixes=suffix)
+        ret = pd.merge(newx, y, on=by, how=how, suffixes=suffix)
         for col in by:
             # try recovering factor columns
             xcol = x[col]
@@ -109,7 +111,7 @@ def _inner_join(
     x: DataFrame,
     y: DataFrame,
     *,
-    by: Data[Str] = None,
+    by: Data[Str] | None = None,
     copy: bool = False,
     suffix: Data[Str] = ("_x", "_y"),
     keep: bool = False,
@@ -135,7 +137,7 @@ def _left_join(
     x: DataFrame,
     y: DataFrame,
     *,
-    by: Data[Str] = None,
+    by: Data[Str] | None = None,
     copy: bool = False,
     suffix: Data[Str] = ("_x", "_y"),
     keep: bool = False,
@@ -161,7 +163,7 @@ def _right_join(
     x: DataFrame,
     y: DataFrame,
     *,
-    by: Data[Str] = None,
+    by: Data[Str] | None = None,
     copy: bool = False,
     suffix: Data[Str] = ("_x", "_y"),
     keep: bool = False,
@@ -187,7 +189,7 @@ def _full_join(
     x: DataFrame,
     y: DataFrame,
     *,
-    by: Data[Str] = None,
+    by: Data[Str] | None = None,
     copy: bool = False,
     suffix: Data[Str] = ("_x", "_y"),
     keep: bool = False,
@@ -213,7 +215,7 @@ def _semi_join(
     x: DataFrame,
     y: DataFrame,
     *,
-    by: Data[Str] = None,
+    by: Optional[Data[Str]] = None,
     copy: bool = False,
 ) -> DataFrame:
     on = _merge_on(by)
@@ -224,10 +226,9 @@ def _semi_join(
         # fix #71: semi_join returns duplicated rows
         DataFrame(y, copy=False).drop_duplicates(right_on),
         how="left",
-        copy=copy,
         suffixes=["", "_y"],
         indicator="__merge__",
-        **on,
+        **cast(Any, on),
     )
     ret = ret.loc[ret["__merge__"] == "both", x.columns]
     return reconstruct_tibble(ret, x)
@@ -239,21 +240,20 @@ def _semi_join(
     kw_context={"by": Context.SELECT},
     backend="pandas",
 )
-def anti_join(
+def _anti_join(
     x: DataFrame,
     y: DataFrame,
     *,
-    by: Data[Str] = None,
+    by: Data[Str] | None = None,
     copy: bool = False,
 ) -> DataFrame:
     ret = pd.merge(
         DataFrame(x, copy=False),
         DataFrame(y, copy=False),
         how="left",
-        copy=copy,
         suffixes=["", "_y"],
         indicator=True,
-        **_merge_on(by),
+        **cast(Any, _merge_on(by)),
     )
     ret = ret.loc[ret._merge != "both", x.columns]
     return reconstruct_tibble(ret, x)
@@ -269,21 +269,28 @@ def _nest_join(
     x: DataFrame,
     y: DataFrame,
     *,
-    by: Data[Str] = None,
+    by: Optional[Data[Str]] = None,
     copy: bool = False,
     keep: bool = False,
-    name: str = None,
+    name: Optional[str] = None,
 ) -> DataFrame:
-    on = by
+    on: Dict[Any, Any]
     newx = DataFrame(x, copy=False)
     y = DataFrame(y, copy=False)
-    if isinstance(by, (list, tuple, set)):
+    if isinstance(by, dict):  # pragma: no cover
+        on = dict(by)
+    elif isinstance(by, (list, tuple, set)):
         on = dict(zip(by, by))
     elif by is None:
         common_cols = intersect(newx.columns, y.columns)
         on = dict(zip(common_cols, common_cols))
-    elif not isinstance(by, dict):
-        on = {by: by}
+    else:
+        if is_scalar(by):
+            by_key = by if isinstance(by, str) else str(by)
+            on = {by_key: by_key}
+        else:  # pragma: no cover
+            by_cols = list(by)
+            on = dict(zip(by_cols, by_cols))
 
     if copy:
         newx = newx.copy()
@@ -296,7 +303,12 @@ def _nest_join(
                 condition = y[on[key]] == row[key]
             else:
                 condition = condition & (y[on[key]] == row[key])
-        df = filter_(y, condition, __ast_fallback="normal", __backend="pandas")
+        df = filter_(
+            y,
+            condition,
+            __ast_fallback="normal",  # type: ignore
+            __backend="pandas",  # type: ignore
+        )
         if not keep:
             df = df[setdiff(df.columns, list(on.values()))]
 

@@ -1,7 +1,7 @@
 from __future__ import annotations
 
 import warnings
-from typing import Any
+from typing import Any, cast
 
 import numpy as np
 import datar_numpy.api.arithm  # noqa: F401
@@ -47,7 +47,6 @@ from datar.apis.base import (
 
 from ...utils import get_grouper
 from ...typing import Data, Int, Number, Bool
-from ...common import is_null
 from ...pandas import (
     DataFrame,
     Series,
@@ -105,7 +104,7 @@ def _check_all_numeric(x: DataFrame, fun_name: str) -> None:
     raise ValueError(f"In {fun_name}(...): input must be all numeric.")
 
 
-def _na_rm_check(__data: NDFrame, na_rm: Bool, *args: Any, **kwargs: Any):
+def _na_rm_check(__data: NDFrame, na_rm: Bool | None, *args: Any, **kwargs: Any):
     """Warn about na_rm False on GroupBy objects"""
     if isinstance(__data, (GroupBy, TibbleGrouped)) and na_rm is not None:
         raise ValueError("`na_rm` is not supported on grouped objects.")
@@ -116,23 +115,19 @@ def _na_rm_check(__data: NDFrame, na_rm: Bool, *args: Any, **kwargs: Any):
 def _cov_df(x, y=None, na_rm: bool = False, ddof: int = 1):
     """Covariance of DataFrame"""
     if y is not None:
-        raise ValueError(
-            "In `cov(...)`: No `y` is allowed when `x` is a data frame."
-        )
+        raise ValueError("In `cov(...)`: No `y` is allowed when `x` is a data frame.")
     return x.cov(ddof=ddof)
 
 
 @cov.register(TibbleGrouped, backend="pandas")
 def _cov_tibble_grouped(
     x: TibbleGrouped,
-    y: Data[Number] = None,
+    y: Data[Number] | None = None,
     ddof: Int = 1,
 ) -> Tibble:
     """Covariance of TibbleGrouped"""
     if y is not None:
-        raise ValueError(
-            "In `cov(...)`: No `y` is allowed when `x` is a data frame."
-        )
+        raise ValueError("In `cov(...)`: No `y` is allowed when `x` is a data frame.")
 
     with warnings.catch_warnings():
         # size-1 group will warning about ddof
@@ -143,14 +138,12 @@ def _cov_tibble_grouped(
 @cov.register(SeriesGroupBy, backend="pandas")
 def _cov_seriesgroupby(
     x: SeriesGroupBy,
-    y: Data[Number] = None,
+    y: Data[Number] | None = None,
     ddof: Int = 1,
 ) -> Series:
     """Covariance of SeriesGrouped"""
     if y is None:
-        raise ValueError(
-            "In `cov(...)`: `y` is required when `x` is a SeriesGroupBy."
-        )
+        raise ValueError("In `cov(...)`: `y` is required when `x` is a SeriesGroupBy.")
 
     df = TibbleGrouped.from_args(x=x, cov=y)
     with warnings.catch_warnings():
@@ -170,7 +163,7 @@ def _scale_df(
     x: DataFrame,
     center: Bool | Data[Number] = True,
     scale_: Bool | Data[Number] = True,
-) -> Series:
+) -> DataFrame:
     _check_all_numeric(x, "scale")
     center_true = center is True
 
@@ -195,18 +188,20 @@ def _scale_df(
     if scale_ is True:
 
         def _rms(col: Series) -> Series:
-            nonnas = col[~is_null(col)] ** 2
+            nonnas = col[col.notna()] ** 2
             return np.sqrt(nonnas.sum() / (len(nonnas) - 1))
 
         scale_ = x.std(numeric_only=True) if center_true else x.agg(_rms)
 
     elif scale_ is not False:
-        scale_ = make_array(scale_)
-        if len(scale_) != ncols:
+        scale_arr = make_array(scale_)
+        if len(scale_arr) != ncols:
             raise ValueError(
-                f"length of `scale_` ({len(center)}) must equal "
+                f"length of `scale_` ({len(scale_arr)}) must equal "
                 f"the number of columns of `x` ({ncols})"
             )
+
+        scale_ = scale_arr  # pragma: no cover
 
     if scale_ is not False:
         x = x.div(scale_)
@@ -256,7 +251,7 @@ def _pmin_ndframe(
     """Get the min value rowwisely"""
     return Tibble.from_args(*x, _name_repair="minimal").min(
         axis=1,
-        skipna=na_rm,
+        skipna=bool(na_rm),
     )
 
 
@@ -267,7 +262,7 @@ def _pmin_grouped(
 ) -> SeriesGroupBy:
     """Get the min value rowwisely"""
     gf = TibbleGrouped.from_args(*x, _name_repair="minimal")
-    out = gf.min(axis=1, skipna=na_rm)
+    out = gf.min(axis=1, skipna=bool(na_rm))
     g = gf._datar["grouped"]
     return out.groupby(
         get_grouper(g),
@@ -285,7 +280,7 @@ def _pmax_ndframe(
     """Get the max value rowwisely"""
     return Tibble.from_args(*x, _name_repair="minimal").max(
         axis=1,
-        skipna=na_rm,
+        skipna=bool(na_rm),
     )
 
 
@@ -296,7 +291,7 @@ def _pmax_grouped(
 ) -> SeriesGroupBy:
     """Get the max value rowwisely"""
     gf = TibbleGrouped.from_args(*x, _name_repair="minimal")
-    out = gf.max(axis=1, skipna=na_rm)
+    out = gf.max(axis=1, skipna=bool(na_rm))
     g = gf._datar["grouped"]
     return out.groupby(
         get_grouper(g),
@@ -307,13 +302,13 @@ def _pmax_grouped(
 
 
 @col_sums.register(DataFrame, backend="pandas")
-def _col_sums_df(x: DataFrame, na_rm: Bool = None) -> Series:
+def _col_sums_df(x: DataFrame, na_rm: Bool | None = None) -> Series:
     _check_all_numeric(x, "col_sums")
     return x.sum(skipna=bool(na_rm), numeric_only=True)
 
 
 @col_sums.register(TibbleGrouped, backend="pandas")
-def _col_sums_tibble_grouped(x: TibbleGrouped, na_rm: Bool = None) -> Series:
+def _col_sums_tibble_grouped(x: TibbleGrouped, na_rm: Bool | None = None) -> Series:
     _check_all_numeric(x, "col_sums")
     _na_rm_check(x, na_rm)
     x = x._datar["grouped"]
@@ -321,19 +316,19 @@ def _col_sums_tibble_grouped(x: TibbleGrouped, na_rm: Bool = None) -> Series:
 
 
 @row_sums.register(DataFrame, backend="pandas")
-def _row_sums_df(x: DataFrame, na_rm: Bool = None) -> Series:
+def _row_sums_df(x: DataFrame, na_rm: Bool | None = None) -> Series:
     _check_all_numeric(x, "row_sums")
     return x.sum(skipna=bool(na_rm), numeric_only=True, axis=1)
 
 
 @col_means.register(DataFrame, backend="pandas")
-def _col_means_df(x: DataFrame, na_rm: Bool = None) -> Series:
+def _col_means_df(x: DataFrame, na_rm: Bool | None = None) -> Series:
     _check_all_numeric(x, "col_means")
     return x.mean(skipna=bool(na_rm), numeric_only=True)
 
 
 @col_means.register(TibbleGrouped, backend="pandas")
-def _col_means_tibble_grouped(x: TibbleGrouped, na_rm: Bool = None) -> Series:
+def _col_means_tibble_grouped(x: TibbleGrouped, na_rm: Bool | None = None) -> Series:
     _check_all_numeric(x, "col_means")
     _na_rm_check(x, na_rm)
     x = x._datar["grouped"]
@@ -341,45 +336,43 @@ def _col_means_tibble_grouped(x: TibbleGrouped, na_rm: Bool = None) -> Series:
 
 
 @row_means.register(DataFrame, backend="pandas")
-def _row_means_df(x: DataFrame, na_rm: Bool = None) -> Series:
+def _row_means_df(x: DataFrame, na_rm: Bool | None = None) -> Series:
     _check_all_numeric(x, "row_means")
     return x.mean(skipna=bool(na_rm), numeric_only=True, axis=1)
 
 
 @col_sds.register(DataFrame, backend="pandas")
-def _col_sds_df(x: DataFrame, na_rm: Bool = None, ddof: Int = 1) -> Series:
+def _col_sds_df(x: DataFrame, na_rm: Bool | None = None, ddof: Int = 1) -> Series:
     _check_all_numeric(x, "col_sds")
-    return x.std(skipna=bool(na_rm), numeric_only=True, ddof=ddof)
+    return x.std(skipna=bool(na_rm), numeric_only=True, ddof=cast(int, ddof))
 
 
 @col_sds.register(TibbleGrouped, backend="pandas")
 def _col_sds_tibble_grouped(
     x: TibbleGrouped,
-    na_rm: Bool = None,
+    na_rm: Bool | None = None,
     ddof: Int = 1,
 ) -> Series:
     _check_all_numeric(x, "col_sds")
     _na_rm_check(x, na_rm)
     x = x._datar["grouped"]
-    return x.std(ddof=ddof)
+    return x.std(ddof=cast(int, ddof))
 
 
 @row_sds.register(DataFrame, backend="pandas")
-def _row_sds_df(x: DataFrame, na_rm: Bool = None, ddof: Int = 1) -> Series:
+def _row_sds_df(x: DataFrame, na_rm: Bool | None = None, ddof: Int = 1) -> Series:
     _check_all_numeric(x, "row_sds")
-    return x.std(skipna=bool(na_rm), numeric_only=True, ddof=ddof, axis=1)
+    return x.std(skipna=bool(na_rm), numeric_only=True, ddof=cast(int, ddof), axis=1)
 
 
 @col_medians.register(DataFrame, backend="pandas")
-def _col_medians_df(x: DataFrame, na_rm: Bool = None) -> Series:
+def _col_medians_df(x: DataFrame, na_rm: Bool | None = None) -> Series:
     _check_all_numeric(x, "col_medians")
     return x.median(skipna=bool(na_rm), numeric_only=True)
 
 
 @col_medians.register(TibbleGrouped, backend="pandas")
-def _col_medians_tibble_grouped(
-    x: TibbleGrouped, na_rm: Bool = None
-) -> Series:
+def _col_medians_tibble_grouped(x: TibbleGrouped, na_rm: Bool | None = None) -> Series:
     _check_all_numeric(x, "col_medians")
     _na_rm_check(x, na_rm)
     x = x._datar["grouped"]
@@ -387,6 +380,6 @@ def _col_medians_tibble_grouped(
 
 
 @row_medians.register(DataFrame, backend="pandas")
-def _row_medians_df(x: DataFrame, na_rm: Bool = None) -> Series:
+def _row_medians_df(x: DataFrame, na_rm: Bool | None = None) -> Series:
     _check_all_numeric(x, "row_medians")
     return x.median(skipna=bool(na_rm), numeric_only=True, axis=1)

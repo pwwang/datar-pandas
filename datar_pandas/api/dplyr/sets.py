@@ -2,6 +2,9 @@
 
 https://github.com/tidyverse/dplyr/blob/master/R/sets.r
 """
+
+from typing import Any, cast
+
 import numpy as np
 from datar.apis.dplyr import (
     ungroup,
@@ -24,6 +27,8 @@ from ...common import (
     intersect as _intersect,
 )
 from ...tibble import TibbleGrouped, reconstruct_tibble
+
+META_KWARGS = cast(Any, meta_kwargs)
 
 
 def _check_xy(x, y):
@@ -60,8 +65,8 @@ def _intersect_df(x: DataFrame, y: DataFrame) -> DataFrame:
     from .distinct import distinct
 
     out = distinct(
-        pd.merge(x, ungroup(y, **meta_kwargs), how="inner"),
-        **meta_kwargs,
+        pd.merge(x, ungroup(y, **META_KWARGS), how="inner"),
+        **META_KWARGS,
     )
     # In pandas 3, merging str (StringDtype) with category can produce object
     # Restore x's column dtypes when the merge produced object dtype
@@ -83,8 +88,8 @@ def _intersect_df(x: DataFrame, y: DataFrame) -> DataFrame:
 
 @intersect.register(TibbleGrouped, backend="pandas")
 def _intersect_grouped(x, y):
-    newx = ungroup(x, **meta_kwargs)
-    newy = ungroup(y, **meta_kwargs)
+    newx = ungroup(x, **META_KWARGS)
+    newy = ungroup(y, **META_KWARGS)
     out = intersect.dispatch(DataFrame)(newx, newy)
     return reconstruct_tibble(out, x)
 
@@ -96,16 +101,13 @@ def _intersect_sg(x, y) -> SeriesGroupBy:
         xgrouper = get_grouper(x)
         ygrouper = get_grouper(y)
         if not _grouper_compatible(xgrouper, ygrouper, broadcastable=False):
-            raise ValueError(
-                "Groupby objects are not compatible for intersection."
-            )
+            raise ValueError("Groupby objects are not compatible for intersection.")
 
         # intersect each group
         y_groups = y.groups
         y_obj = y.obj
         x = (
-            x
-            .apply(lambda s: intersect(s, y_obj.iloc[y_groups[s.name]]))
+            x.apply(lambda s: intersect(s, y_obj.iloc[y_groups[s.name]]))
             .explode(ignore_index=False)
             .convert_dtypes()
         )
@@ -113,19 +115,13 @@ def _intersect_sg(x, y) -> SeriesGroupBy:
 
     if isinstance(x, SeriesGroupBy):
         x = (
-            x
-            .apply(lambda s: intersect(s, y))
+            x.apply(lambda s: intersect(s, y))
             .explode(ignore_index=False)
             .convert_dtypes()
         )
         return x.groupby(x.index)
 
-    y = (
-        y
-        .apply(lambda s: intersect(x, s))
-        .explode(ignore_index=False)
-        .convert_dtypes()
-    )
+    y = y.apply(lambda s: intersect(x, s)).explode(ignore_index=False).convert_dtypes()
     return y.groupby(y.index)
 
 
@@ -144,8 +140,8 @@ def _union_df(x, y):
     from .distinct import distinct
 
     out = distinct(
-        pd.merge(x, ungroup(y, **meta_kwargs), how="outer"),
-        **meta_kwargs,
+        pd.merge(x, ungroup(y, **META_KWARGS), how="outer"),
+        **META_KWARGS,
     )
     out.reset_index(drop=True, inplace=True)
     if isinstance(y, TibbleGrouped):
@@ -156,8 +152,8 @@ def _union_df(x, y):
 @union.register(TibbleGrouped, backend="pandas")
 def _union_grouped(x, y):
     out = union.dispatch(DataFrame)(
-        ungroup(x, **meta_kwargs),
-        ungroup(y, **meta_kwargs),
+        ungroup(x, **META_KWARGS),
+        ungroup(y, **META_KWARGS),
     )
     return reconstruct_tibble(out, x)
 
@@ -177,7 +173,7 @@ def _setdiff_df(x, y):
     indicator = "__datar_setdiff__"
     out = pd.merge(
         x,
-        ungroup(y, **meta_kwargs),
+        ungroup(y, **META_KWARGS),
         how="left",
         indicator=indicator,
     )
@@ -188,7 +184,7 @@ def _setdiff_df(x, y):
         out[out[indicator] == "left_only"]
         .drop(columns=[indicator])
         .reset_index(drop=True),
-        **meta_kwargs,
+        **META_KWARGS,
     )
     # In pandas 3, merging str with category can produce object dtype
     for col in x.columns:
@@ -210,8 +206,8 @@ def _setdiff_df(x, y):
 @setdiff.register(TibbleGrouped, backend="pandas")
 def _setdiff_grouped(x, y):
     out = setdiff.dispatch(DataFrame)(
-        ungroup(x, **meta_kwargs),
-        ungroup(y, **meta_kwargs),
+        ungroup(x, **META_KWARGS),
+        ungroup(y, **META_KWARGS),
     )
     return reconstruct_tibble(out, x)
 
@@ -233,7 +229,7 @@ def _union_all(x, y):
         The dataframe of union of all rows of input dataframes
     """
     _check_xy(x, y)
-    out = bind_rows(x, ungroup(y, **meta_kwargs), **meta_kwargs)
+    out = bind_rows(x, ungroup(y, **META_KWARGS), **META_KWARGS)
     if isinstance(y, TibbleGrouped):
         return reconstruct_tibble(out, y)
     return out
@@ -242,8 +238,8 @@ def _union_all(x, y):
 @union_all.register(TibbleGrouped, backend="pandas")
 def _union_all_grouped(x, y):
     out = union_all.dispatch(DataFrame)(
-        ungroup(x, **meta_kwargs),
-        ungroup(y, **meta_kwargs),
+        ungroup(x, **META_KWARGS),
+        ungroup(y, **META_KWARGS),
     )
     return reconstruct_tibble(out, x)
 
@@ -261,8 +257,8 @@ def _set_equal_df(x, y, equal_na=True):
     Returns:
         True if they equal else False
     """
-    x = ungroup(x, **meta_kwargs)
-    y = ungroup(y, **meta_kwargs)
+    x = ungroup(x, **META_KWARGS)
+    y = ungroup(y, **META_KWARGS)
     _check_xy(x, y)
 
     x = x.sort_values(by=x.columns.to_list()).reset_index(drop=True)
@@ -279,13 +275,13 @@ def _symdiff(x, y):
 @symdiff.register(DataFrame, backend="pandas")
 def _symdiff_df(x, y):
     """Symmetric difference of two dataframes"""
-    _x = ungroup(x, **meta_kwargs)
-    _y = ungroup(y, **meta_kwargs)
+    _x = ungroup(x, **META_KWARGS)
+    _y = ungroup(y, **META_KWARGS)
     _check_xy(_x, _y)
 
     out = setdiff(
-        union(_x, _y, **meta_kwargs),
-        intersect(_x, _y, **meta_kwargs),
-        **meta_kwargs,
+        union(_x, _y, **META_KWARGS),
+        intersect(_x, _y, **META_KWARGS),
+        **META_KWARGS,
     )
     return reconstruct_tibble(out, x)

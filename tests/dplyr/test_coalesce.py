@@ -50,9 +50,7 @@ def test_with_dataframes():
     df2 = tibble(x=[1, 2, 3], y=c(3, 4, NA), z=c(NA, NA, NA))
     df3 = tibble(x=NA, y=c(30, 40, 50), z=[101, 102, 103])
     out = coalesce(df1, df2, df3)
-    expect = tibble(
-        x=c(1.0, 1.0, 3.0), y=c(2.0, 4.0, 50.0), z=c(1.0, 2.0, 103.0)
-    )
+    expect = tibble(x=c(1.0, 1.0, 3.0), y=c(2.0, 4.0, 50.0), z=c(1.0, 2.0, 103.0))
     assert_frame_equal(out, expect)
 
 

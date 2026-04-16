@@ -2,6 +2,7 @@
 
 See source https://github.com/tidyverse/dplyr/blob/master/R/filter.R
 """
+
 import operator
 
 import numpy as np
@@ -27,7 +28,7 @@ def _filter(
         logger.warning("`filter()` doesn't support `_preserve` argument yet.")
 
     if _data.shape[0] == 0 or not conditions:
-        return _data.copy()
+        return reconstruct_tibble(_data.copy(), _data)
 
     condition = np.array(True)
     for cond in conditions:
@@ -42,14 +43,18 @@ def _filter(
         condition = bool(condition)
 
     if condition is True:
-        return _data.copy()
+        return reconstruct_tibble(_data.copy(), _data)
     if condition is False:
-        return _data.take([])
+        return reconstruct_tibble(_data.take([]), _data)
 
     if isinstance(condition, Series):
         condition = condition.values
 
-    out = ungroup(_data, __ast_fallback="normal", __backend="pandas")[condition]
+    out = ungroup(
+        _data,
+        __ast_fallback="normal",  # type: ignore
+        __backend="pandas",  # type: ignore
+    )[condition]
     if isinstance(_data, TibbleGrouped):
         out.reset_index(drop=True, inplace=True)
 

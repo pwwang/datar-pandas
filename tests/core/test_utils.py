@@ -14,10 +14,10 @@ def test_apply_dtypes():
 
 
 def test_dict_get():
-    d = {'a': 1, 'b': 2, np.nan: 3}
-    assert dict_get(d, 'a') == 1
-    assert dict_get(d, 'b') == 2
+    d = {"a": 1, "b": 2, np.nan: 3}
+    assert dict_get(d, "a") == 1
+    assert dict_get(d, "b") == 2
     assert dict_get(d, float("nan")) == 3
-    assert dict_get(d, 'c', None) is None
+    assert dict_get(d, "c", None) is None
     with pytest.raises(KeyError):
-        dict_get(d, 'c')
+        dict_get(d, "c")

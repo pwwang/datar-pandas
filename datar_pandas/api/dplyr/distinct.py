@@ -2,7 +2,8 @@
 
 See source https://github.com/tidyverse/dplyr/blob/master/R/distinct.R
 """
-from typing import Any
+
+from typing import Any, cast
 from pipda.reference import Reference
 from datar.apis.dplyr import mutate, distinct, n_distinct
 
@@ -48,8 +49,8 @@ def _distinct(
                     *args,
                     **kwargs,
                     _keep="none",
-                    __ast_fallback="normal",
-                    __backend="pandas",
+                    __ast_fallback="normal",  # type: ignore
+                    __backend="pandas",  # type: ignore
                 )
             ).drop_duplicates()
 
@@ -74,7 +75,7 @@ def _distinct(
 @func_bootstrap(n_distinct, kind="agg")
 def _n_distinct_bootstrap(x: PandasObject, na_rm: bool = True):
     """Get the length of distinct elements"""
-    return x.nunique(dropna=na_rm)
+    return cast(Any, x).nunique(dropna=na_rm)
 
 
 @n_distinct.register(object, context=Context.EVAL, backend="pandas")

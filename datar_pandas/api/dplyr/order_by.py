@@ -2,6 +2,7 @@
 
 https://github.com/tidyverse/dplyr/blob/master/R/order-by.R
 """
+
 from __future__ import annotations
 
 from typing import Any, Callable
@@ -19,7 +20,7 @@ from ..misc import itemgetter
 
 @order_by.register(backend="pandas")
 def _order_by(order, call: FunctionCall):
-    order = order_fun(order, __ast_fallback="normal")
+    order = order_fun(order, __ast_fallback="normal")  # type: ignore
     if not isinstance(call, FunctionCall) or len(call._pipda_args) < 1:
         raise ValueError(
             "In `order_by()`: `call` must be a registered "
@@ -58,7 +59,7 @@ def _with_order_obj(
     *args: Any,
     **kwargs: Any,
 ):
-    order = order_fun(order, __ast_fallback="normal")
+    order = order_fun(order, __ast_fallback="normal")  # type: ignore
 
     x = _with_order(x, order)
     out = func(x, *args, **kwargs)
@@ -75,7 +76,7 @@ def _with_order_bootstrap(
     *args: Any,
     **kwargs: Any,
 ):
-    order = order_fun(order, __ast_fallback="normal")
+    order = order_fun(order, __ast_fallback="normal")  # type: ignore
 
     x = _with_order(x, order)
     out = func(x, *args, **kwargs)

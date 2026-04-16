@@ -140,9 +140,7 @@ def test_pmax():
 def test_cov():
     df = tibble(x=[1, 2, 3], y=[5, 6, 7])
     out = df >> cov()
-    assert_frame_equal(
-        out.reset_index(drop=True), tibble(x=[1.0, 1.0], y=[1.0, 1.0])
-    )
+    assert_frame_equal(out.reset_index(drop=True), tibble(x=[1.0, 1.0], y=[1.0, 1.0]))
 
     out = [1, 2, 3] >> cov([4, 5, 6])
     assert out == 1.0
@@ -190,9 +188,7 @@ def test_col_row_verbs():
         [3.5355339059327378, 3.605551275463989, 6.244997998398398],
         approx=True,
     )
-    assert_iterable_equal(
-        col_sds(df), [1.0, NA, 4.58257569495584], approx=True
-    )
+    assert_iterable_equal(col_sds(df), [1.0, NA, 4.58257569495584], approx=True)
     assert_iterable_equal(
         col_sds(df, na_rm=True),
         [1.0, 1.4142135623730951, 4.58257569495584],
@@ -301,9 +297,7 @@ def test_weighted_mean():
     assert_equal(weighted_mean(df.x, df.w2), NA)
 
     df = tibble(x=[1, 2, 3], w=[1, 2, 3], g=[1, 1, 2]).group_by("g")
-    assert_iterable_equal(
-        weighted_mean(df.x, df.w), [1.6667, 3.0], approx=1e-2
-    )
+    assert_iterable_equal(weighted_mean(df.x, df.w), [1.6667, 3.0], approx=1e-2)
 
 
 def test_quantile():

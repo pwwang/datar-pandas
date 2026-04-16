@@ -10,4 +10,5 @@ def test_no_such():
 
 def test_data():
     from datar.data import iris
+
     assert isinstance(iris, DataFrame)

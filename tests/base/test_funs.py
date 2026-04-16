@@ -41,9 +41,7 @@ def test_cut():
     assert sum(tab.values.flatten()) == 10000
 
     z = cut([1] * 5, 4)
-    assert_iterable_equal(
-        z.to_numpy(), [Interval(0.9995, 1.0, closed="right")] * 5
-    )
+    assert_iterable_equal(z.to_numpy(), [Interval(0.9995, 1.0, closed="right")] * 5)
     assert_iterable_equal(
         z.categories.to_list(),
         [
@@ -58,9 +56,7 @@ def test_cut():
     tab = table(cut(z, breaks=[pi / 3.0 * i for i in range(0, 4)]))
     assert str(tab.columns.tolist()[0]) == "(0.0, 1.05]"
 
-    tab = table(
-        cut(z, breaks=[pi / 3.0 * i for i in range(0, 4)], precision=3)
-    )
+    tab = table(cut(z, breaks=[pi / 3.0 * i for i in range(0, 4)], precision=3))
     assert str(tab.columns.tolist()[0]) == "(0.0, 1.047]"
 
     aaa = [1, 2, 3, 4, 5, 2, 3, 4, 5, 6, 7]
@@ -88,9 +84,7 @@ def test_outer():
     assert_frame_equal(out, DataFrame([[1, 2, 3], [2, 4, 6]]))
 
     out = outer(["1", "2"], ["1", "2", "3"], fun=paste0)
-    assert_frame_equal(
-        out, DataFrame([["11", "12", "13"], ["21", "22", "23"]])
-    )
+    assert_frame_equal(out, DataFrame([["11", "12", "13"], ["21", "22", "23"]]))
 
 
 def test_rank():

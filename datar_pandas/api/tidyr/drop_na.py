@@ -2,14 +2,20 @@
 
 https://github.com/tidyverse/tidyr/blob/HEAD/R/drop-na.R
 """
+
+from typing import Any, cast
+
 from datar.core.utils import arg_match
 from datar.dplyr import ungroup
 from datar.apis.tidyr import drop_na
 
 from ...pandas import DataFrame
 from ...contexts import Context
-from ...utils import vars_select
+from ...utils import vars_select, meta_kwargs
 from ...tibble import reconstruct_tibble
+
+
+meta_pd = cast(Any, meta_kwargs)
 
 
 @drop_na.register(DataFrame, context=Context.SELECT, backend="pandas")
@@ -35,11 +41,10 @@ def _drop_na(
     """
     arg_match(how_, "how_", ["any", "all"])
     all_columns = _data.columns
-    data = ungroup(_data, __ast_fallback="normal", __backend="pandas")
+    data = ungroup(_data, **meta_pd)
     if columns:
-        columns = vars_select(all_columns, *columns)
-        columns = all_columns[columns]
-        out = data.dropna(subset=columns, how=how_).reset_index(drop=True)
+        sel_columns = all_columns[list(vars_select(all_columns, *columns))]
+        out = data.dropna(subset=sel_columns, how=how_).reset_index(drop=True)
     else:
         out = data.dropna(how=how_).reset_index(drop=True)
 

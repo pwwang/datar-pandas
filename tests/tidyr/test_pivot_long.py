@@ -161,9 +161,7 @@ def test_original_col_order_is_preserved():
 
 
 def test_handles_duplicated_column_names():
-    df = tibble(
-        tibble(a=1), tibble(b=3), x=1, a=2, b=4, _name_repair="minimal"
-    )
+    df = tibble(tibble(a=1), tibble(b=3), x=1, a=2, b=4, _name_repair="minimal")
     pv = pivot_longer(df, ~f.x)
 
     assert pv.columns.tolist() == ["x", "name", "value"]
@@ -174,9 +172,7 @@ def test_handles_duplicated_column_names():
 def test_can_pivot_duplicated_names_to_dot_value():
     df = tibble(x=1, a_1=1, a_2=2, b_1=3, b_2=4, _name_repair="minimal")
     pv1 = pivot_longer(df, ~f.x, names_to=c(".value", NA), names_sep="_")
-    pv2 = pivot_longer(
-        df, ~f.x, names_to=c(".value", NA), names_pattern="(.)_(.)"
-    )
+    pv2 = pivot_longer(df, ~f.x, names_to=c(".value", NA), names_pattern="(.)_(.)")
     # The suffices will be used to group the data, which needs to
     # be captured explictly.
     # pv3 = pivot_longer(df, ~f.x, names_to = ".value", names_pattern = "(.)_.")
@@ -191,9 +187,7 @@ def test_dot_value_can_be_any_position_in_names_to():
     samp = tibble(
         i=c[1:5], y_t1=rnorm(4), y_t2=rnorm(4), z_t1=rep(3, 4), z_t2=rep(-2, 4)
     )
-    value_first = pivot_longer(
-        samp, ~f.i, names_to=[".value", "time"], names_sep="_"
-    )
+    value_first = pivot_longer(samp, ~f.i, names_to=[".value", "time"], names_sep="_")
 
     samp2 = rename(samp, t1_y="y_t1", t2_y="y_t2", t1_z="z_t1", t2_z="z_t2")
     value_second = pivot_longer(
@@ -212,11 +206,7 @@ def test_type_error_message_use_variable_names():
 
 def test_grouping_is_preserved():
     df = tibble(g=1, x1=1, x2=2)
-    out = (
-        df
-        >> group_by(f.g)
-        >> pivot_longer(c[f.x1 :], names_to="x", values_to="v")
-    )
+    out = df >> group_by(f.g) >> pivot_longer(c[f.x1 :], names_to="x", values_to="v")
     assert_equal(group_vars(out), ["g"])
 
 

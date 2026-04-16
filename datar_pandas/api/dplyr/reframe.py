@@ -24,7 +24,11 @@ def _reframe(
     out, _ = _summarise_build(_data, *args, **kwargs)
 
     if isinstance(_data, TibbleGrouped):
-        gvars = group_vars(_data, __ast_fallback="normal", __backend="pandas")
+        gvars = group_vars(
+            _data,
+            __ast_fallback="normal",  # type: ignore
+            __backend="pandas",  # type: ignore
+        )
         non_gvars = out.columns.difference(gvars).to_list()
         # remove the empty rows
         # faster way?

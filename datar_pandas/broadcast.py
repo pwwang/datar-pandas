@@ -25,6 +25,11 @@ In the above example, `f.x` is broadcasted into `[1, 1, 2, 2]` based on the
 right operand `[1, 2]`
 """
 
+# pyright: reportGeneralTypeIssues=false, reportAttributeAccessIssue=false
+# pyright: reportArgumentType=false, reportReturnType=false
+# pyright: reportAssignmentType=false, reportCallIssue=false
+# pyright: reportIndexIssue=false
+
 from __future__ import annotations
 
 import time
@@ -216,8 +221,7 @@ def _broadcast_base(
 
             if usizes[0] != len(value):
                 raise ValueError(
-                    f"Cannot recycle `{name}` with size "
-                    f"{len(value)} to {usizes[0]}."
+                    f"Cannot recycle `{name}` with size {len(value)} to {usizes[0]}."
                 )
             return base
 
@@ -225,7 +229,7 @@ def _broadcast_base(
             if set(usizes) != set([1, len(value)]):
                 size_tip = usizes[usizes != len(value)][0]
                 raise ValueError(
-                    f"Cannot recycle `{name}` with size " f"{len(value)} to {size_tip}."
+                    f"Cannot recycle `{name}` with size {len(value)} to {size_tip}."
                 )
 
             if not get_obj(base).index.is_unique:
@@ -379,7 +383,9 @@ def _(
             val_sizes = value.index.remove_unused_categories().value_counts(
                 sort=False,
             )
-        elif PANDAS_VERSION[0] == 2 and isinstance(value.index, MultiIndex):  # pragma: no cover
+        elif PANDAS_VERSION[0] == 2 and isinstance(
+            value.index, MultiIndex
+        ):  # pragma: no cover
             # Pandas 2 does convert MultiIndex to CategoricalIndex if all
             # are CategoricalIndex
             val_sizes = value.index.to_series().value_counts(sort=False)
@@ -590,7 +596,6 @@ def _(
     # This is typically an aggregated result to the orignal structure
     # For example:  f.x.mean() / f.x
     if _agg_result_compatible(value.index, grouper):
-
         if isinstance(value, Series):
             out = Series(
                 value,

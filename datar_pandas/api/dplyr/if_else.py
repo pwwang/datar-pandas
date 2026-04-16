@@ -3,6 +3,7 @@
 https://github.com/tidyverse/dplyr/blob/master/R/if_else.R
 https://github.com/tidyverse/dplyr/blob/master/R/case_when.R
 """
+
 import numpy as np
 from datar.apis.dplyr import if_else, case_when, case_match
 
@@ -85,9 +86,7 @@ def _case_when(when, case, *when_cases):
 
     when_cases = (when, case, *when_cases)
 
-    is_series = any(
-        isinstance(wc, (Series, SeriesGroupBy)) for wc in when_cases
-    )
+    is_series = any(isinstance(wc, (Series, SeriesGroupBy)) for wc in when_cases)
     df = Tibble.from_args(*when_cases, _name_repair="minimal")
     ungrouped = ungroup(df, **meta_kwargs)
 
@@ -112,9 +111,7 @@ def _case_match(_x, *args, _default=None, _dtypes=None):
 
     x = ungroup(_x, **meta_kwargs) if isinstance(_x, SeriesGroupBy) else _x
     cases = (
-        arg
-        if i % 2 == 1
-        else np.isin(x, arg).astype(bool) | pd.isnull(x)
+        arg if i % 2 == 1 else np.isin(x, arg).astype(bool) | pd.isnull(x)
         for i, arg in enumerate(args)
     )
     cases = (*cases, True, [None] if _default is None else _default)

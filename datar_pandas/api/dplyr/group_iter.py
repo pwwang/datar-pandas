@@ -4,10 +4,11 @@ https://github.com/tidyverse/dplyr/blob/master/R/group_split.R
 https://github.com/tidyverse/dplyr/blob/master/R/group_map.R
 https://github.com/tidyverse/dplyr/blob/master/R/group_trim.R
 """
+
 from __future__ import annotations
 
 import inspect
-from typing import Any, Callable
+from typing import Any, Callable, Optional, cast
 
 from pipda import register_verb
 from datar.core.utils import logger
@@ -17,10 +18,8 @@ from datar.apis.dplyr import (
     group_vars,
     group_by,
     ungroup,
-    select,
     mutate,
     across,
-    where,
     group_map,
     group_modify,
     group_walk,
@@ -53,7 +52,11 @@ def _group_map(
     **kwargs: Any,
 ):
     keys = (
-        group_keys(_data, __ast_fallback="normal", __backend="pandas")
+        group_keys(
+            _data,
+            __ast_fallback="normal",  # type: ignore
+            __backend="pandas",  # type: ignore
+        )
         if _nargs(_f) > 1
         else None
     )
@@ -61,8 +64,8 @@ def _group_map(
         group_split(
             _data,
             _keep=_keep,
-            __ast_fallback="normal",
-            __backend="pandas",
+            __ast_fallback="normal",  # type: ignore
+            __backend="pandas",  # type: ignore
         )
     ):
         if keys is None:
@@ -86,8 +89,8 @@ def _group_map_list(
             *args,
             **kwargs,
             _keep=_keep,
-            __ast_fallback="normal",
-            __backend="pandas",
+            __ast_fallback="normal",  # type: ignore
+            __backend="pandas",  # type: ignore
         )
     )
 
@@ -95,7 +98,7 @@ def _group_map_list(
 group_map.list = register_verb(
     DataFrame,
     func=_group_map_list,
-    context=Context.PENDING,
+    context=cast(Any, Context.PENDING),
 )
 
 
@@ -118,7 +121,11 @@ def _group_modify_grouped(
     _keep: bool = False,
     **kwargs: Any,
 ) -> DataFrame:
-    gvars = group_vars(_data, __ast_fallback="normal", __backend="pandas")
+    gvars = group_vars(
+        _data,
+        __ast_fallback="normal",  # type: ignore
+        __backend="pandas",  # type: ignore
+    )
     func = (lambda df, keys: _f(df)) if _nargs(_f) == 1 else _f
 
     def fun(df, keys):
@@ -144,8 +151,8 @@ def _group_modify_grouped(
         _data,
         fun,
         _keep=_keep,
-        __ast_fallback="normal",
-        __backend="pandas",
+        __ast_fallback="normal",  # type: ignore
+        __backend="pandas",  # type: ignore
     )
     out = pd.concat(chunks, axis=0)
 
@@ -169,41 +176,41 @@ def _group_walk(
             *args,
             **kwargs,
             _keep=_keep,
-            __ast_fallback="normal",
-            __backend="pandas",
+            __ast_fallback="normal",  # type: ignore
+            __backend="pandas",  # type: ignore
         )
     )
 
 
 @group_trim.register(DataFrame, context=Context.EVAL, backend="pandas")
-def _group_trim(_data: DataFrame, _drop: bool = None) -> DataFrame:
+def _group_trim(_data: DataFrame, _drop: Optional[bool] = None) -> DataFrame:
     return _data
 
 
 @group_trim.register(TibbleGrouped, context=Context.EVAL, backend="pandas")
 def _group_trim_grouped(
     _data: TibbleGrouped,
-    _drop: bool = None,
+    _drop: Optional[bool] = None,
 ) -> TibbleGrouped:
-    ungrouped = ungroup(_data, __ast_fallback="normal", __backend="pandas")
-
-    fgroups = select(
-        ungrouped,
-        where(is_factor),
-        __ast_fallback="normal",
-        __backend="pandas",
+    ungrouped = ungroup(
+        _data,
+        __ast_fallback="normal",  # type: ignore
+        __backend="pandas",  # type: ignore
     )
+
+    factor_cols = [col for col in ungrouped.columns if is_factor(ungrouped[col])]
+    fgroups = ungrouped.loc[:, factor_cols]
     dropped = mutate(
         ungrouped,
         across(
             fgroups.columns.tolist(),
             droplevels,
         ),
-        __ast_fallback="normal",
-        __backend="pandas",
+        __ast_fallback="normal",  # type: ignore
+        __backend="pandas",  # type: ignore
     )
 
-    return reconstruct_tibble(dropped, _data, drop=_drop)
+    return cast(TibbleGrouped, reconstruct_tibble(dropped, _data, drop=_drop))
 
 
 @with_groups.register(DataFrame, context=Context.PENDING, backend="pandas")
@@ -215,7 +222,11 @@ def _with_groups(
     **kwargs: Any,
 ) -> Any:
     if _groups is None:
-        grouped = ungroup(_data, __ast_fallback="normal", __backend="pandas")
+        grouped = ungroup(
+            _data,
+            __ast_fallback="normal",  # type: ignore
+            __backend="pandas",  # type: ignore
+        )
     else:
         # all_columns = _data.columns
         # _groups = evaluate_expr(_groups, _data, Context.SELECT)
@@ -223,8 +234,8 @@ def _with_groups(
         grouped = group_by(
             _data,
             _groups,
-            __ast_fallback="normal",
-            __backend="pandas",
+            __ast_fallback="normal",  # type: ignore
+            __backend="pandas",  # type: ignore
         )
 
     return _func(grouped, *args, **kwargs)
@@ -241,8 +252,8 @@ def _group_split(
         _data,
         *args,
         **kwargs,
-        __ast_fallback="normal",
-        __backend="pandas",
+        __ast_fallback="normal",  # type: ignore
+        __backend="pandas",  # type: ignore
     )
     yield from group_split_impl(data, _keep=_keep)
 
@@ -273,13 +284,10 @@ def _group_split_rowwise(
 ):
     if args or kwargs:
         logger.warning(
-            "`*args` and `**kwargs` is ignored in "
-            "`group_split(<TibbleRowwise>)`."
+            "`*args` and `**kwargs` is ignored in `group_split(<TibbleRowwise>)`."
         )
     if _keep is not None:
-        logger.warning(
-            "`_keep` is ignored in " "`group_split(<TibbleRowwise>)`."
-        )
+        logger.warning("`_keep` is ignored in `group_split(<TibbleRowwise>)`.")
 
     return group_split_impl(_data, _keep=True)
 
@@ -296,8 +304,8 @@ def _group_split_list(
             _data,
             *args,
             _keep=_keep,
-            __ast_fallback="normal",
-            __backend="pandas",
+            __ast_fallback="normal",  # type: ignore
+            __backend="pandas",  # type: ignore
             **kwargs,
         )
     )
@@ -306,17 +314,29 @@ def _group_split_list(
 group_split.list = register_verb(
     DataFrame,
     func=_group_split_list,
-    context=Context.PENDING,
+    context=cast(Any, Context.PENDING),
 )
 
 
 def group_split_impl(data, _keep):
     """Implement splitting data frame by groups"""
-    out = ungroup(data, __ast_fallback="normal", __backend="pandas")
-    indices = group_rows(data, __ast_fallback="normal", __backend="pandas")
+    out = ungroup(
+        data,
+        __ast_fallback="normal",  # type: ignore
+        __backend="pandas",  # type: ignore
+    )
+    indices = group_rows(
+        data,
+        __ast_fallback="normal",  # type: ignore
+        __backend="pandas",  # type: ignore
+    )
 
     if not _keep:
-        remove = group_vars(data, __ast_fallback="normal", __backend="pandas")
+        remove = group_vars(
+            data,
+            __ast_fallback="normal",  # type: ignore
+            __backend="pandas",  # type: ignore
+        )
         _keep = out.columns
         _keep = setdiff(_keep, remove)
         out = out[_keep]

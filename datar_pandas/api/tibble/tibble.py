@@ -1,5 +1,5 @@
 from __future__ import annotations
-from typing import TYPE_CHECKING, Any, Callable, Mapping
+from typing import TYPE_CHECKING, Any, Callable, Mapping, Optional, cast
 
 import numpy as np
 from pipda import Expression, ReferenceAttr, ReferenceItem, evaluate_expr
@@ -25,8 +25,8 @@ if TYPE_CHECKING:
 def _tibble(
     *args,
     _name_repair: str | Callable = "check_unique",
-    _rows: int = None,
-    _dtypes: Dtype | Mapping[str, Dtype] = None,
+    _rows: Optional[int] = None,
+    _dtypes: Optional[Dtype | Mapping[str, Dtype]] = None,
     _drop_index: bool = False,
     _index=None,
     **kwargs,
@@ -46,7 +46,7 @@ def _tibble(
         if isinstance(val, Expression):
             try:
                 # Check if any refers to self (args, kwargs)
-                evaluate_expr(val, eval_data, Context.EVAL)
+                evaluate_expr(val, eval_data, cast(Any, Context.EVAL))
             except (KeyError, NotImplementedError):
                 # If not, it refers to external data
                 evaled_args.append(val)
@@ -65,7 +65,7 @@ def _tibble(
     for key, val in kwargs.items():
         if isinstance(val, Expression):
             try:
-                evaluate_expr(val, eval_data, Context.EVAL)
+                evaluate_expr(val, eval_data, cast(Any, Context.EVAL))
             except (KeyError, NotImplementedError):
                 evaled_kws[key] = val
             else:
@@ -78,14 +78,14 @@ def _tibble(
     return tibble_(
         *evaled_args,
         _name_repair=_name_repair,
-        _rows=_rows,
+        _rows=_rows,  # type: ignore[arg-type]
         _dtypes=_dtypes,
         _drop_index=_drop_index,
         _index=_index,
         __ast_fallback="normal",
         __backend="pandas",
         **evaled_kws,
-    )
+    )  # type: ignore[call-arg]
 
 
 @tibble_.register(
@@ -99,8 +99,8 @@ def _tibble(
 def _tibble_(
     *args,
     _name_repair: str | Callable = "check_unique",
-    _rows: int = None,
-    _dtypes: Dtype | Mapping[str, Dtype] = None,
+    _rows: Optional[int] = None,
+    _dtypes: Optional[Dtype | Mapping[str, Dtype]] = None,
     _drop_index: bool = False,
     _index=None,
     **kwargs,
@@ -108,7 +108,7 @@ def _tibble_(
     out = Tibble.from_args(
         *args,
         **kwargs,
-        _name_repair=_name_repair,
+        _name_repair=_name_repair,  # type: ignore[arg-type]
         _rows=_rows,
         _dtypes=_dtypes,
     )
@@ -125,7 +125,7 @@ def _tibble_(
 def _tribble(
     *dummies: Any,
     _name_repair: str | Callable = "minimal",
-    _dtypes: Dtype | Mapping[str, Dtype] = None,
+    _dtypes: Optional[Dtype | Mapping[str, Dtype]] = None,
 ) -> Tibble:
     columns = []
     data = []
@@ -172,7 +172,7 @@ def _tribble(
 def _tibble_row(
     *args: Any,
     _name_repair: str | Callable = "check_unique",
-    _dtypes: Dtype | Mapping[str, Dtype] = None,
+    _dtypes: Optional[Dtype | Mapping[str, Dtype]] = None,
     **kwargs: Any,
 ) -> Tibble:
     """Constructs a data frame that is guaranteed to occupy one row.

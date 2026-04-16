@@ -1,10 +1,13 @@
 """Provides functions for multiple factors"""
+
 import itertools
+from typing import Any, cast
 
 from datar.apis.forcats import fct_c, fct_cross, lvls_union
 
 from ...pandas import Categorical
 from ...common import intersect, is_null
+from ...utils import meta_kwargs
 from ..base import expand_grid
 from ..base.factor import factor, levels
 from ..base.string import paste
@@ -24,16 +27,16 @@ def _fct_c(*fs) -> Categorical:
     Returns:
         The concatenated factor
     """
+    meta_pd = cast(Any, meta_kwargs)
     if not fs:
-        return factor(__ast_fallback="normal", __backend="pandas")
+        return factor(**meta_pd)
 
-    levs = lvls_union(fs, __ast_fallback="normal", __backend="pandas")
+    levs = lvls_union(fs, **meta_pd)
     allvals = list(itertools.chain(*fs))
     return factor(
         allvals,
         levels=levs,
-        __ast_fallback="normal",
-        __backend="pandas",
+        **meta_pd,
     )
 
 
@@ -56,30 +59,34 @@ def _fct_cross(
     Returns:
         The new factor
     """
+    meta_pd = cast(Any, meta_kwargs)
+    meta_np = cast(Any, {"__ast_fallback": "normal", "__backend": "numpy"})
     if not fs or (len(fs) == 1 and len(check_factor(fs[0])) == 0):
-        return factor(__ast_fallback="normal", __backend="pandas")
+        return factor(**meta_pd)
 
     fs = [check_factor(fct) for fct in fs]
-    newf = paste(*fs, sep=sep, __ast_fallback="normal", __backend="numpy")
+    newf = paste(*fs, sep=sep, **meta_np)
 
     old_levels = (
-        levels(fct, __ast_fallback="normal", __backend="pandas")
+        levels(fct, **meta_pd)
         for fct in fs
     )
     grid = expand_grid(*old_levels, __ast_fallback="normal", __backend="pandas")
     new_levels = paste(
         *(grid[col] for col in grid),
         sep=sep,
-        __ast_fallback="normal",
-        __backend="numpy",
+        **meta_np,
     )
 
     if not keep_empty:
-        new_levels = intersect(new_levels, newf[~is_null(newf)])
+        is_null_mask = is_null(newf)
+        new_levels = intersect(
+            new_levels,
+            newf[~is_null_mask],  # type: ignore[operator]
+        )
 
     return factor(
         newf,
         levels=new_levels,
-        __ast_fallback="normal",
-        __backend="pandas",
+        **meta_pd,
     )

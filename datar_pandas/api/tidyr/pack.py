@@ -2,23 +2,27 @@
 
 https://github.com/tidyverse/tidyr/blob/master/R/pack.R
 """
-from typing import Iterable, Set, Union, Callable
+
+from typing import Any, Iterable, Set, Union, Callable, Optional, cast
 
 from datar.core.names import repair_names
 from datar.apis.tidyr import pack, unpack
 
 from ...pandas import DataFrame
 from ...common import is_scalar, setdiff
-from ...utils import vars_select
+from ...utils import vars_select, meta_kwargs
 from ...tibble import reconstruct_tibble
 from ...contexts import Context
 from ..dplyr.bind import bind_cols
 
 
+meta_pd = cast(Any, meta_kwargs)
+
+
 @pack.register(DataFrame, context=Context.SELECT, backend="pandas")
 def _pack(
     _data: DataFrame,
-    _names_sep: str = None,
+    _names_sep: Optional[str] = None,
     **cols: Union[str, int],
 ) -> DataFrame:
     """Makes df narrow by collapsing a set of columns into a single df-column.
@@ -45,9 +49,7 @@ def _pack(
         oldcols = all_columns[vars_select(all_columns, columns)]
         usedcols = usedcols.union(oldcols)
         newcols = (
-            oldcols
-            if _names_sep is None
-            else _strip_names(oldcols, group, _names_sep)
+            oldcols if _names_sep is None else _strip_names(oldcols, group, _names_sep)
         )
         colgroups[group] = zip(newcols, oldcols)
 
@@ -60,8 +62,7 @@ def _pack(
     out = bind_cols(
         _data[asis],
         DataFrame(cols),
-        __ast_fallback="normal",
-        __backend="pandas",
+        **meta_pd,
     )
     return reconstruct_tibble(out, _data)
 
@@ -70,7 +71,7 @@ def _pack(
 def _unpack(
     data: DataFrame,
     cols,
-    names_sep: str = None,
+    names_sep: Optional[str] = None,
     names_repair: Union[str, Callable] = "check_unique",
 ) -> DataFrame:
     """Makes df wider by expanding df-columns back out into individual columns.
@@ -135,7 +136,7 @@ def _check_present(
     for col in cols:
         if not isinstance(col, str):
             columns = vars_select(all_columns, col)
-            columns = all_columns[columns][0].split("$", 1)[0]
+            columns = [list(all_columns)[list(columns)[0]].split("$", 1)[0]]
         else:
             columns = [col]
 

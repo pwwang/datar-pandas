@@ -63,7 +63,7 @@ def test_match():
     out = match(x.x, [1, 2])
     assert_iterable_equal(out, [0, 1, 0, -1])
 
-    x = x.groupby('g')
+    x = x.groupby("g")
     out = match(x.x, x.y)
     assert_iterable_equal(get_obj(out), [1, 0, -1, 1])
 

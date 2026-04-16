@@ -120,9 +120,7 @@ def test_slice_gives_correct_rows():
     ) >> group_by(f.group)
 
     out = slice(a, c[:3])
-    assert get_obj(out.value).tolist() == [
-        f"row{i}" for i in [1, 2, 3, 6, 7, 8]
-    ]
+    assert get_obj(out.value).tolist() == [f"row{i}" for i in [1, 2, 3, 6, 7, 8]]
 
     out = slice(a, c(1, 3))
     assert get_obj(out.value).tolist() == [f"row{i}" for i in [2, 4, 7, 9]]
@@ -211,9 +209,7 @@ def test_slice_does_not_evaluate_the_expression_in_empty_groups():
 
 
 def test_slice_handles_df_columns():
-    df = tibble(
-        x=[1, 2], y=tibble(a=[1, 2], b=[3, 4]), z=tibble(A=[1, 2], B=[3, 4])
-    )
+    df = tibble(x=[1, 2], y=tibble(a=[1, 2], b=[3, 4]), z=tibble(A=[1, 2], B=[3, 4]))
     out = slice(df, 0)
     assert out.equals(df.iloc[[0], :])
 

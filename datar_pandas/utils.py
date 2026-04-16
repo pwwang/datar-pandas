@@ -2,7 +2,7 @@ from __future__ import annotations
 
 import textwrap
 import warnings
-from typing import TYPE_CHECKING, Any, Hashable, Iterable, Mapping
+from typing import TYPE_CHECKING, Any, Hashable, Iterable, Mapping, Optional
 from functools import singledispatch
 
 import numpy as np
@@ -15,7 +15,7 @@ from .collections import Collection
 from .pandas import DataFrame, Series, SeriesGroupBy, get_obj
 
 if TYPE_CHECKING:
-    from pipda import ContextType
+    from pipda import ContextBase as ContextType
 
 # Specify a "no default" value so that None can be used as a default value
 NO_DEFAULT = object()
@@ -43,7 +43,7 @@ class ExpressionWrapper:
     def __str__(self) -> str:
         return str(self.expr)
 
-    def _pipda_eval(self, data: Any, context: ContextType = None) -> Any:
+    def _pipda_eval(self, data: Any, context: Optional["ContextType"] = None) -> Any:
         return evaluate_expr(self.expr, data, context)
 
 
@@ -56,7 +56,7 @@ def name_of(value: Any) -> str:
 
 name_of.register(Series, lambda x: x.name)
 name_of.register(SeriesGroupBy, lambda x: get_obj(x).name)
-name_of.register(DataFrame, lambda x: None)
+name_of.register(DataFrame, lambda x: None)  # type: ignore[arg-type]
 
 
 def apply_dtypes(df: DataFrame, dtypes) -> None:
@@ -78,18 +78,18 @@ def apply_dtypes(df: DataFrame, dtypes) -> None:
             df[column] = df[column].astype(dtype)
         else:
             for col in df:
-                if col.startswith(f"{column}$"):
+                if isinstance(col, str) and col.startswith(f"{column}$"):
                     df[col] = df[col].astype(dtype)
 
 
-def dict_get(d: Mapping[str, Any], key: Hashable, default: Any = NO_DEFAULT):
+def dict_get(d: Mapping[Any, Any], key: Hashable, default: Any = NO_DEFAULT):
     """Get value from dict in case nan is in the key"""
     try:
         return d[key]
     except KeyError:
-        if is_null(key):
+        if bool(is_null(key)):
             for k, v in d.items():
-                if is_null(k):
+                if bool(is_null(k)):
                     return v
 
         if default is NO_DEFAULT:
@@ -121,7 +121,7 @@ def vars_select(
     # if not isinstance(all_columns, Index):
     #     all_columns = Index(all_columns, dtype=object)
 
-    columns = [
+    cols: Any = [
         column.name
         if isinstance(column, Series)
         else get_obj(column).name
@@ -129,17 +129,18 @@ def vars_select(
         else column
         for column in columns
     ]
-    for col in columns:
+    for col in cols:
         if not isinstance(col, str):
             continue
-        colidx = all_columns.get_indexer_for([col])
-        if colidx.size > 1:
-            raise ValueError(
-                "Names must be unique. Name "
-                f'"{col}" found at locations {list(colidx)}.'
-            )
+        if hasattr(all_columns, 'get_indexer_for'):
+            colidx = all_columns.get_indexer_for([col])  # type: ignore[union-attr]
+            if colidx.size > 1:
+                raise ValueError(
+                    f'Names must be unique. Name "{col}" found at '
+                    f"locations {list(colidx)}."
+                )
 
-    selected = Collection(*columns, pool=list(all_columns))
+    selected = Collection(*cols, pool=list(all_columns))
     if raise_nonexists and selected.unmatched and selected.unmatched != {None}:
         raise KeyError(f"Columns `{selected.unmatched}` do not exist.")
 

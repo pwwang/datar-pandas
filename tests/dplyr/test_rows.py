@@ -193,14 +193,14 @@ def test_rows_patch_allows_y_keys_not_in_x_by_unmatched_arg():
     x = tibble(a=1, b=NA)
     y = tibble(a=[2, 1, 3], b=[1, 1, 1])
     out = rows_patch(x, y, by="a", unmatched="ignore")
-    assert_frame_equal(out, tibble(a=1, b=1.))
+    assert_frame_equal(out, tibble(a=1, b=1.0))
 
 
 def test_rows_patch_allow_x_dup_keys():
     x = tibble(a=[1, 2, 1, 3], b=[NA, 3, 4, NA], c=letters[:4])
     y = tibble(a=[1, 3], b=[99, 88])
     out = rows_patch(x, y, by="a")
-    exp = tibble(a=[1, 2, 1, 3], b=[99., 3, 4, 88], c=letters[:4])
+    exp = tibble(a=[1, 2, 1, 3], b=[99.0, 3, 4, 88], c=letters[:4])
     assert_frame_equal(out, exp)
 
 
@@ -236,7 +236,7 @@ def test_rows_upsert_allow_x_dup_keys():
     out = rows_upsert(x, y, by="a")
     exp = tibble(
         a=[1, 2, 1, 3, 4],
-        b=[99., 3, 99, 88, 100],
+        b=[99.0, 3, 99, 88, 100],
         c=c(letters[:4], NA),
     )
     assert_frame_equal(out, exp)

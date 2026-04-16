@@ -1,4 +1,7 @@
 """Provides specific contexts for datar"""
+
+# pyright: reportGeneralTypeIssues=false
+
 from enum import Enum
 
 from pipda.context import (
@@ -45,7 +48,7 @@ class ContextEval(ContextEvalPipda):
         """Defines how `item` in `f[item]` is evaluated.
 
         This function should return a `ContextBase` object."""
-        return Context.SELECT
+        return Context.SELECT  # type: ignore[return-value]
 
 
 class Context(Enum):

@@ -1,15 +1,19 @@
 """Uncount a data frame"""
-from typing import Any, Iterable
+
+from typing import Any, Iterable, Optional, cast
 
 from datar.apis.tidyr import uncount
 
 from ...pandas import DataFrame, Series, is_number
 from ...common import is_scalar
-from ...utils import get_grouper
+from ...utils import get_grouper, meta_kwargs
 from ...broadcast import broadcast_to
 from ...contexts import Context
 from ...tibble import reconstruct_tibble
 from ..dplyr.group_by import ungroup
+
+
+meta_pd = cast(Any, meta_kwargs)
 
 
 @uncount.register(DataFrame, context=Context.EVAL, backend="pandas")
@@ -17,7 +21,7 @@ def _uncount(
     data: DataFrame,
     weights,
     _remove: bool = True,
-    _id: str = None,
+    _id: Optional[str] = None,
 ) -> DataFrame:
     """Duplicating rows according to a weighting variable
 
@@ -33,7 +37,7 @@ def _uncount(
         dataframe with rows repeated.
     """
     grouped = getattr(data, "_datar", {}).get("grouped", None)
-    undata = ungroup(data, __ast_fallback="normal", __backend="pandas").copy()
+    undata = ungroup(data, **meta_pd).copy()
     weights = broadcast_to(
         weights,
         data.index,

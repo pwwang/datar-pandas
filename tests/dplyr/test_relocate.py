@@ -83,7 +83,7 @@ def test_before_0():
 
 
 def test_rename_gvars():
-    df = tibble(x=1, y=2).group_by('x')
+    df = tibble(x=1, y=2).group_by("x")
     out = relocate(df, g=f.x, _after=f.y)
     assert isinstance(out, TibbleGrouped)
-    assert out.group_vars == ['g']
+    assert out.group_vars == ["g"]

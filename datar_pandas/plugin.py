@@ -14,6 +14,7 @@ if TYPE_CHECKING:
 @plugin.impl
 def setup():
     from datar.core.options import add_option
+
     pdtypes.patch()
     add_option("use_modin", False)
     add_option("dplyr_summarise_inform", True)
@@ -141,6 +142,7 @@ def misc_api():
         pd_str,
         flatten,
     )
+
     return {
         "itemgetter": itemgetter,
         "attrgetter": attrgetter,
@@ -162,7 +164,8 @@ def get_versions():
     }
 
     if get_option("use_modin"):  # pragma: no cover
-        import modin
+        import modin  # type: ignore[import-untyped]
+
         out["modin"] = modin.__version__
 
     return out
@@ -171,10 +174,12 @@ def get_versions():
 @plugin.impl
 def c_getitem(item):
     from .collections import Collection
+
     return Collection(item)
 
 
 @plugin.impl
 def operate(op, x, y=None):
     from .operators import operate as operate_
+
     return operate_(op, x, y)

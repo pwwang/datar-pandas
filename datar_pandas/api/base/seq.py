@@ -52,8 +52,9 @@ def _match(x, table, nomatch=-1):
         sorter = np.argsort(tab)
         if isinstance(sorter, Series):
             sorter = sorter.values
-        searched = np.searchsorted(tab, xx, sorter=sorter).ravel()
-        out = sorter.take(searched, mode="clip")
+        sorter_arr = np.asarray(sorter, dtype=np.intp)
+        searched = np.searchsorted(tab, xx, sorter=sorter_arr).ravel()
+        out = np.take(sorter_arr, searched, mode="clip")
         out[~np.isin(xx, tab)] = nomatch
         return out
 
@@ -149,7 +150,6 @@ def _order(x: Series, decreasing=False, na_last=True):
     out = np.argsort(x.fillna(na))
     if decreasing:
         out = out[::-1]
-        out.index = x.index
     return out
 
 
@@ -253,7 +253,7 @@ def _c(*args):
 
 
 @func_bootstrap(rev, kind="transform")
-def _rev(x, __args_raw=None):
+def _rev(x, *, __args_raw=None):
     out = x[::-1]
     out.index = x.index
     return out

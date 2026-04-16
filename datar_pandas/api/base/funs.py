@@ -3,14 +3,17 @@
 If a function uses DataFrame/TibbleGrouped as first argument, it may be
 registered by `register_verb` and should be placed in `./verbs.py`
 """
+
 from datar.apis.base import (
     cut,
     diff,
     outer,
     rank,
 )
+
 # numpy impl of diff
 from datar_numpy.api import sets as _  # noqa: F401
+
 # numpy impl of rank
 from datar_numpy.api import seq as _  # noqa: F401, F811
 

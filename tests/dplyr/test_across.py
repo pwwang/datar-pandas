@@ -1,5 +1,6 @@
 """Grabbed from
 https://github.com/tidyverse/dplyr/blob/master/tests/testthat/test-across.R"""
+
 import numpy
 import pytest
 from datar import f
@@ -20,7 +21,7 @@ from datar.base import (
     round,
     runif,
     sd,
-    sum
+    sum,
 )
 from datar.dplyr import (
     across,
@@ -35,7 +36,7 @@ from datar.dplyr import (
     mutate,
     rowwise,
     summarise,
-    where
+    where,
 )
 from datar.tibble import tibble
 from pipda import VerbCall, register_func, register_verb
@@ -71,14 +72,10 @@ def test_names_output():
     out = gf >> summarise(across(where(is_numeric), mean))
     assert out.columns.tolist() == ["x", "y", "z"]
 
-    out = gf >> summarise(
-        across(where(is_numeric), mean, _names="mean_{_col}")
-    )
+    out = gf >> summarise(across(where(is_numeric), mean, _names="mean_{_col}"))
     assert out.columns.tolist() == ["x", "mean_y", "mean_z"]
 
-    out = gf >> summarise(
-        across(where(is_numeric), {"mean": mean, "sum": sum})
-    )
+    out = gf >> summarise(across(where(is_numeric), {"mean": mean, "sum": sum}))
     assert out.columns.tolist() == ["x", "y_mean", "y_sum", "z_mean", "z_sum"]
 
     # Different from R's list
@@ -200,11 +197,7 @@ def test_with_group_id():
     @register_verb(DataFrame, dependent=True, context=None)
     def switcher(data, group_id, across_a, across_b):
         return group_id.apply(
-            lambda x: (
-                get_obj(across_a.a)[0]
-                if x == 0
-                else get_obj(across_b.b)[1]
-            )
+            lambda x: get_obj(across_a.a)[0] if x == 0 else get_obj(across_b.b)[1]
         )
 
     out = df >> mutate(x=switcher(cur_group_id(), across(f.a), across(f.b)))
@@ -376,9 +369,7 @@ def test_nb_fail():
     from datar.data import iris
 
     out = iris >> mutate(
-        across(
-            where(is_double) & ~c(f["Petal_Length"], f["Petal_Width"]), round
-        )
+        across(where(is_double) & ~c(f["Petal_Length"], f["Petal_Width"]), round)
     )
     rows = out >> nrow()
     assert rows == 150
@@ -423,7 +414,7 @@ def test_if_any_if_all_single_arg():
 def test_verb_as_fun():
     df = tibble(x=[1, 1, 2, 2])
     out = df >> mutate(z=across(f.x, duplicated))
-    assert_iterable_equal(out['z'].x, [False, True, False, True])
+    assert_iterable_equal(out["z"].x, [False, True, False, True])
 
     # verb not using dataframe
     @register_verb(Series)
@@ -431,4 +422,4 @@ def test_verb_as_fun():
         return x + 1
 
     out = df >> mutate(z=across(f.x, add))
-    assert_iterable_equal(out['z'].x, [2, 2, 3, 3])
+    assert_iterable_equal(out["z"].x, [2, 2, 3, 3])

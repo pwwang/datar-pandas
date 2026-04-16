@@ -31,13 +31,13 @@ def test_pick_columns_from_data():
     expect = df[["z", "x1", "x2"]]
 
     out = df >> mutate(sel=pick(f.z, starts_with("x")))
-    assert_frame_equal(out['sel'], expect)
+    assert_frame_equal(out["sel"], expect)
 
 
 def test_use_namespaced_call():
     df = tibble(x=1, y="y")
     out = df >> mutate(z=pick(where(is_character)))
-    assert_frame_equal(out['z'], tibble(y="y"))
+    assert_frame_equal(out["z"], tibble(y="y"))
 
 
 def test_returns_separate_dataframes_for_each_group():
@@ -79,7 +79,7 @@ def test_with_all_of():
     df = tibble(g=1, x=2, y=3)
     y = ["x"]
     out = df >> mutate(z=pick(all_of(y)))
-    assert_frame_equal(out['z'], tibble(x=2))
+    assert_frame_equal(out["z"], tibble(x=2))
 
 
 def test_must_supply_one_selector():
@@ -97,7 +97,7 @@ def test_evaluation_on_current_data():
         gdf >> mutate(x=None, y=pick(f.x))
 
     out = gdf >> mutate(y=f.x + 1, z=pick(f.x, f.y))
-    assert_frame_equal(out[['x', 'y']], out['z'])
+    assert_frame_equal(out[["x", "y"]], out["z"])
 
 
 # pick + summarise ------------------------------------------------------------
@@ -105,14 +105,14 @@ def test_uses_current_columns():
     df = tibble(x=c[1:6], y=c[6:11])
 
     out = df >> summarise(x=sum(f.x), z=pick(f.x))
-    assert_iterable_equal(out['x'], [15])
+    assert_iterable_equal(out["x"], [15])
 
 
 def test_can_pick_new_columns():
     df = tibble(x=c[1:6])
 
     out = df >> mutate(y=f.x + 1, z=pick(f.y))
-    assert_frame_equal(out['z'], out[['y']])
+    assert_frame_equal(out["z"], out[["y"]])
 
 
 # pick + arrange --------------------------------------------------------------
@@ -120,15 +120,15 @@ def test_can_arrange_with_pick():
     df = tibble(x=[2, 2, 1], y=[3, 1, 3])
 
     out = df >> arrange(pick(f.x, f.y))
-    assert_iterable_equal(out['x'], [1, 2, 2])
-    assert_iterable_equal(out['y'], [3, 1, 3])
+    assert_iterable_equal(out["x"], [1, 2, 2])
+    assert_iterable_equal(out["y"], [3, 1, 3])
 
 
 # pick + filter ---------------------------------------------------------------
 def test_can_pick_inside_filter():
     df = tibble(x=[1, 2, NA, 3], y=[2, NA, 5, 3])
     out = df >> filter_(complete_cases(pick(f.x, f.y))) >> drop_index()
-    assert_frame_equal(out, tibble(x=[1., 3.], y=[2., 3.]))
+    assert_frame_equal(out, tibble(x=[1.0, 3.0], y=[2.0, 3.0]))
 
 
 # pick + group_by -------------------------------------------------------------

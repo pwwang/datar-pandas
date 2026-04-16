@@ -1,6 +1,7 @@
 """Replace NAs with specified values"""
+
 from functools import singledispatch
-from typing import Any, Iterable
+from typing import Any, Iterable, cast
 
 import numpy as np
 from datar.apis.tidyr import replace_na
@@ -15,12 +16,7 @@ from ...contexts import Context
 def _replace_na(data: Iterable[Any], replace: Any) -> Iterable[Any]:
     """Replace NA for any iterables"""
     return np.array(
-        [
-            replace
-            if is_scalar(elem) and pd.isnull(elem)
-            else elem
-            for elem in data
-        ]
+        [replace if is_scalar(elem) and pd.isnull(elem) else elem for elem in data]
     )
 
 
@@ -68,7 +64,7 @@ def _replace_na_registered(
         Corresponding data with NAs replaced
     """
     if data_or_replace is None and replace is None:
-        return data.copy()
+        return cast(Any, data).copy() if hasattr(data, "copy") else data
 
     if replace is None:
         # no replace, then data_or_replace should be replace

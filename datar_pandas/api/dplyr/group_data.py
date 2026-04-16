@@ -24,8 +24,8 @@ def _group_data(_data: DataFrame) -> Tibble:
         {
             "_rows": group_rows(
                 _data,
-                __ast_fallback="normal",
-                __backend="pandas",
+                __ast_fallback="normal",  # type: ignore
+                __backend="pandas",  # type: ignore
             ),
         }
     )
@@ -37,11 +37,15 @@ def _group_data(_data: DataFrame) -> Tibble:
     backend="pandas",
 )
 def _group_data_grouped(_data: TibbleGrouped | GroupBy) -> Tibble:
-    gpdata = group_keys(_data, __ast_fallback="normal", __backend="pandas")
+    gpdata = group_keys(
+        _data,
+        __ast_fallback="normal",  # type: ignore
+        __backend="pandas",  # type: ignore
+    )
     gpdata["_rows"] = group_rows(
         _data,
-        __ast_fallback="normal",
-        __backend="pandas",
+        __ast_fallback="normal",  # type: ignore
+        __backend="pandas",  # type: ignore
     )
     return gpdata
 
@@ -72,8 +76,8 @@ def _group_rows(_data: DataFrame) -> List[List[int]]:
 def _group_rows_grouped(_data: TibbleGrouped) -> List[List[int]]:
     return group_rows(
         _data._datar["grouped"],
-        __ast_fallback="normal",
-        __backend="pandas",
+        __ast_fallback="normal",  # type: ignore
+        __backend="pandas",  # type: ignore
     )
 
 
@@ -81,8 +85,7 @@ def _group_rows_grouped(_data: TibbleGrouped) -> List[List[int]]:
 def _group_rows_groupby(_data: GroupBy) -> List[List[int]]:
     grouper = get_grouper(_data)
     return [
-        list(dict_get(grouper.indices, group_key))
-        for group_key in grouper.result_index
+        list(dict_get(grouper.indices, group_key)) for group_key in grouper.result_index
     ]
 
 
@@ -96,8 +99,8 @@ def _group_indices_gruoped(_data: TibbleGrouped) -> List[int]:
     ret = {}
     for row in group_data(
         _data,
-        __ast_fallback="normal",
-        __backend="pandas",
+        __ast_fallback="normal",  # type: ignore
+        __backend="pandas",  # type: ignore
     ).itertuples():
         for index in row[-1]:
             ret[index] = row.Index
@@ -120,7 +123,11 @@ def _group_size_grouped(_data: TibbleGrouped) -> Sequence[int]:
     return list(
         map(
             len,
-            group_rows(_data, __ast_fallback="normal", __backend="pandas"),
+            group_rows(
+                _data,
+                __ast_fallback="normal",  # type: ignore
+                __backend="pandas",  # type: ignore
+            ),
         )
     )
 

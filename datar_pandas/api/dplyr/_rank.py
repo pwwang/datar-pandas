@@ -1,5 +1,6 @@
 from types import GeneratorType
 from functools import singledispatch
+from typing import cast
 
 import numpy as np
 
@@ -34,9 +35,7 @@ def _rank(
     out = data.rank(
         method=method,
         pct=percent,
-        na_option=(
-            "keep" if na_last == "keep" else "top" if not na_last else "bottom"
-        ),
+        na_option=("keep" if na_last == "keep" else "top" if not na_last else "bottom"),
     )
 
     return out if is_series else out.values
@@ -52,9 +51,7 @@ def _(
     out = data.rank(
         method=method,
         pct=percent,
-        na_option=(
-            "keep" if na_last == "keep" else "top" if not na_last else "bottom"
-        ),
+        na_option=("keep" if na_last == "keep" else "top" if not na_last else "bottom"),
     )
     return out
 
@@ -92,7 +89,7 @@ def _(x):
 def _(x):
     if x.ndim > 1:
         if x.shape[1] == 0:
-            return []
+            return np.array([], dtype=int)
         x = Series(np.arange(x.shape[0]), index=x.index)
     return _rank(x, na_last="keep", method="first")
 
@@ -158,7 +155,9 @@ def _ntile_ndarray(x, n):
 
     labels = out[~pd.isnull(out)].astype(int)
     categories = np.arange(labels.max()) + 1 if labels.size else []
-    return Categorical(labels if labels.size == out.size else out, categories=categories)
+    return Categorical(
+        labels if labels.size == out.size else out, categories=categories
+    )
 
 
 @_ntile.register(GroupBy)
@@ -172,12 +171,12 @@ def _percent_rank(x, na_last="keep"):
         dtype = getattr(x, "dtype", None)
         return np.array(x, dtype=dtype)
 
-    return _percent_rank(Series(x), na_last).values
+    return np.asarray(_percent_rank(Series(x), na_last))
 
 
 @_percent_rank.register(NDFrame)
 def _(x, na_last="keep"):
-    ranking = _rank(x, na_last, "min", True)
+    ranking = Series(_rank(x, na_last, "min", True), index=x.index)
     minrank = ranking.min()
     maxrank = ranking.max()
 
@@ -188,7 +187,7 @@ def _(x, na_last="keep"):
 
 @_percent_rank.register(GroupBy)
 def _(x, na_last="keep"):
-    ranking = _rank(x, na_last, "min", True).groupby(
+    ranking = cast(Series, _rank(x, na_last, "min", True)).groupby(
         get_grouper(x),
         observed=x.observed,
         sort=x.sort,
@@ -210,15 +209,15 @@ def _cume_dist(x, na_last="keep"):
         dtype = getattr(x, "dtype", None)
         return np.array(x, dtype=dtype)
 
-    return _cume_dist(Series(x), na_last).values
+    return np.asarray(_cume_dist(Series(x), na_last))
 
 
 @_cume_dist.register(NDFrame)
 def _(x, na_last="keep"):
-    ranking = _rank(x, na_last, "min")
+    ranking = Series(_rank(x, na_last, "min"), index=x.index)
     total = (~pd.isnull(ranking)).sum()
     ret = ranking.transform(lambda r: ranking.le(r).sum() / total)
-    ret[pd.isnull(ranking).values] = np.nan
+    ret[pd.isnull(ranking)] = np.nan
     return ret
 
 

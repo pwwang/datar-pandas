@@ -2,7 +2,8 @@
 
 See source https://github.com/tidyverse/dplyr/blob/master/R/select.R
 """
-from typing import Any, Iterable, Mapping, Sequence, Tuple, Union
+
+from typing import Any, Iterable, Mapping, Optional, Sequence, Tuple, Union
 
 from datar.core.utils import logger
 from datar.apis.dplyr import group_vars, select
@@ -10,7 +11,7 @@ from datar.apis.dplyr import group_vars, select
 from ...pandas import DataFrame, Index
 
 from ...contexts import Context
-from ...tibble import Tibble, TibbleGrouped
+from ...tibble import Tibble, TibbleGrouped, reconstruct_tibble
 from ...utils import vars_select
 from ...collections import Inverted
 from ...common import setdiff, union, intersect
@@ -20,15 +21,19 @@ from ...common import setdiff, union, intersect
 def _select(
     _data: DataFrame,
     *args: Union[str, Iterable, Inverted],
-    **kwargs: Mapping[str, str],
+    **kwargs: str,
 ) -> Tibble:
     all_columns = _data.columns
-    gvars = group_vars(_data, __ast_fallback="normal", __backend="pandas")
+    gvars = group_vars(
+        _data,
+        __ast_fallback="normal",  # type: ignore
+        __backend="pandas",  # type: ignore
+    )
     selected_idx, new_names = _eval_select(
         all_columns,
         *args,
-        **kwargs,
         _group_vars=gvars,
+        **kwargs,
     )
     out = _data.copy()
     # nested dfs?
@@ -38,20 +43,18 @@ def _select(
             isinstance(out, TibbleGrouped)
             and len(intersect(gvars, list(new_names))) > 0
         ):
-            out._datar["group_vars"] = [
-                new_names.get(gvar, gvar) for gvar in gvars
-            ]
+            out._datar["group_vars"] = [new_names.get(gvar, gvar) for gvar in gvars]
 
-    return out.iloc[:, selected_idx]
+    return reconstruct_tibble(out.iloc[:, list(selected_idx)], _data)
 
 
 def _eval_select(
     _all_columns: Index,
     *args: Any,
     _group_vars: Sequence[str],
-    _missing_gvars_inform: bool = True,
+    _missing_gvars_inform: Any = True,
     **kwargs: Any,
-) -> Tuple[Sequence[int], Mapping[str, str]]:
+) -> Tuple[Sequence[int], Optional[Mapping[str, str]]]:
     """Evaluate selections to get locations
 
     Returns:
@@ -69,7 +72,7 @@ def _eval_select(
             logger.info("Adding missing grouping variables: %s", missing)
 
     selected_idx = union(
-        _all_columns.get_indexer_for(_group_vars),
+        _all_columns.get_indexer_for(Index(_group_vars)),
         selected_idx,
     )
 

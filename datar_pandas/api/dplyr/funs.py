@@ -1,5 +1,7 @@
 """Functions from R-dplyr"""
+
 import numpy as np
+from typing import Literal, cast
 
 from datar.apis.dplyr import (
     between,
@@ -26,7 +28,11 @@ from ...tibble import Tibble
 
 @between.register(object, backend="pandas")
 def _between_obj(x, left, right, inclusive: str = "both"):
-    return Series(x).between(left, right, inclusive=inclusive)
+    return Series(x).between(
+        left,
+        right,
+        inclusive=cast(Literal["both", "neither", "left", "right"], inclusive),
+    )
 
 
 @func_bootstrap(between, kind="transform")
@@ -50,7 +56,7 @@ def _cummean(x: Series):
 
 @cumall.register(object, backend="pandas")
 def _cumall_obj(x, na_as: bool = False):
-    return Series(x, dtype=object).fillna(na_as).cumprod().astype(bool)
+    return Series(x).fillna(na_as).astype(bool).cumprod().astype(bool)
 
 
 @func_bootstrap(cumall, kind="transform")
@@ -71,9 +77,9 @@ def _cumany(x, na_as: bool = False):
 @coalesce.register(object, backend="pandas")
 def _coalesce_obj(x, *replace):
     df = Tibble.from_args(x, *replace)
-    x = df.iloc[:, 0]
+    x = cast(Series, df.iloc[:, 0])
     for col in df.columns[1:]:
-        x = x.combine_first(df[col])
+        x = x.combine_first(cast(Series, df[col]))
     return x
 
 
@@ -100,13 +106,11 @@ def _na_if_obj(x, y):
     x = make_array(x)
     y = make_array(y)
     if x.size < y.size:
-        raise ValueError(
-            f"`y` must be length {x.size} (same as `x`), not {y.size}."
-        )
+        raise ValueError(f"`y` must be length {x.size} (same as `x`), not {y.size}.")
 
     try:
         eqs = np.equal(x, y)
-    except np.core._exceptions.UFuncTypeError:  # pragma: no cover
+    except TypeError:  # pragma: no cover
         eqs = np.equal(x.astype(object), y.astype(object))
 
     if eqs.any():
@@ -135,7 +139,7 @@ def _near(a, b):
     return np.isclose(a, b)
 
 
-def _nth_(x, n, order_by=np.nan, default=np.nan, __args_raw=None):
+def _nth_(x, n, order_by=np.nan, default=np.nan, *, __args_raw=None):
     if not isinstance(n, int):
         raise TypeError("`nth` expects `n` to be an integer")
 
@@ -144,8 +148,7 @@ def _nth_(x, n, order_by=np.nan, default=np.nan, __args_raw=None):
     else:
         order_by_null = pd.isnull(__args_raw["order_by"])
 
-    if is_scalar(order_by_null):
-        order_by_null = np.array([order_by_null], dtype=bool)
+    order_by_null = np.asarray(order_by_null, dtype=bool)
 
     if not order_by_null.all():
         x = x.iloc[as_series(order_by).argsort().values]
@@ -157,7 +160,7 @@ def _nth_(x, n, order_by=np.nan, default=np.nan, __args_raw=None):
 
 
 @nth.register(object, backend="pandas")
-def _nth_obj(x, n, order_by=np.nan, default=np.nan, __args_raw=None):
+def _nth_obj(x, n, order_by=np.nan, default=np.nan, *, __args_raw=None):
     return _nth_(
         as_series(x),
         n,
@@ -168,7 +171,7 @@ def _nth_obj(x, n, order_by=np.nan, default=np.nan, __args_raw=None):
 
 
 @func_bootstrap(nth, exclude={"n", "default"})
-def _nth(x, n, order_by=np.nan, default=np.nan, __args_raw=None):
+def _nth(x, n, order_by=np.nan, default=np.nan, *, __args_raw=None):
     return _nth_(
         x,
         n,
@@ -179,7 +182,7 @@ def _nth(x, n, order_by=np.nan, default=np.nan, __args_raw=None):
 
 
 @first.register(object, backend="pandas")
-def _first_obj(x, order_by=np.nan, default=np.nan, __args_raw=None):
+def _first_obj(x, order_by=np.nan, default=np.nan, *, __args_raw=None):
     return _nth_(
         as_series(x),
         0,
@@ -194,6 +197,7 @@ def _first(
     x,
     order_by=np.nan,
     default=np.nan,
+    *,
     __args_raw=None,
 ):
     """Get the first element of x"""
@@ -207,7 +211,7 @@ def _first(
 
 
 @last.register(object, backend="pandas")
-def _last_obj(x, order_by=np.nan, default=np.nan, __args_raw=None):
+def _last_obj(x, order_by=np.nan, default=np.nan, *, __args_raw=None):
     return _nth_(
         as_series(x),
         -1,
@@ -222,6 +226,7 @@ def _last(
     x,
     order_by=np.nan,
     default=np.nan,
+    *,
     __args_raw=None,
 ):
     """Get the last element of x"""

@@ -84,12 +84,7 @@ def test_handles_scalar_results():
     df1 = mtcars >> filter(min(f.mpg) > 0)
     assert df1.equals(mtcars)
 
-    df2 = (
-        mtcars
-        >> group_by(f.cyl)
-        >> filter(min(f.mpg) > 0)
-        >> arrange(f.cyl, f.mpg)
-    )
+    df2 = mtcars >> group_by(f.cyl) >> filter(min(f.mpg) > 0) >> arrange(f.cyl, f.mpg)
     # See TibbleGrouped's Known issues
     df3 = mtcars >> group_by(f.cyl) >> arrange(f.cyl, f.mpg)
     assert_frame_equal(df2, df3)
@@ -213,9 +208,9 @@ def test_filter_false_handles_indices(caplog):
 
 
 def test_handles_tuple_columns():
-    res = tibble(
-        a=[1, 2], x=[tuple(range(1, 11)), tuple(range(1, 6))]
-    ) >> filter(f.a == 1)
+    res = tibble(a=[1, 2], x=[tuple(range(1, 11)), tuple(range(1, 6))]) >> filter(
+        f.a == 1
+    )
     assert res.x.tolist() == [tuple(range(1, 11))]
 
     res = (
@@ -233,13 +228,7 @@ def test_row_number_no_warning(caplog):
 
 def test_preserve_order_across_groups():
     df = tibble(g=c(1, 2, 1, 2, 1), time=[5, 4, 3, 2, 1], x=f.time)
-    res1 = (
-        df
-        >> group_by(f.g)
-        >> filter(f.x <= 4)
-        >> ungroup()
-        >> arrange(f.g, f.time)
-    )
+    res1 = df >> group_by(f.g) >> filter(f.x <= 4) >> ungroup() >> arrange(f.g, f.time)
 
     res2 = (
         df
@@ -250,13 +239,7 @@ def test_preserve_order_across_groups():
         >> arrange(f.g, f.time)
     )
 
-    res3 = (
-        df
-        >> filter(f.x <= 4)
-        >> group_by(f.g)
-        >> ungroup()
-        >> arrange(f.g, f.time)
-    )
+    res3 = df >> filter(f.x <= 4) >> group_by(f.g) >> ungroup() >> arrange(f.g, f.time)
     res1.reset_index(drop=True, inplace=True)
     res2.reset_index(drop=True, inplace=True)
     res3.reset_index(drop=True, inplace=True)

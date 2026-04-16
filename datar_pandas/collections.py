@@ -1,4 +1,9 @@
 """Provide Collection and related classes to mimic `c` from `r-base`"""
+
+# pyright: reportGeneralTypeIssues=false, reportAttributeAccessIssue=false
+# pyright: reportArgumentType=false, reportReturnType=false
+# pyright: reportOperatorIssue=false, reportIncompatibleMethodOverride=false
+
 from __future__ import annotations
 
 from abc import ABC, abstractmethod
@@ -80,9 +85,7 @@ class Collection(CollectionBase, list):
 
         if pool is not None:
             elems = [
-                elem
-                for elem in self.elems
-                if not is_scalar(elem) or not is_null(elem)
+                elem for elem in self.elems if not is_scalar(elem) or not is_null(elem)
             ]
         else:
             elems = self.elems  # type: ignore
@@ -104,8 +107,7 @@ class Collection(CollectionBase, list):
 
         if any(inverts):
             raise ValueError(
-                "Cannot mix Inverted and non-Inverted elements "
-                "in a collection."
+                "Cannot mix Inverted and non-Inverted elements in a collection."
             )
 
         expanded = []
@@ -196,7 +198,7 @@ class Negated(Collection):
     def __repr__(self) -> str:
         return f"Negated({self.elems})"
 
-    def expand(self, pool: int | Iterable = None) -> None:
+    def expand(self, pool: int | Iterable = None) -> "CollectionBase":
         """Expand the object"""
         super().expand(pool)
         # self is now 0-based indexes
@@ -224,7 +226,7 @@ class Inverted(Collection):
     def __repr__(self) -> str:
         return f"Inverted({self.elems})"
 
-    def expand(self, pool: int | Iterable = None) -> None:
+    def expand(self, pool: int | Iterable = None) -> "CollectionBase":
         """Expand the object"""
         if pool is None:
             raise ValueError("Inverted object needs `pool` to expand.")
@@ -251,7 +253,7 @@ class Intersect(Collection):
     def __repr__(self) -> str:
         return f"Intersect({self.elems})"
 
-    def expand(self, pool: int | Iterable = None) -> None:
+    def expand(self, pool: int | Iterable = None) -> "CollectionBase":
         """Expand the object"""
         left = Collection(self.elems[0], pool=pool)
         right = frozenset(Collection(self.elems[1], pool=pool))
@@ -270,16 +272,14 @@ class Slice(Collection):
 
     def __init__(self, *args: Any, pool: int | Iterable = None) -> None:
         if len(args) != 1 or not isinstance(args[0], slice):
-            raise ValueError(
-                "Slice should wrap one and only one slice object."
-            )
+            raise ValueError("Slice should wrap one and only one slice object.")
         self.slc = args[0]
         super().__init__(*args, pool=pool)
 
     def __repr__(self) -> str:
         return f"Slice({self.elems})"
 
-    def expand(self, pool: int | Iterable = None) -> None:
+    def expand(self, pool: int | Iterable = None) -> "CollectionBase":
         if pool is not None:
             self.pool = pool
         else:

@@ -36,9 +36,7 @@ from ..conftest import assert_iterable_equal, assert_factor_equal
 def test_new_levels_are_padded_numerics():
     f1 = factor(letters[:10])
     f2 = fct_anon(f1)
-    assert_iterable_equal(
-        levels(f2), [str(i).rjust(2, "0") for i in range(10)]
-    )
+    assert_iterable_equal(levels(f2), [str(i).rjust(2, "0") for i in range(10)])
 
 
 def test_prefix_added_to_start_of_level():
@@ -74,18 +72,14 @@ def test_can_collapse_unnamed_levels_to_other():
     f1 = factor(letters[:3])
     f2 = fct_collapse(f1, xy=c("a", "b"), other_level="Other")
 
-    assert_factor_equal(
-        f2, factor(c("xy", "xy", "Other"), levels=c("xy", "Other"))
-    )
+    assert_factor_equal(f2, factor(c("xy", "xy", "Other"), levels=c("xy", "Other")))
 
 
 def test_collapses_lvls_when_groupotherTRUE_but_noother_vars_to_group():
     f1 = factor(letters[:4])
     f2 = fct_collapse(f1, x1=c("a", "b", "d"), x2="c", other_level="Other")
 
-    assert_factor_equal(
-        f2, factor(c("x1", "x1", "x2", "x1"), levels=c("x1", "x2"))
-    )
+    assert_factor_equal(f2, factor(c("x1", "x1", "x2", "x1"), levels=c("x1", "x2")))
 
 
 def test_collapses_lvls_when_groupotherTRUE_and_someother_vars_to_group():
@@ -223,16 +217,12 @@ def test_values_are_correctly_weighted():
     )
 
     assert_iterable_equal(levels(fct_lump(f, w=w)), levels(fct_lump(f2)))
-    assert_iterable_equal(
-        levels(fct_lump(f, n=1, w=w)), levels(fct_lump(f2, n=1))
-    )
+    assert_iterable_equal(levels(fct_lump(f, n=1, w=w)), levels(fct_lump(f2, n=1)))
     assert_iterable_equal(
         levels(fct_lump(f, n=-2, w=w, ties_method="min")),
         levels(fct_lump(f2, n=-2, ties_method="min")),
     )
-    assert_iterable_equal(
-        levels(fct_lump(f, n=99, w=w)), levels(fct_lump(f2, n=99))
-    )
+    assert_iterable_equal(levels(fct_lump(f, n=99, w=w)), levels(fct_lump(f2, n=99)))
     assert_iterable_equal(
         levels(fct_lump(f, prop=0.01, w=w)), levels(fct_lump(f2, prop=0.01))
     )
@@ -292,21 +282,15 @@ def test_fct_lump_prop_works_when_not_weighted():
     f = c("a", "a", "a", "b", "b", "c", "d", "e", "f", "g")
 
     assert_iterable_equal(levels(fct_lump_prop(f, prop=0.2)), c("a", "Other"))
-    assert_iterable_equal(
-        levels(fct_lump_prop(f, prop=0.1)), c("a", "b", "Other")
-    )
+    assert_iterable_equal(levels(fct_lump_prop(f, prop=0.1)), c("a", "b", "Other"))
 
 
 def test_fct_lump_prop_works_when_weighted():
     f = c("a", "b", "c", "d", "e")
     w = c(0.2, 2, 6, 4, 1)
 
-    assert_iterable_equal(
-        levels(fct_lump_prop(f, prop=0.3, w=w)), c("c", "d", "Other")
-    )
-    assert_iterable_equal(
-        levels(fct_lump_prop(f, prop=0.2, w=w)), c("c", "d", "Other")
-    )
+    assert_iterable_equal(levels(fct_lump_prop(f, prop=0.3, w=w)), c("c", "d", "Other"))
+    assert_iterable_equal(levels(fct_lump_prop(f, prop=0.2, w=w)), c("c", "d", "Other"))
 
 
 # Default -----------------------------------------------------------------
@@ -414,7 +398,7 @@ def test_error_if_not_function():
 
 def test_error_if_level_not_character():
     f1 = factor("a")
-    with pytest.raises(TypeError, match="no len"):
+    with pytest.raises(TypeError, match="no len|not iterable"):
         fct_relabel(f1, lambda x: 1)
 
 
@@ -428,17 +412,13 @@ def test_total_collapse():
     f1 = factor(letters)
     new_levels = lambda x: rep("1", length(x))
 
-    assert_factor_equal(
-        fct_relabel(f1, new_levels), factor(new_levels(letters))
-    )
+    assert_factor_equal(fct_relabel(f1, new_levels), factor(new_levels(letters)))
 
 
 def test_additional_arguments():
     f1 = factor(letters)
 
-    assert_factor_equal(
-        fct_relabel(f1, paste0, "."), factor(paste0(letters, "."))
-    )
+    assert_factor_equal(fct_relabel(f1, paste0, "."), factor(paste0(letters, ".")))
 
 
 def test_formulas_are_coerced_to_functions():
@@ -450,6 +430,4 @@ def test_formulas_are_coerced_to_functions():
 
 
 def test_string_input_is_coerced_to_a_factor():
-    assert_factor_equal(
-        fct_relabel(LETTERS[:2], _fun=lambda x: x), factor(LETTERS[:2])
-    )
+    assert_factor_equal(fct_relabel(LETTERS[:2], _fun=lambda x: x), factor(LETTERS[:2]))

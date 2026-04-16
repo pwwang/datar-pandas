@@ -124,16 +124,12 @@ def test_names_glue_affects_output_names():
         names_glue="count_{resourcetype}",
         values_from=f.count,
     )
-    assert_iterable_equal(
-        out.columns, ["project", "count_C", "count_I", "count_O"]
-    )
+    assert_iterable_equal(out.columns, ["project", "count_C", "count_I", "count_O"])
 
 
 def test_can_sort_column_names():
     df = tibble(int=[1, 3, 2], fac=factor(list("abc"), levels=list("acb")))
-    out = pivot_wider(
-        df, names_from=f.fac, values_from=f.int, names_sort=False
-    )
+    out = pivot_wider(df, names_from=f.fac, values_from=f.int, names_sort=False)
     assert out.columns.tolist() == list("acb")
     out = pivot_wider(df, names_from=f.fac, values_from=f.int, names_sort=True)
     assert out.columns.tolist() == list("abc")
@@ -161,13 +157,12 @@ def test_can_override_default_keys():
         "age",
         20,
     )
-    pv = df >> pivot_wider(
-        id_cols=f.name, names_from=f.var, values_from=f.value
-    )
+    pv = df >> pivot_wider(id_cols=f.name, names_from=f.var, values_from=f.value)
     assert_equal(nrow(pv), 2)
 
 
 # non-unqiue keys ---------------------------------------------------------
+
 
 # instead of list-columns
 def test_duplicated_keys_aggregated_by_values_fn():
@@ -217,8 +212,8 @@ def test_values_fn_to_be_a_single_func():
 
 def test_can_fill_in_missing_cells():
     df = tibble(g=c(1, 2), var=c("x", "y"), val=c(1, 2))
-    widen = lambda **kwargs: df >> pivot_wider(
-        names_from=f.var, values_from=f.val, **kwargs
+    widen = lambda **kwargs: (
+        df >> pivot_wider(names_from=f.var, values_from=f.val, **kwargs)
     )
 
     assert_iterable_equal(widen().x, [1, NA])
@@ -228,9 +223,7 @@ def test_can_fill_in_missing_cells():
 
 def test_values_fill_only_affects_missing_cells():
     df = tibble(g=c(1, 2), names=c("x", "y"), value=c(1, NA))
-    out = pivot_wider(
-        df, names_from=f.names, values_from=f.value, values_fill=0
-    )
+    out = pivot_wider(df, names_from=f.names, values_from=f.value, values_fill=0)
     assert_iterable_equal(out.y, [0, NA])
 
 

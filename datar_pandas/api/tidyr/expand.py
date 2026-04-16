@@ -3,7 +3,7 @@
 https://github.com/tidyverse/tidyr/blob/HEAD/R/expand.R
 """
 
-from typing import Any, Callable, Iterable, Mapping, Union
+from typing import Any, Callable, Iterable, Mapping, Union, cast
 
 import numpy as np
 
@@ -14,13 +14,16 @@ from ... import pandas as pd
 from ...pandas import DataFrame, Series, Categorical
 from ...common import is_scalar, unique
 from ...contexts import Context
-from ...utils import DEFAULT_COLUMN_PREFIX
+from ...utils import DEFAULT_COLUMN_PREFIX, meta_kwargs
 from ...tibble import Tibble, TibbleGrouped, TibbleRowwise, reconstruct_tibble
 from ..base.factor import factor, levels
 from ..dplyr.arrange import arrange
 from ..dplyr.distinct import distinct
 from ..dplyr.pull import pull
 from ..dplyr.group_by import ungroup
+
+
+meta_pd = cast(Any, meta_kwargs)
 
 
 @expand_grid.register(object, backend="pandas")
@@ -71,8 +74,7 @@ def _expand_grid(
         each = dict(zip(dots, each.astype(int)))
         times = dict(zip(dots, times.astype(int)))
         out = {
-            key: _vec_repeat(val, each[key], times[key])
-            for key, val in dots.items()
+            key: _vec_repeat(val, each[key], times[key]) for key, val in dots.items()
         }
 
     # # tibble will somehow flatten the nested dataframes into fake nested df.
@@ -130,7 +132,7 @@ def _expand_grouped(
     *args: Union[Series, DataFrame],
     _name_repair: Union[str, Callable] = "check_unique",
     **kwargs: Union[Series, DataFrame],
-) -> TibbleGrouped:
+) -> DataFrame:
     """Expand on grouped data frame"""
 
     def apply_func(df):
@@ -139,8 +141,7 @@ def _expand_grouped(
             *args,
             **kwargs,
             _name_repair=_name_repair,
-            __ast_fallback="normal",
-            __backend="pandas",
+            **meta_pd,
         )
 
     out = data._datar["grouped"].apply(apply_func).droplevel(-1).reset_index()
@@ -156,12 +157,11 @@ def _expand_rowwise(
 ) -> DataFrame:
     """Expand on rowwise dataframe"""
     return expand(
-        ungroup(data, __ast_fallback="normal", __backend="pandas"),
+        ungroup(data, **meta_pd),
         *args,
         **kwargs,
         _name_repair=_name_repair,
-        __ast_fallback="normal",
-        __backend="pandas",
+        **meta_pd,
     )
 
 
@@ -198,7 +198,15 @@ def _nesting(
     """
     cols = _dots_cols(*args, **kwargs)
     named = cols.pop("__named__")
-    out = _sorted_unique(Tibble.from_args(**cols, _name_repair=_name_repair))
+    out = cast(
+        DataFrame,
+        _sorted_unique(
+            Tibble.from_args(
+                **cols,
+                _name_repair=_name_repair,  # type: ignore[arg-type]
+            )
+        ),
+    )
     return _flatten_nested(out, named, _name_repair)
 
 
@@ -246,9 +254,9 @@ def _crossing(
 # Helpers --------------------------------
 def _dots_cols(
     *args: Iterable[Any], **kwargs: Iterable[Any]
-) -> Mapping[str, Iterable[Any]]:
+) -> dict[str, Any]:
     """Mimic tidyr:::dots_cols to clean up the dot (args, kwargs) arugments"""
-    out = {"__named__": {}}
+    out: dict[str, Any] = {"__named__": {}}
     for i, arg in enumerate(args):
         if arg is None:
             continue
@@ -272,17 +280,14 @@ def _dots_cols(
 
 
 def _vec_repeat(
-    vec: Iterable[Any], each: Iterable[int], times: Iterable[int]
+    vec: Iterable[Any], each: int, times: int
 ) -> Iterable[Any]:
     """Repeat a vector or a dataframe by rows"""
     if isinstance(vec, DataFrame):
         indexes = _vec_repeat(vec.index, each=each, times=times)
-        return vec.loc[indexes, :].reset_index(drop=True)
+        return vec.loc[list(indexes), :].reset_index(drop=True)
 
-    if (
-        pd.is_categorical_dtype(vec)
-        and isinstance(vec, Series)
-    ):  # pragma: no cover
+    if pd.is_categorical_dtype(vec) and isinstance(vec, Series):  # pragma: no cover
         vec = vec.values
 
     # np.repeat() turn [np.nan, 'A'] to ['nan', 'A']
@@ -291,15 +296,14 @@ def _vec_repeat(
         pd.isnull(elem) for elem in vec
     ):
         vec_to_rep = np.array(vec, dtype=object)
-    out = np.tile(np.repeat(vec_to_rep, each), times)
+    out = np.tile(np.repeat(np.asarray(vec_to_rep), each), times)
     if pd.is_categorical_dtype(vec):
         return factor(
             out,
             levels=levels(vec),
-            ordered=vec.ordered,
-            __ast_fallback="normal",
-            __backend="pandas",
-        )
+            ordered=bool(getattr(vec, "ordered", False)),
+            **meta_pd,
+        )  # type: ignore[arg-type]
     return out
 
 
@@ -316,23 +320,21 @@ def _flatten_nested(
             name: pull(
                 x,
                 name,
-                __ast_fallback="normal",
-                __backend="pandas",
+                **meta_pd,
             )
             for name in named
         }
 
     to_flatten = {
-        key: isinstance(val, DataFrame) and not named[key]
-        for key, val in x.items()
+        key: isinstance(val, DataFrame) and not named[key] for key, val in x.items()
     }
     out = _flatten_at(x, to_flatten)
-    return Tibble.from_args(**out, _name_repair=name_repair)
+    return Tibble.from_args(**out, _name_repair=name_repair)  # type: ignore[arg-type]
 
 
 def _flatten_at(
-    x: Mapping[str, Iterable[Any]], to_flatten: Mapping[str, bool]
-) -> Mapping[str, Iterable[Any]]:
+    x: Mapping[str, Any], to_flatten: Mapping[str, bool]
+) -> Mapping[str, Any]:
     """Flatten data at `to_flatten`"""
     if not any(to_flatten.values()):
         return x
@@ -361,10 +363,9 @@ def _sorted_unique(x: Iterable[Any]) -> Union[Categorical, np.ndarray]:
             lvls,
             levels=lvls,
             exclude=None,
-            ordered=x.ordered,
-            __ast_fallback="normal",
-            __backend="pandas",
-        )
+            ordered=bool(getattr(x, "ordered", False)),
+            **meta_pd,
+        )  # type: ignore[arg-type]
 
     # don't sort on bare list?
     # if isinstance(x, list):
@@ -372,9 +373,8 @@ def _sorted_unique(x: Iterable[Any]) -> Union[Categorical, np.ndarray]:
 
     if isinstance(x, DataFrame):
         return arrange(
-            distinct(x, __ast_fallback="normal", __backend="pandas"),
-            __ast_fallback="normal",
-            __backend="pandas",
+            distinct(x, **meta_pd),
+            **meta_pd,
         )
 
     # return np.sort(np.unique(x))

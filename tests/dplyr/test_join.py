@@ -58,9 +58,7 @@ def test_by_empty_generates_cross():
     df1 = tibble(x=[1, 2])
     df2 = tibble(y=[1, 2])
 
-    out = left_join(
-        df1, df2, by=[]
-    )  # by=None, will try to find common columns
+    out = left_join(df1, df2, by=[])  # by=None, will try to find common columns
 
     assert out.x.tolist() == [1, 1, 2, 2]
     assert out.y.tolist() == [1, 2, 1, 2]

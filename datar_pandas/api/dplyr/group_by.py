@@ -1,8 +1,9 @@
 """Group by verbs and functions
 See source https://github.com/tidyverse/dplyr/blob/master/R/group-by.r
 """
+from __future__ import annotations
 
-from typing import Any, Union
+from typing import Any, Optional, Tuple, Union, cast
 
 from datar.core.names import NameNonUniqueError
 from datar.apis.dplyr import (
@@ -27,11 +28,11 @@ def _group_by(
     _data: DataFrame,
     *args: Any,
     _add: bool = False,  # not working, since _data is not grouped
-    _drop: bool = None,
+    _drop: Optional[bool] = None,
     _sort: bool = False,
     _dropna: bool = False,
     **kwargs: Any,
-) -> TibbleGrouped:
+) -> Union[Tibble, TibbleGrouped]:
 
     if _drop is None:
         _drop = group_by_drop_default(_data)
@@ -48,16 +49,21 @@ def _group_by(
     _data = mutate(
         _data,
         *args,
-        __ast_fallback="normal",
-        __backend="pandas",
+        __ast_fallback="normal",  # type: ignore
+        __backend="pandas",  # type: ignore
         **kwargs,
     )
     _data.reset_index(drop=True, inplace=True)
     new_cols = _data._datar["mutated_cols"]
     if len(new_cols) == 0:
-        return _data
+        return Tibble(_data, copy=False)
 
-    return _data.group_by(new_cols, drop=_drop, sort=_sort, dropna=_dropna)
+    return Tibble(_data, copy=False).group_by(
+        new_cols,
+        drop=_drop,
+        sort=_sort,
+        dropna=_dropna,
+    )
 
 
 @group_by.register(TibbleGrouped, context=Context.PENDING, backend="pandas")
@@ -65,14 +71,13 @@ def _group_by_grouped(
     _data: TibbleGrouped,
     *args: Any,
     _add: bool = False,
-    _drop: bool = None,
+    _drop: Optional[bool] = None,
     _sort: bool = False,
     _dropna: bool = False,
     **kwargs: Any,
 ) -> TibbleGrouped:
-    if (
-        any([isinstance(arg, Grouper) for arg in args])
-        or any([isinstance(v, Grouper) for v in kwargs.values()])
+    if any([isinstance(arg, Grouper) for arg in args]) or any(
+        [isinstance(v, Grouper) for v in kwargs.values()]
     ):
         raise ValueError("Can't use `pandas.Grouper` when the data is already grouped.")
 
@@ -82,24 +87,32 @@ def _group_by_grouped(
     _data = mutate(
         _data,
         *args,
-        __ast_fallback="normal",
-        __backend="pandas",
+        __ast_fallback="normal",  # type: ignore
+        __backend="pandas",  # type: ignore
         **kwargs,
     )
     new_cols = _data._datar["mutated_cols"]
-    gvars = union(
-        group_vars(_data, __ast_fallback="normal", __backend="pandas"),
-        new_cols,
-    ) if _add else new_cols
+    gvars = (
+        union(
+            group_vars(
+                _data,
+                __ast_fallback="normal",  # type: ignore
+                __backend="pandas",  # type: ignore
+            ),
+            new_cols,
+        )
+        if _add
+        else new_cols
+    )
 
     return group_by(
         Tibble(_data, copy=False),
         *gvars,
         _drop=_drop,
-        _sort=_sort,
-        _dropna=_dropna,
-        __ast_fallback="normal",
-        __backend="pandas",
+        _sort=_sort,  # type: ignore
+        _dropna=_dropna,  # type: ignore
+        __ast_fallback="normal",  # type: ignore
+        __backend="pandas",  # type: ignore
     )
 
 
@@ -109,15 +122,13 @@ def _rowwise(
     *cols: Union[str, int],
 ) -> TibbleRowwise:
     if not _data.columns.is_unique:
-        raise NameNonUniqueError(
-            "Cann't rowwise a data frame with duplicated names."
-        )
+        raise NameNonUniqueError("Cann't rowwise a data frame with duplicated names.")
     idxes = vars_select(_data.columns, *cols)
     gvars = _data.columns[idxes]
     return as_tibble(
         _data.reset_index(drop=True),
-        __ast_fallback="normal",
-        __backend="pandas",
+        __ast_fallback="normal",  # type: ignore
+        __backend="pandas",  # type: ignore
     ).rowwise(gvars)
 
 
@@ -133,12 +144,12 @@ def _rowwise_grouped(
             "Either first `ungroup()` or call `rowwise()` without arguments."
         )
 
-    cols = _data.group_vars
+    cols = tuple(cast(Tuple[Union[str, int], ...], _data.group_vars))
     return rowwise(
         _data._datar["grouped"].obj,
         *cols,
-        __ast_fallback="normal",
-        __backend="pandas",
+        __ast_fallback="normal",  # type: ignore
+        __backend="pandas",  # type: ignore
     )
 
 
@@ -171,15 +182,19 @@ def _ungroup_grouped(
     if not cols:
         return Tibble(obj)
 
-    old_groups = group_vars(x, __ast_fallback="normal", __backend="pandas")
+    old_groups = group_vars(
+        x,
+        __ast_fallback="normal",  # type: ignore
+        __backend="pandas",  # type: ignore
+    )
     to_remove = vars_select(obj.columns, *cols)
     new_groups = setdiff(old_groups, obj.columns[to_remove])
 
     return group_by(
         obj,
         *new_groups,
-        __ast_fallback="normal",
-        __backend="pandas",
+        __ast_fallback="normal",  # type: ignore
+        __backend="pandas",  # type: ignore
     )
 
 

@@ -16,7 +16,7 @@ from datar.base import (
     rownames,
     seq,
     seq_along,
-    seq_len
+    seq_len,
 )
 from datar.core.names import NameNonUniqueError
 from datar.data import iris, mtcars
@@ -31,7 +31,7 @@ from datar.tibble import (
     remove_rownames,
     rowid_to_column,
     rownames_to_column,
-    tibble
+    tibble,
 )
 
 from datar_pandas import pandas as pd
@@ -156,12 +156,8 @@ def test_can_add_multiple_rows():
 def test_can_recycle_when_adding_rows():
     iris_new = add_row(iris, Sepal_Length=[-1, -2], Species="unknown")
     assert nrow(iris_new) == nrow(iris) + 2
-    assert_iterable_equal(
-        iris_new.Sepal_Length, iris.Sepal_Length.tolist() + [-1, -2]
-    )
-    assert_iterable_equal(
-        iris_new.Species, iris.Species.tolist() + ["unknown"] * 2
-    )
+    assert_iterable_equal(iris_new.Sepal_Length, iris.Sepal_Length.tolist() + [-1, -2])
+    assert_iterable_equal(iris_new.Species, iris.Species.tolist() + ["unknown"] * 2)
 
 
 def test_can_add_as_first_row_via_before_1():
@@ -219,9 +215,7 @@ def test_error_if_both_before_and_after_are_given():
 def test_missing_row_names_stay_missing_when_adding_row():
     assert not has_rownames(iris)
     assert not has_rownames(iris >> add_row(Species="unknown", _after=0))
-    assert not has_rownames(
-        iris >> add_row(Species="unknown", _after=nrow(iris))
-    )
+    assert not has_rownames(iris >> add_row(Species="unknown", _after=nrow(iris)))
     assert not has_rownames(iris >> add_row(Species="unknown", _after=9))
 
 
@@ -352,8 +346,7 @@ def test_can_recycle_for_0row_df():
     df = tibble(a=[1.0, 2, 3]).iloc[[], :]
     df_new = add_column(df, b=4.0, c=[])
     assert_frame_equal(
-        df_new,
-        tibble(a=[], b=[], c=[], _dtypes={'a': float, 'b': float, 'c': object})
+        df_new, tibble(a=[], b=[], c=[], _dtypes={"a": float, "b": float, "c": object})
     )
 
 
@@ -408,12 +401,8 @@ def test_error_if_column_named_by_before_or_after_not_found():
 def test_missing_row_names_stay_missing_when_adding_column():
     assert_not(has_rownames(iris))
     assert_not(has_rownames(iris >> add_column(x=seq(1, 150), _after=0)))
-    assert_not(
-        has_rownames(iris >> add_column(x=seq(1, 150), _after=ncol(iris) - 1))
-    )
-    assert_not(
-        has_rownames(iris >> add_column(x=seq(1, 150), _before=1))
-    )
+    assert_not(has_rownames(iris >> add_column(x=seq(1, 150), _after=ncol(iris) - 1)))
+    assert_not(has_rownames(iris >> add_column(x=seq(1, 150), _before=1)))
 
 
 def test_errors_of_add_row_and_add_column():
@@ -433,9 +422,7 @@ def test_errors_of_add_row_and_add_column():
     with pytest.raises(NameNonUniqueError):
         add_column(tibble(a=1, b=2), a=1, b=2)
     with pytest.raises(NameNonUniqueError):
-        add_column(
-            tibble(**dict(zip(letters, letters))), a=1
-        )
+        add_column(tibble(**dict(zip(letters, letters))), a=1)
     with pytest.raises(ValueError):
         add_column(tibble(a=[2, 3]), b=[4, 5, 6])
     with pytest.raises(ValueError):

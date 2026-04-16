@@ -9,7 +9,10 @@ from datar.apis.dplyr import recode, recode_factor
 
 from ... import pandas as pd
 from ...pandas import (
-    Categorical, Series, is_categorical_dtype, is_numeric_dtype,
+    Categorical,
+    Series,
+    is_categorical_dtype,
+    is_numeric_dtype,
 )
 from ...common import is_scalar, intersect, unique
 from ...factory import func_bootstrap
@@ -66,13 +69,9 @@ def _check_type(val, out_type, name):
 
     if val.dtype is np.dtype(object):
         if out_type and not all(isinstance(elem, out_type) for elem in val):
-            raise TypeError(
-                f"{name} must be {out_type.__name__}, not {type(val[0])}."
-            )
+            raise TypeError(f"{name} must be {out_type.__name__}, not {type(val[0])}.")
     elif out_type and not isinstance(_get_first(val), out_type):
-        raise TypeError(
-            f"{name} must be {out_type.__name__}, not {val.dtype.name}."
-        )
+        raise TypeError(f"{name} must be {out_type.__name__}, not {val.dtype.name}.")
 
 
 def _replace_with(
@@ -116,9 +115,7 @@ def _validate_recode_default(
 ):
     """Validate default for recoding"""
     default = _recode_default(x, default, out_type)
-    if default is None and sum(replaced & ~pd.isnull(x)) < len(
-        out[~pd.isnull(x)]
-    ):
+    if default is None and sum(replaced & ~pd.isnull(x)) < len(out[~pd.isnull(x)]):
         logger.warning(
             "Unreplaced values treated as NA as `_x` is not compatible. "
             "Please specify replacements exhaustively or supply `_default`",
@@ -129,9 +126,7 @@ def _validate_recode_default(
 
 def _recode_default(x, default, out_type):
     """Get right default for recoding"""
-    if default is None and (
-        out_type is None or isinstance(_get_first(x), out_type)
-    ):
+    if default is None and (out_type is None or isinstance(_get_first(x), out_type)):
         return x
     return default
 
@@ -147,9 +142,7 @@ def _recode_numeric(
     values = _args_to_recodings(*args, **kwargs, _force_index=True)
     _check_args(values, _default, _missing)
     if any(not isinstance(val, int) for val in values):
-        raise ValueError(
-            "All values must be unnamed (or named with integers)."
-        )
+        raise ValueError("All values must be unnamed (or named with integers).")
 
     n = len(_x)
     out = np.array([np.nan] * n, dtype=object)
@@ -159,9 +152,7 @@ def _recode_numeric(
     for val in values:
         if out_type is None:
             out_type = type(values[val])
-        out = _replace_with(
-            out, out_type, _x == val, values[val], f"Element {val}"
-        )
+        out = _replace_with(out, out_type, _x == val, values[val], f"Element {val}")
         replaced[_x == val] = True
 
     _default = _validate_recode_default(_default, _x, out, out_type, replaced)
@@ -317,9 +308,7 @@ def _recode(
             _x, *args, _default=_default, _missing=_missing, **kwargs
         )
 
-    return _recode_character(
-        _x, *args, _default=_default, _missing=_missing, **kwargs
-    )
+    return _recode_character(_x, *args, _default=_default, _missing=_missing, **kwargs)
 
 
 @recode_factor.register(object, backend="pandas")

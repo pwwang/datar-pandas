@@ -1,5 +1,6 @@
 """Provides forcats verbs to manipulate factor level values"""
-from typing import Any, Callable, Iterable, List, Mapping
+
+from typing import Any, Callable, Iterable, Mapping, Optional, cast
 
 import numpy as np
 from datar.core.utils import logger
@@ -33,6 +34,9 @@ from ..dplyr.if_else import if_else
 from .utils import check_factor, ForcatsRegType
 
 
+meta_np = cast(Any, {"__ast_fallback": "normal", "__backend": "numpy"})
+
+
 @fct_anon.register(ForcatsRegType, context=Context.EVAL, backend="pandas")
 def _fct_anon(
     _f,
@@ -53,12 +57,11 @@ def _fct_anon(
     lvls = paste0(
         prefix,
         [str(i).rjust(ndigits, "0") for i in range(nlvls)],
-        __backend="numpy",
-        __ast_fallback="normal",
+        **meta_np,
     )
     _f = lvls_revalue(
         _f,
-        sample(lvls, __backend="numpy", __ast_fallback="normal"),
+        sample(lvls, **meta_np),
         **meta_kwargs,
     )
     return lvls_reorder(
@@ -66,10 +69,8 @@ def _fct_anon(
         match(
             lvls,
             levels(_f, **meta_kwargs),
-            __backend="numpy",
-            __ast_fallback="normal",
+            **meta_np,
         ),
-        **meta_kwargs,
     )
 
 
@@ -132,14 +133,14 @@ def _fct_recode(
     if unknown:
         logger.warning("[fct_recode] Unknown levels in `_f`: %s", unknown)
 
-    return recode_factor(_f, for_recode, **meta_kwargs).values
+    return recode_factor(_f, for_recode).values
 
 
 @fct_collapse.register(ForcatsRegType, context=Context.EVAL, backend="pandas")
 def _fct_collapse(
     _f,
     other_level: Any = None,
-    **kwargs: List,
+    **kwargs: Any,
 ) -> Categorical:
     """Collapse factor levels into manually defined groups
 
@@ -159,7 +160,7 @@ def _fct_collapse(
 
     if other_level is not None:
         lvls = levels(_f, **meta_kwargs)
-        kwargs[other_level] = set(lvls) - levs
+        kwargs[other_level] = list(set(lvls) - levs)
 
     out = fct_recode(_f, kwargs)
     if other_level in kwargs:
@@ -291,16 +292,14 @@ def _fct_lump_n(
         rnk = rank(
             calcs["count"],
             ties_method=ties_method,
-            __ast_fallback="normal",
-            __backend="numpy",
+            **meta_np,
         )
         n = -n
     else:
         rnk = rank(
             -calcs["count"],
             ties_method=ties_method,
-            __ast_fallback="normal",
-            __backend="numpy",
+            **meta_np,
         )
 
     new_levels = if_else(
@@ -341,7 +340,7 @@ def _fct_lump_lowfreq(_f, other_level: Any = "Other"):
     _f = calcs["_f"]
 
     new_levels = if_else(
-        ~in_smallest(calcs["count"]),
+        np.logical_not(in_smallest(calcs["count"])),
         levels(_f, **meta_kwargs),
         other_level,
         **meta_kwargs,
@@ -357,7 +356,7 @@ def _fct_lump_lowfreq(_f, other_level: Any = "Other"):
 @fct_lump.register(ForcatsRegType, context=Context.EVAL, backend="pandas")
 def _fct_lump(
     _f,
-    n: int = None,
+    n: Optional[int] = None,
     prop=None,
     w=None,
     other_level: Any = "Other",
@@ -393,7 +392,7 @@ def _fct_lump(
             n=n,
             w=w,
             other_level=other_level,
-            ties_method=ties_method,
+            ties_method=ties_method,  # type: ignore[call-arg]
         )
     if n is None:
         return fct_lump_prop(_f, prop=prop, w=w, other_level=other_level)
@@ -404,8 +403,8 @@ def _fct_lump(
 @fct_other.register(ForcatsRegType, context=Context.EVAL, backend="pandas")
 def _fct_other(
     _f,
-    keep: Iterable = None,
-    drop: Iterable = None,
+    keep: Optional[Iterable] = None,
+    drop: Optional[Iterable] = None,
     other_level: Any = "Other",
 ) -> Categorical:
     """Replace levels with "other"
@@ -426,16 +425,15 @@ def _fct_other(
     """
     _f = check_factor(_f)
 
-    if (keep is None and drop is None) or (
-        keep is not None and drop is not None
-    ):
+    if (keep is None and drop is None) or (keep is not None and drop is not None):
         raise ValueError("Must supply exactly one of `keep` and `drop`")
 
     lvls = levels(_f, **meta_kwargs)
     if keep is not None:
-        lvls[~np.isin(lvls, keep)] = other_level
+        lvls[~np.isin(lvls, list(keep))] = other_level
     else:
-        lvls[np.isin(lvls, drop)] = other_level
+        assert drop is not None
+        lvls[np.isin(lvls, list(drop))] = other_level
 
     _f = lvls_revalue(_f, lvls, **meta_kwargs)
     return fct_relevel(_f, other_level, after=-1, **meta_kwargs)
@@ -463,8 +461,9 @@ def _fct_relabel(
     """
     _f = check_factor(_f)
     old_levels = levels(_f, **meta_kwargs)
-    if (
-        getattr(_fun, "_pipda_functype", None) in ("verb", "pipeable")
+    if getattr(_fun, "_pipda_functype", None) in (
+        "verb",
+        "pipeable",
     ):  # pragma: no cover
         # TODO: test
         kwargs["__ast_fallback"] = "normal"
@@ -477,7 +476,7 @@ def _fct_relabel(
 # -------------
 
 
-def check_weights(w, n: int = None):
+def check_weights(w, n: Optional[int] = None):
     """Check the weights"""
     if w is None:
         return w
@@ -487,8 +486,7 @@ def check_weights(w, n: int = None):
 
     if len(w) != n:
         raise ValueError(
-            f"`w` must be the same length as `f` ({n}), "
-            f"not length {len(w)}."
+            f"`w` must be the same length as `f` ({n}), not length {len(w)}."
         )
 
     for weight in w:
@@ -506,7 +504,7 @@ def check_calc_levels(_f, w=None):
     w = check_weights(w, len(_f))
 
     if w is None:
-        cnt = table(_f, **meta_kwargs).iloc[0, :].values
+        cnt = table(_f).iloc[0, :].values
         total = len(_f)
     else:
         cnt = (
@@ -537,12 +535,10 @@ def lump_cutoff(x) -> int:
     return len(x)  # pragma: no cover
 
 
-def in_smallest(x) -> Iterable[bool]:
+def in_smallest(x) -> Any:
     """Check if elements in x are the smallest of x"""
-    ord_x = order(
-        x, decreasing=True, __ast_fallback="normal", __backend="numpy"
-    )
+    ord_x = order(x, decreasing=True, **meta_np)
     idx = lump_cutoff(x[ord_x])
 
     to_lump = np.arange(len(x)) >= idx
-    return to_lump[order(ord_x, __ast_fallback="normal", __backend="numpy")]
+    return to_lump[order(ord_x, **meta_np)]

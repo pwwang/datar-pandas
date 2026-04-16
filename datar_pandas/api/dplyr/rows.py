@@ -2,7 +2,8 @@
 
 https://github.com/tidyverse/dplyr/blob/master/R/rows.R
 """
-from typing import Tuple
+
+from typing import Any, Tuple, cast
 import numpy as np
 from datar.core.utils import logger, arg_match
 from datar.apis.dplyr import (
@@ -46,7 +47,7 @@ def _rows_insert(
         raise ValueError("Attempting to insert duplicate rows.")
 
     idx_y = np.isin(y.index, idx_y, invert=True)
-    return bind_rows(x, y.loc[idx_y, :], **_meta_args)
+    return bind_rows(x, y.loc[idx_y, :], **cast(Any, _meta_args))
 
 
 @rows_append.register(DataFrame, context=Context.EVAL, backend="pandas")
@@ -55,7 +56,7 @@ def _rows_append(x, y, **kwargs):
         raise ValueError("Unsupported arguments: %s" % kwargs.keys())
 
     _rows_check_key_df(x, y.columns, df_name="x")
-    return bind_rows(x, y, **_meta_args)
+    return bind_rows(x, y, **cast(Any, _meta_args))
 
 
 @rows_update.register(DataFrame, context=Context.EVAL, backend="pandas")
@@ -131,7 +132,7 @@ def _rows_upsert(x, y, by=None):
 
     x = x.copy()
     x.loc[idx_x, y.columns] = y.loc[idx_y, :].values
-    return bind_rows(x, y.loc[~y.index.isin(idx_y)], **_meta_args)
+    return bind_rows(x, y.loc[~y.index.isin(idx_y)], **cast(Any, _meta_args))
 
 
 @rows_delete.register(DataFrame, context=Context.EVAL, backend="pandas")
@@ -215,4 +216,7 @@ def _rows_match(
     merge_col = "__merge__"
     df = xi.merge(yi, how="left", indicator=merge_col)
     df = df[df[merge_col] == "both"]
-    return df[x_id_col].values.astype(int), df[y_id_col].values.astype(int)
+    return (
+        np.asarray(df[x_id_col].values).astype(int),
+        np.asarray(df[y_id_col].values).astype(int),
+    )

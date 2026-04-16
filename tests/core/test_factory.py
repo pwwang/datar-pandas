@@ -16,7 +16,7 @@ def test_args_frame():
 
 
 def test_pre():
-    @func_factory(kind="apply", pre=lambda x: ((x + 1, ), {}))
+    @func_factory(kind="apply", pre=lambda x: ((x + 1,), {}))
     def mn(x):
         return x.mean()
 

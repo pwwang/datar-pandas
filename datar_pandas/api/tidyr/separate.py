@@ -3,8 +3,9 @@ expression or numeric locations
 
 https://github.com/tidyverse/tidyr/blob/HEAD/R/separate.R
 """
+
 import re
-from typing import Any, List, Tuple, Union
+from typing import Any, List, Union, cast
 
 import numpy as np
 from datar.core.utils import logger
@@ -15,9 +16,12 @@ from ...pandas import DataFrame
 from ...common import is_scalar
 from ...contexts import Context
 from ...tibble import reconstruct_tibble
-from ...utils import vars_select, apply_dtypes
+from ...utils import vars_select, apply_dtypes, meta_kwargs
 from ..dplyr.mutate import mutate
 from ..dplyr.group_by import ungroup
+
+
+meta_pd = cast(Any, meta_kwargs)
 
 
 @separate.register(DataFrame, context=Context.SELECT, backend="pandas")
@@ -71,8 +75,8 @@ def _separate(
         raise ValueError("`into` must be a string or a list of strings.")
 
     all_columns = data.columns
-    col = vars_select(all_columns, col)
-    col = all_columns[col[0]]
+    selected = vars_select(all_columns, col)
+    col = all_columns[selected[0]]
 
     colindex = [i for i, outcol in enumerate(into) if not pd.isnull(outcol)]
     non_na_elems = lambda row: [row[i] for i in colindex]
@@ -94,16 +98,14 @@ def _separate(
 
     if extra_warns:
         logger.warning(
-            "Expected %s pieces. "
-            "Additional pieces discarded in %s rows %s.",
+            "Expected %s pieces. Additional pieces discarded in %s rows %s.",
             nout,
             len(extra_warns),
             extra_warns,
         )
     if missing_warns:
         logger.warning(
-            "Expected %s pieces. "
-            "Missing pieces filled with `NA` in %s rows %s.",
+            "Expected %s pieces. Missing pieces filled with `NA` in %s rows %s.",
             nout,
             len(missing_warns),
             missing_warns,
@@ -113,9 +115,9 @@ def _separate(
     separated.columns = non_na_elems(into)
     apply_dtypes(separated, convert)
 
-    _data = ungroup(data, __ast_fallback="normal", __backend="pandas")
+    _data = ungroup(data, **meta_pd)
     out = _data.drop(columns=[col]) if remove else _data
-    out = mutate(out, separated, __ast_fallback="normal", __backend="pandas")
+    out = mutate(out, separated, **meta_pd)
 
     return reconstruct_tibble(out, data)
 
@@ -123,7 +125,7 @@ def _separate(
 @separate_rows.register(DataFrame, context=Context.SELECT, backend="pandas")
 def _separate_rows(
     data: DataFrame,
-    *columns: Tuple[str],
+    *columns: str,
     sep: str = r"[^0-9A-Za-z]+",
     convert=False,
 ) -> DataFrame:
@@ -140,8 +142,8 @@ def _separate_rows(
         Dataframe with rows separated and repeated.
     """
     all_columns = data.columns
-    selected = all_columns[vars_select(all_columns, *columns)]
-    out = ungroup(data, __ast_fallback="normal", __backend="pandas")
+    selected = all_columns[list(vars_select(all_columns, *columns))]
+    out = ungroup(data, **meta_pd)
     for sel in selected:  # TODO: apply together
         out[sel] = out[sel].apply(
             _separate_col,
@@ -158,8 +160,7 @@ def _separate_rows(
         selected,
         keep_empty=True,
         dtypes=convert,
-        __ast_fallback="normal",
-        __backend="pandas",
+        **meta_pd,
     )
 
     return reconstruct_tibble(

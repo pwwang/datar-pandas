@@ -1,4 +1,3 @@
-import warnings
 from typing import Any
 
 import numpy as np
@@ -25,6 +24,7 @@ np_meta_kwargs = {"__backend": "numpy", "__ast_fallback": "normal"}
 
 def unique(x: Any) -> Any:
     from .pandas import Series, Index, Categorical
+
     if not isinstance(x, (Series, Index, Categorical, np.ndarray)):
         x = np.array(x, dtype=object)
     return _unique(x)
@@ -36,6 +36,7 @@ def is_null(x: Any) -> Data[Bool]:
 
 def is_factor(x: Any) -> bool:
     from .utils import meta_kwargs
+
     return _is_factor(x, **meta_kwargs)
 
 

@@ -3,17 +3,21 @@ expression groups
 
 https://github.com/tidyverse/tidyr/blob/HEAD/R/extract.R
 """
+
 import re
-from typing import Union
+from typing import Any, Union, cast
 from datar.apis.tidyr import extract
 
 from ... import pandas as pd
 from ...pandas import DataFrame
 from ...common import is_scalar
 from ...contexts import Context
-from ...utils import apply_dtypes, vars_select
+from ...utils import apply_dtypes, vars_select, meta_kwargs
 from ...tibble import reconstruct_tibble
 from ..dplyr.group_by import ungroup
+
+
+meta_pd = cast(Any, meta_kwargs)
 
 
 @extract.register(DataFrame, context=Context.SELECT, backend="pandas")
@@ -49,8 +53,8 @@ def _extract(
         into = [into]  # type: ignore
 
     all_columns = data.columns
-    col = vars_select(all_columns, col)
-    col = all_columns[col[0]]
+    selected = vars_select(all_columns, col)
+    col = all_columns[selected[0]]
 
     outcols = {}
     # merge columns with same name
@@ -62,21 +66,18 @@ def _extract(
         if is_scalar(outcol) and pd.isnull(outcol):
             continue
         if not isinstance(outcol, str):
-            raise ValueError(
-                "`into` must be a string or an iterable of strings."
-            )
+            raise ValueError("`into` must be a string or an iterable of strings.")
         outcols[i] = outcol
         mergedcols.setdefault(outcol, []).append(i)
 
-    regex = re.compile(regex)
-    if regex.groups != len(into):
+    regex_compiled = re.compile(regex)
+    if regex_compiled.groups != len(into):
         raise ValueError(
-            f"`regex` should define {len(into)} groups; "
-            f"found {regex.groups}."
+            f"`regex` should define {len(into)} groups; found {regex_compiled.groups}."
         )
 
-    undata = ungroup(data, __ast_fallback="normal", __backend="pandas")
-    out = undata[col].str.extract(regex)
+    undata = ungroup(data, **meta_pd)
+    out = undata[col].str.extract(regex_compiled)
     out = {
         outcol: (
             out.iloc[:, indexes[0]]

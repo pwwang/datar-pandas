@@ -1,4 +1,5 @@
 """Cumulative functions"""
+
 import numpy as np
 from datar.apis.base import cumsum, cumprod, cummax, cummin
 from datar_numpy.api import cum as _  # noqa: F401

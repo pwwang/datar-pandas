@@ -1,4 +1,5 @@
 """Provides desc"""
+
 import numpy as np
 from datar.apis.dplyr import desc
 from datar_numpy.utils import make_array
@@ -14,9 +15,7 @@ def _desc(x):
         out = -x
     except (ValueError, TypeError):
         cat = Categorical(x.values)
-        out = desc.dispatch(SeriesCategorical)(
-            Series(cat, index=x.index)
-        )
+        out = desc.dispatch(SeriesCategorical)(Series(cat, index=x.index))
     out.name = None
     return out
 

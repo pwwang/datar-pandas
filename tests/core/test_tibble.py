@@ -31,7 +31,9 @@ def test_tibble_from_pairs():
     with pytest.raises(ValueError):
         df = Tibble.from_pairs(
             ["a", "a"],
-            [1, ],
+            [
+                1,
+            ],
         )
 
     df = Tibble.from_pairs(
@@ -146,17 +148,15 @@ def test_tibble_rowwise():
     assert_frame_equal(df2, df3)
 
 
-@pytest.mark.skipif(
-    not is_installed("pdtypes"), reason="'pdtypes' is not installed"
-)
+@pytest.mark.skipif(not is_installed("pdtypes"), reason="'pdtypes' is not installed")
 def test_footer():
-    df = Tibble.from_args(x=[1, 2, 3]).group_by('x')
+    df = Tibble.from_args(x=[1, 2, 3]).group_by("x")
     assert "n=3" in str(df)
     assert "n=3" in df._repr_html_()
 
 
 def test_regroup_nohard():
-    df = Tibble.from_args(x=[1, 2, 3]).group_by('x')
+    df = Tibble.from_args(x=[1, 2, 3]).group_by("x")
     out = df.regroup(hard=False, inplace=False)
     assert out is not df
     assert out._datar["grouped"] is not df._datar["grouped"]

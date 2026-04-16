@@ -31,9 +31,7 @@ def _full_seq_bootstrap(x, period, tol=1e-6):
     minx = x.min()  # na not counted
     maxx = x.max()
 
-    if (
-        ((x - minx) % period > tol) & (period - ((x - minx) % period) > tol)
-    ).any():
+    if (((x - minx) % period > tol) & (period - ((x - minx) % period) > tol)).any():
         raise ValueError("`x` is not a regular sequence.")
 
     if period - ((maxx - minx) % period) <= tol:

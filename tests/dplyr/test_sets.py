@@ -222,8 +222,10 @@ def test_set_operations_keep_the_ordering_of_the_data():
     out = union(df1, rev_df(df2))
     exp = tibble(x=c(seq(1, 4), [6, 5]), g=rep([1, 2, 3], each=2))
     # pandas 2.2 sorts the keys
-    assert out.sort_values(by=["x"]).reset_index(drop=True).equals(
-        exp.sort_values(by=["x"]).reset_index(drop=True)
+    assert (
+        out.sort_values(by=["x"])
+        .reset_index(drop=True)
+        .equals(exp.sort_values(by=["x"]).reset_index(drop=True))
     )
 
 
@@ -291,20 +293,20 @@ def test_errors():
 
 def test_intersect_union_setdiff_keep_y_groups():
     x = tibble(x=[1, 2, 3])
-    y = x.group_by('x')
+    y = x.group_by("x")
 
     out = intersect(x, y)
-    assert out.group_vars == ['x']
+    assert out.group_vars == ["x"]
     assert out.shape[0] == 3
 
     out = union(x, y)
-    assert out.group_vars == ['x']
+    assert out.group_vars == ["x"]
     assert out.shape[0] == 3
 
     out = union_all(x, y)
-    assert out.group_vars == ['x']
+    assert out.group_vars == ["x"]
     assert out.shape[0] == 6
 
     out = setdiff(x, y)
-    assert out.group_vars == ['x']
+    assert out.group_vars == ["x"]
     assert out.shape[0] == 0

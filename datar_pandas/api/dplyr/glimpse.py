@@ -1,4 +1,4 @@
-from typing import Callable
+from typing import Callable, Optional
 
 from datar.apis.dplyr import glimpse
 
@@ -8,9 +8,9 @@ from ...middlewares import glimpse_formatter, Glimpse
 
 
 @glimpse.register(DataFrame, context=Context.EVAL, backend="pandas")
-def glimpse(
+def _glimpse(
     x: DataFrame,
-    width: int = None,
+    width: Optional[int] = None,
     formatter: Callable = glimpse_formatter,
 ) -> Glimpse:
     return Glimpse(x, width=width, formatter=formatter)

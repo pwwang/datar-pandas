@@ -2,6 +2,7 @@
 
 https://github.com/tidyverse/dplyr/blob/master/R/lead-lag.R
 """
+
 import numpy as np
 from datar.apis.dplyr import with_order, lead, lag
 
@@ -15,10 +16,10 @@ def _shift(x, n, default=None, order_by=None):
     if not isinstance(n, int):
         raise ValueError("`lead-lag` expect an integer for `n`.")
 
-    if not is_scalar(default) and len(default) > 1:
+    if default is not None and not is_scalar(default) and len(default) > 1:
         raise ValueError("`lead-lag` Expect scalar or length-1 `default`.")
 
-    if not is_scalar(default):
+    if default is not None and not is_scalar(default):
         default = default[0]
 
     if order_by is not None:

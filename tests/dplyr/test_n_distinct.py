@@ -108,11 +108,7 @@ def test_n_distinct_handles_in_na_rm():
     out = d >> summarise(n=n_distinct(f.x, na_rm=no)) >> pull(to="list")
     assert out == [5]
 
-    out = (
-        d
-        >> summarise(n=n_distinct(f.x, na_rm=True or True))
-        >> pull(to="list")
-    )
+    out = d >> summarise(n=n_distinct(f.x, na_rm=True or True)) >> pull(to="list")
     assert out == [4]
 
 
@@ -124,9 +120,7 @@ def test_n_distinct_respects_data():
 
 
 def test_n_distinct_works_with_str_col():
-    wrapper = lambda data, col: summarise(
-        data, result=n_distinct(f[col], na_rm=True)
-    )
+    wrapper = lambda data, col: summarise(data, result=n_distinct(f[col], na_rm=True))
 
     df = tibble(x=[1, 1, 3, NA])
     out = wrapper(df, "x")

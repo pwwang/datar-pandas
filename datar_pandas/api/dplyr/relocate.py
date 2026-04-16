@@ -1,5 +1,6 @@
 """Relocate columns"""
-from typing import Any, Union
+
+from typing import Any, Optional, Union, cast
 
 from datar.apis.dplyr import group_vars, relocate
 
@@ -15,12 +16,20 @@ from .select import _eval_select
 def _relocate(
     _data: DataFrame,
     *args: Any,
-    _before: Union[int, str] = None,
-    _after: Union[int, str] = None,
+    _before: Optional[Union[int, str]] = None,
+    _after: Optional[Union[int, str]] = None,
     **kwargs: Any,
 ) -> Tibble:
-    gvars = group_vars(_data, __ast_fallback="normal", __backend="pandas")
-    _data = as_tibble(_data.copy(), __ast_fallback="normal", __backend="pandas")
+    gvars = group_vars(
+        _data,
+        __ast_fallback="normal",  # type: ignore
+        __backend="pandas",  # type: ignore
+    )
+    _data = as_tibble(
+        _data.copy(),
+        __ast_fallback="normal",  # type: ignore
+        __backend="pandas",  # type: ignore
+    )
 
     all_columns = _data.columns
     to_move, new_names = _eval_select(
@@ -71,13 +80,11 @@ def _relocate(
     out = _data.iloc[:, pos]
     # out = out.copy()
     if new_names:
-        out.rename(columns=new_names, inplace=True)
+        out = out.rename(columns=new_names)  # type: ignore[call-overload]
         if (
             isinstance(out, TibbleGrouped)
             and len(intersect(gvars, list(new_names))) > 0
         ):
-            out._datar["group_vars"] = [
-                new_names.get(gvar, gvar) for gvar in gvars
-            ]
+            out._datar["group_vars"] = [new_names.get(gvar, gvar) for gvar in gvars]
 
-    return out
+    return cast(Tibble, out)

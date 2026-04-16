@@ -2,8 +2,9 @@
 
 https://github.com/tidyverse/tidyr/blob/master/R/nest.R
 """
+
 import re
-from typing import Callable, Mapping, Union, Iterable, List
+from typing import Any, Callable, Mapping, Union, Iterable, List, Optional, cast
 
 import numpy as np
 from datar.apis.tidyr import unpack, unchop, nest, unnest
@@ -11,7 +12,7 @@ from datar.apis.tidyr import unpack, unchop, nest, unnest
 from ... import pandas as pd
 from ...pandas import DataFrame, Series, NDFrame
 from ...common import is_scalar, setdiff
-from ...utils import vars_select
+from ...utils import vars_select, meta_kwargs
 from ...broadcast import broadcast_to, init_tibble_from
 from ...contexts import Context
 from ...tibble import (
@@ -27,10 +28,13 @@ from ..dplyr.arrange import arrange
 from ..dplyr.group_by import ungroup
 
 
+meta_pd = cast(Any, meta_kwargs)
+
+
 @nest.register(DataFrame, context=Context.SELECT, backend="pandas")
 def _nest(
     _data: DataFrame,
-    _names_sep: str = None,
+    _names_sep: Optional[str] = None,
     **cols: Union[str, int],
 ) -> DataFrame:
     """Nesting creates a list-column of data frames
@@ -68,8 +72,7 @@ def _nest(
     keys = _data[asis]
     u_keys = distinct(
         keys,
-        __ast_fallback="normal",
-        __backend="pandas",
+        **meta_pd,
     ).reset_index(drop=True)
     nested = []
     for group, columns in colgroups.items():
@@ -94,27 +97,26 @@ def _nest(
     return bind_cols(
         u_keys,
         broadcast_to(out, u_keys.index),
-        __ast_fallback="normal",
-        __backend="pandas",
+        **meta_pd,
     )
 
 
 @nest.register(TibbleGrouped, context=Context.SELECT, backend="pandas")
 def _nest_grouped(
     _data: TibbleGrouped,
-    _names_sep: str = None,
+    _names_sep: Optional[str] = None,
     **cols: Mapping[str, Union[str, int]],
-) -> TibbleGrouped:
+) -> DataFrame:
     """Nesting grouped dataframe"""
     if not cols:
         cols = {
             "data": setdiff(
                 _data.columns,
-                group_vars(_data, __ast_fallback="normal", __backend="pandas"),
+                group_vars(_data, **meta_pd),
             )
         }
     out = nest.dispatch(DataFrame)(
-        ungroup(_data, __ast_fallback="normal", __backend="pandas"),
+        ungroup(_data, **meta_pd),
         **cols,
         _names_sep=_names_sep,
     )
@@ -127,7 +129,7 @@ def _unnest(
     *cols: Union[str, int],
     keep_empty: bool = False,
     dtypes=None,
-    names_sep: str = None,
+    names_sep: Optional[str] = None,
     names_repair: Union[str, Callable] = "check_unique",
 ) -> DataFrame:
     """Flattens list-column of data frames back out into regular columns.
@@ -167,29 +169,27 @@ def _unnest(
         raise ValueError("`*cols` is required when using unnest().")
 
     all_columns = data.columns
-    cols = vars_select(all_columns, cols)
-    cols = all_columns[cols]
+    selected_cols = vars_select(all_columns, *cols)
+    selected_cols = all_columns[selected_cols]
 
-    out = ungroup(data, __ast_fallback="normal", __backend="pandas")
+    out = ungroup(data, **meta_pd)
 
-    for col in cols:
+    for col in selected_cols:
         out[col] = _as_df(data[col])
 
     out = unchop(
         out,
-        cols,
+        selected_cols,
         keep_empty=keep_empty,
         dtypes=dtypes,
-        __ast_fallback="normal",
-        __backend="pandas",
+        **meta_pd,
     )
     out = unpack(
         out,
-        cols,
-        names_sep=names_sep,
+        selected_cols,
+        names_sep=cast(Any, names_sep),
         names_repair=names_repair,
-        __ast_fallback="normal",
-        __backend="pandas",
+        **meta_pd,
     )
     return reconstruct_tibble(out, data)
 
@@ -200,12 +200,12 @@ def _unnest_roowise(
     *cols: Union[str, int],
     keep_empty: bool = False,
     dtypes=None,
-    names_sep: str = None,
+    names_sep: Optional[str] = None,
     names_repair: Union[str, Callable] = "check_unique",
 ) -> TibbleGrouped:
     """Unnest rowwise dataframe"""
     out = unnest.dispatch(DataFrame)(
-        ungroup(data, __ast_fallback="normal", __backend="pandas"),
+        ungroup(data, **meta_pd),
         *cols,
         keep_empty=keep_empty,
         dtypes=dtypes,
@@ -246,17 +246,13 @@ def _as_df(series: Series) -> List[DataFrame]:
             if val.shape[1] == 0:  # no columns
                 out.append(np.nan)
             elif val.shape[0] == 0:
-                out.append(
-                    DataFrame([[np.nan] * val.shape[1]], columns=val.columns)
-                )
+                out.append(DataFrame([[np.nan] * val.shape[1]], columns=val.columns))
             else:
                 out.append(val)
         elif is_scalar(val) and pd.isnull(val):
             out.append(val)
         else:
-            out.append(
-                init_tibble_from(val, name=getattr(series, "obj", series).name)
-            )
+            out.append(init_tibble_from(val, name=getattr(series, "obj", series).name))
     return out
 
 
@@ -270,8 +266,10 @@ def _vec_split(x: NDFrame, by: NDFrame) -> DataFrame:
         x = x.to_frame()
     if isinstance(by, Series):  # pragma: no cover, always a data frame?
         by = by.to_frame()
+    x = cast(DataFrame, x)
+    by = cast(DataFrame, by)
 
-    df = bind_cols(x, by, __ast_fallback="normal", __backend="pandas")
+    df = bind_cols(x, by, **meta_pd)
     if df.shape[0] == 0:
         return Tibble(columns=["key", "val"])
     if by.shape[1] > 0:
@@ -279,16 +277,13 @@ def _vec_split(x: NDFrame, by: NDFrame) -> DataFrame:
             df = Tibble(df, copy=False)
         df = df.group_by(by.columns.tolist(), drop=True)
 
-    gdata = group_data(df, __ast_fallback="normal", __backend="pandas")
+    gdata = group_data(df, **meta_pd)
     gdata = arrange(
         gdata,
         gdata._rows,
-        __ast_fallback="normal",
-        __backend="pandas",
+        **meta_pd,
     )
     out = Tibble(index=gdata.index)
     out["key"] = gdata[by.columns]
-    out["val"] = [
-        x.iloc[rows, :].reset_index(drop=True) for rows in gdata._rows
-    ]
+    out["val"] = [x.iloc[rows, :].reset_index(drop=True) for rows in gdata._rows]
     return out

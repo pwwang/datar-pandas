@@ -1,3 +1,5 @@
+# pyright: reportGeneralTypeIssues=false, reportAttributeAccessIssue=false
+
 import operator
 from collections.abc import Sequence
 from typing import Any, Callable
@@ -27,6 +29,7 @@ def _binop(
         The result of the operation
     """
     from .broadcast import broadcast2
+
     left, right, grouper, is_rowwise = broadcast2(left, right)
 
     if boolean:

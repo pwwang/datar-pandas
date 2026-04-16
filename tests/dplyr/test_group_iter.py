@@ -6,6 +6,7 @@ https://github.com/tidyverse/dplyr/blob/master/tests/testthat/test-group_split.R
 https://github.com/tidyverse/dplyr/blob/master/tests/testthat/test-group_trim.R
 https://github.com/tidyverse/dplyr/blob/master/tests/testthat/test-groups-with.R
 """
+
 import pytest
 from datar import f
 from datar.tibble import tibble
@@ -153,9 +154,7 @@ def test_rowwise_data_has_1group_for_each_group():
 
 
 def test_group_size_correct_for_grouped_data():
-    df = tibble(
-        x=rep([1, 2, 3], each=10), y=rep(range(1, 7), each=5)
-    ) >> group_by(f.x)
+    df = tibble(x=rep([1, 2, 3], each=10), y=rep(range(1, 7), each=5)) >> group_by(f.x)
     assert_equal(n_groups(df), 3)
     sizes = group_size(df)
     assert sizes == [10] * 3
@@ -168,10 +167,7 @@ def test_group_map_respects_empty_groups():
     assert len(list(res)) == 3
 
     res = (
-        iris
-        >> group_by(f.Species)
-        >> filter(f.Species == "setosa")
-        >> group_map(tally)
+        iris >> group_by(f.Species) >> filter(f.Species == "setosa") >> group_map(tally)
     )
     assert len(list(res)) == 1
 
@@ -447,13 +443,10 @@ def test_group_split_on_a_rowwise_df_returns_a_list_of_tibbles():
 def test_group_split_works_with_subclasses_implementing_group_by_ungroup():
     # test_that("group_split() works with subclasses implementing group_by()
     # / ungroup()", {
-    class TibbleGrouped1(TibbleGrouped):
-        ...
+    class TibbleGrouped1(TibbleGrouped): ...
 
     df = DataFrame(dict(x=[1, 2, 2]))
-    gf = TibbleGrouped1.from_groupby(
-        df.groupby("x")
-    )
+    gf = TibbleGrouped1.from_groupby(df.groupby("x"))
     out = group_split.list(gf, f.x)
     assert len(out) == 2
     assert out[0].equals(df.iloc[[0], :])
@@ -487,10 +480,7 @@ def test_group_trim_is_identity_on_nongrouped_data():
 
 def test_group_trim_always_regroups_even_if_no_factors():
     res = (
-        mtcars
-        >> group_by(f.cyl)
-        >> filter(f.cyl == 6, _preserve=True)
-        >> group_trim()
+        mtcars >> group_by(f.cyl) >> filter(f.cyl == 6, _preserve=True) >> group_trim()
     )
     assert_equal(n_groups(res), 1)
 

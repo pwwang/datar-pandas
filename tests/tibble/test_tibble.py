@@ -269,7 +269,7 @@ def test_dup_cols():
     df = tribble(f.x, f.x, 1, 2)
     assert df.columns.tolist() == ["x", "x"]
 
-    x = Series([1], name='x')
+    x = Series([1], name="x")
     df = tibble(x, x, _name_repair="minimal")
     assert df.columns.tolist() == ["x", "x"]
 
@@ -318,7 +318,7 @@ def test_as_tibble():
     out = as_tibble(x)
     assert_frame_equal(out, tibble(a=1))
 
-    gf = out.groupby('a')
+    gf = out.groupby("a")
     out = as_tibble(gf)
     assert isinstance(out, TibbleGrouped)
     assert_iterable_equal(out.group_vars, ["a"])

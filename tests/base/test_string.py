@@ -103,9 +103,7 @@ def test_nzchar():
     assert_iterable_equal(nzchar(Series([""])), [False])
     assert_iterable_equal(nzchar(Series(["1"])), [True])
     assert_iterable_equal(nzchar(Series(["1", np.nan])), [True, False])
-    assert_iterable_equal(
-        nzchar(Series(["1", np.nan]), keep_na=True), [True, np.nan]
-    )
+    assert_iterable_equal(nzchar(Series(["1", np.nan]), keep_na=True), [True, np.nan])
 
 
 def test_paste():
@@ -145,9 +143,7 @@ def test_substr():
     #     substr(Series([np.nan]), [1, 2], 3), [np.nan, np.nan]
     # )
     assert_iterable_equal(substr(Series(["abce", "efgh"]), 1, 3), ["bc", "fg"])
-    assert_iterable_equal(
-        substring(Series(["abce", "efgh"]), 1), ["bce", "fgh"]
-    )
+    assert_iterable_equal(substring(Series(["abce", "efgh"]), 1), ["bce", "fgh"])
     # assert_iterable_equal(
     #     substr(Series(["abce", "efgh", np.nan]), 1, 3), ["bc", "fg", np.nan]
     # )
@@ -179,9 +175,7 @@ def test_strsplit():
 def test_starts_endswith():
     assert_iterable_equal(startswith(Series(["abc"]), "a"), [True])
     assert_iterable_equal(endswith(Series(["abc"]), "c"), [True])
-    assert_iterable_equal(
-        startswith(Series(["abc", "def"]), "a"), [True, False]
-    )
+    assert_iterable_equal(startswith(Series(["abc", "def"]), "a"), [True, False])
     assert_iterable_equal(endswith(Series(["abc", "def"]), "c"), [True, False])
 
 
@@ -194,9 +188,7 @@ def test_strtoi():
 
 def test_chartr():
     assert_iterable_equal(chartr(Series(["a"]), "A", "abc"), ["Abc"])
-    assert_iterable_equal(
-        chartr("a", "A", Series(["abc", "ade"])), ["Abc", "Ade"]
-    )
+    assert_iterable_equal(chartr("a", "A", Series(["abc", "ade"])), ["Abc", "Ade"])
 
     tg = tibble(x=["abc", "ade"], g=[1, 2]).group_by("g")
     assert_iterable_equal(chartr("a", "A", tg.x).obj, ["Abc", "Ade"])
@@ -226,9 +218,7 @@ def test_trimws():
     assert_iterable_equal(trimws(Series([" a "])), ["a"])
     assert_iterable_equal(trimws(Series([" a ", " b "]), "both"), ["a", "b"])
     assert_iterable_equal(trimws(Series([" a ", " b "]), "left"), ["a ", "b "])
-    assert_iterable_equal(
-        trimws(Series([" a ", " b "]), "right"), [" a", " b"]
-    )
+    assert_iterable_equal(trimws(Series([" a ", " b "]), "right"), [" a", " b"])
     assert_iterable_equal(
         trimws(Series([" a ", " b "]).groupby([1, 2]), "right").obj,
         [" a", " b"],

@@ -15,7 +15,7 @@ from datar.dplyr import (
     ntile,
     percent_rank,
     pull,
-    row_number
+    row_number,
 )
 from datar.tibble import tibble
 from datar_pandas.pandas import get_obj
@@ -56,9 +56,12 @@ def test_ntile_always_returns_an_integer():
 
 def test_ntile_does_not_overflow():
     m = int(1e2)
-    res = tibble(a=range(1, m + 1)) >> mutate(
-        b=ntile(f.a, n=m)
-    ) >> count(f.b) >> pull(to='list')
+    res = (
+        tibble(a=range(1, m + 1))
+        >> mutate(b=ntile(f.a, n=m))
+        >> count(f.b)
+        >> pull(to="list")
+    )
     assert_equal(sum(res), 100)
 
 
@@ -90,19 +93,11 @@ def test_row_number_handles_empty_dfs():
 
 def test_lead_lag_inside_mutates_handles_expressions_as_value_for_default():
     df = tibble(x=[1, 2, 3])
-    res = mutate(
-        df,
-        leadn=lead(f.x, default=f.x[0]),
-        lagn=lag(f.x, default=f.x[0])
-    )
+    res = mutate(df, leadn=lead(f.x, default=f.x[0]), lagn=lag(f.x, default=f.x[0]))
     assert_iterable_equal(res.leadn, lead(df.x, default=df.x[0]))
     assert_iterable_equal(res.lagn, lag(df.x, default=df.x[0]))
 
-    res = mutate(
-        df,
-        leadn=lead(f.x, default=[1]),
-        lagn=lag(f.x, default=[1])
-    )
+    res = mutate(df, leadn=lead(f.x, default=[1]), lagn=lag(f.x, default=[1]))
     assert_iterable_equal(res.leadn, lead(df.x, default=[1]))
     assert_iterable_equal(res.lagn, lag(df.x, default=[1]))
 

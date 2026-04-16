@@ -34,9 +34,7 @@ def test_named_substitution_works():
     out = recode(x1, a="apple", _default="<NA>")
     assert_iterable_equal(out, ["apple", "<NA>", "<NA>"])
     out = recode(x2, a="apple", _default="<NA>")
-    assert_factor_equal(
-        out, factor(["apple", "<NA>", "<NA>"])
-    )
+    assert_factor_equal(out, factor(["apple", "<NA>", "<NA>"]))
 
 
 def test_missing_values_replaced_by_missing_argument():
@@ -132,14 +130,10 @@ def test_args_kwargs_works_correctly():
     assert_iterable_equal(out, exp)
 
     out = recode_factor(x3, a="apple", b="banana", _default=NA_character_)
-    exp = recode_factor(
-        x3, _default=NA_character_, **{"a": "apple", "b": "banana"}
-    )
+    exp = recode_factor(x3, _default=NA_character_, **{"a": "apple", "b": "banana"})
     assert_iterable_equal(out, exp)
 
-    out = recode_factor(
-        Series(x3), a="apple", b="banana", _default=NA_character_
-    )
+    out = recode_factor(Series(x3), a="apple", b="banana", _default=NA_character_)
     assert_iterable_equal(out, exp)
 
 
@@ -241,9 +235,7 @@ def test_errors():
 
     # default type mismatch
     with pytest.raises(TypeError, match="must be str"):
-        recode(
-            [1, 2, 3], "x", _default=numpy.array([1, "a", "b"], dtype=object)
-        )
+        recode([1, 2, 3], "x", _default=numpy.array([1, "a", "b"], dtype=object))
 
     # default length mismatch
     with pytest.raises(ValueError, match="must be length 3"):

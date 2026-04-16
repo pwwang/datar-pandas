@@ -2,11 +2,13 @@
 
 https://github.com/tidyverse/dplyr/blob/master/R/pull.R
 """
+
 from datar.core.utils import arg_match
 from datar.apis.dplyr import pull
 
 from ...pandas import DataFrame, Series
 from ...common import is_scalar
+
 # from ...tibble import Tibble, TibbleGrouped
 from ...contexts import Context
 from ..tibble.tibble import as_tibble
@@ -22,13 +24,15 @@ def _pull(_data, var=-1, *, name=None, to=None):
     # make sure pull(df, 'x') pulls a dataframe for columns
     # x$a, x$b in df
 
-    to = arg_match(
-        to, "to", ["list", "array", "frame", "series", "dict", None]
-    )
+    to = arg_match(to, "to", ["list", "array", "frame", "series", "dict", None])
     if name is not None and is_scalar(name):
         name = [name]
 
-    _data = as_tibble(_data, __ast_fallback="normal", __backend="pandas")
+    _data = as_tibble(
+        _data,
+        __ast_fallback="normal",  # type: ignore
+        __backend="pandas",  # type: ignore
+    )
     if isinstance(var, int):
         var = _data.columns[var]
         var = var.split("$", 1)[0]
@@ -46,9 +50,7 @@ def _pull(_data, var=-1, *, name=None, to=None):
 
     if to == "dict":
         if name is None or len(name) != len(pulled):
-            raise ValueError(
-                "No `name` provided or length mismatches with the values."
-            )
+            raise ValueError("No `name` provided or length mismatches with the values.")
         return dict(zip(name, pulled))
     if to == "list":
         return pulled.values.tolist()
@@ -57,9 +59,7 @@ def _pull(_data, var=-1, *, name=None, to=None):
     if to == "frame":
         value = pulled if isinstance(pulled, DataFrame) else pulled.to_frame()
         if name and len(name) != value.shape[1]:
-            raise ValueError(
-                f"Expect {value.shape[1]} names but got {len(name)}."
-            )
+            raise ValueError(f"Expect {value.shape[1]} names but got {len(name)}.")
         if name:
             value.columns = name
         return value
@@ -72,9 +72,7 @@ def _pull(_data, var=-1, *, name=None, to=None):
         return pulled
     # df
     if name and len(name) != pulled.shape[1]:
-        raise ValueError(
-            f"Expect {pulled.shape[1]} names but got {len(name)}."
-        )
+        raise ValueError(f"Expect {pulled.shape[1]} names but got {len(name)}.")
 
     out = pulled.to_dict("series")
     if not name:

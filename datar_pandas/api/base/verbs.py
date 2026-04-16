@@ -1,4 +1,7 @@
 """Function from R-base that can be used as verbs"""
+
+from typing import Sequence, cast
+
 import numpy as np
 from datar.core.utils import arg_match
 from datar.apis.base import (
@@ -46,8 +49,8 @@ def _set_colnames(df, names, nested=True):
     old_names = colnames(
         df,
         nested=True,
-        __ast_fallback="normal",
-        __backend="pandas",
+        __ast_fallback="normal",  # type: ignore
+        __backend="pandas",  # type: ignore
     )
     mapping = dict(zip(old_names, names))
     names = []
@@ -78,8 +81,8 @@ def _set_rownames(df, names):
 @dim.register(DataFrame, backend="pandas")
 def _dim(x, nested=True):
     return (
-        nrow(x, __ast_fallback="normal", __backend="pandas"),
-        ncol(x, nested, __ast_fallback="normal", __backend="pandas"),
+        nrow(x, __ast_fallback="normal", __backend="pandas"),  # type: ignore
+        ncol(x, nested, __ast_fallback="normal", __backend="pandas"),  # type: ignore
     )
 
 
@@ -97,8 +100,8 @@ def _ncol(_data, nested=True):
         colnames(
             _data,
             nested=nested,
-            __ast_fallback=True,
-            __backend="pandas",
+            __ast_fallback=True,  # type: ignore
+            __backend="pandas",  # type: ignore
         )
     )
 
@@ -111,11 +114,14 @@ def _diag(x=1, nrow=None, ncol=None):
     if ncol is None:
         ncol = nrow
     if is_scalar(x):
-        nmax = max(nrow, ncol)
+        nrow_i = 1 if nrow is None else nrow
+        ncol_i = nrow_i if ncol is None else ncol
+        nmax = max(nrow_i, ncol_i)
         x = [x] * nmax
     elif nrow is not None:
-        nmax = max(nrow, ncol)
-        nmax = nmax // len(x)
+        ncol_i = nrow if ncol is None else ncol
+        nmax = max(nrow, ncol_i)
+        nmax = nmax // len(cast(Sequence[object], x))
         x = x * nmax
 
     x = np.array(x)
@@ -163,9 +169,7 @@ def _duplicated(
 
 @max_col.register(DataFrame, backend="pandas")
 def _max_col(df, ties_method="random"):
-    ties_method = arg_match(
-        ties_method, "ties_method", ["random", "first", "last"]
-    )
+    ties_method = arg_match(ties_method, "ties_method", ["random", "first", "last"])
 
     def which_max_with_ties(ser: Series):
         """Find index with max if ties happen"""

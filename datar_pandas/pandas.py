@@ -1,3 +1,5 @@
+# pyright: reportMissingImports=false, reportGeneralTypeIssues=false
+
 from contextlib import contextmanager as _contextmanager, nullcontext as _nullcontext
 
 from datar import get_option
@@ -7,11 +9,11 @@ from pandas.testing import (  # noqa: F401
     assert_series_equal,
 )
 from pandas.api.types import (  # noqa: F401
-    is_array_like,
+    is_array_like,  # type: ignore[attr-defined]
     is_bool,
     is_number,
     is_scalar,
-    is_categorical_dtype,
+    is_categorical_dtype,  # type: ignore[attr-defined]
     is_complex_dtype,
     is_integer,
     is_integer_dtype,
@@ -52,6 +54,7 @@ if get_option("use_modin"):  # pragma: no cover
     )
     from modin.pandas.base import BasePandasDataset as NDFrame  # noqa: F401
     from modin.pandas.groupby import DataFrameGroupBy, SeriesGroupBy  # noqa: F401
+
     try:
         from modin.pandas.groupby import GroupBy  # noqa: F401
     except ImportError:
@@ -106,6 +109,7 @@ else:
     def option_context(key, val, *args):  # pragma: no cover
         import warnings as _warnings
         from pandas._config.config import OptionError
+
         try:
             with _warnings.catch_warnings():
                 _warnings.simplefilter("ignore")

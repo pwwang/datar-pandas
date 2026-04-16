@@ -1,4 +1,9 @@
 """Middlewares for datar"""
+
+# pyright: reportGeneralTypeIssues=false, reportArgumentType=false
+# pyright: reportAttributeAccessIssue=false, reportReturnType=false
+# pyright: reportCallIssue=false, reportOperatorIssue=false
+
 import html
 import textwrap
 import numpy as np
@@ -29,11 +34,7 @@ class Across:
         args=None,
         kwargs=None,
     ):
-        cols = (
-            data >> everything()
-            if cols is None
-            else cols
-        )
+        cols = data >> everything() if cols is None else cols
         if is_scalar(cols):
             cols = [cols]
 
@@ -48,9 +49,7 @@ class Across:
                 for i, fn in enumerate(fns)
             )
         elif isinstance(fns, dict):
-            fns_list.extend(
-                {"fn": value, "_fn": key} for key, value in fns.items()
-            )
+            fns_list.extend({"fn": value, "_fn": key} for key, value in fns.items())
         elif fns is not None:
             raise ValueError(
                 "Argument `_fns` of across must be None, a function, "
@@ -81,18 +80,13 @@ class Across:
                 fn = render_data.pop("fn")
                 name_format = self.names
                 if not name_format:
-                    name_format = (
-                        "{_col}_{_fn}" if "_fn" in render_data else "{_col}"
-                    )
+                    name_format = "{_col}_{_fn}" if "_fn" in render_data else "{_col}"
 
                 name = name_format.format(**render_data)
                 args = CurColumn.replace_args(self.args, column)
                 kwargs = CurColumn.replace_kwargs(self.kwargs, column)
 
-                if (
-                    getattr(fn, "_pipda_functype", None) == "verb"
-                    and fn.dependent
-                ):
+                if getattr(fn, "_pipda_functype", None) == "verb" and fn.dependent:
                     value = fn(  # pragma: no cover
                         self.data,
                         self.data[column],
@@ -109,7 +103,9 @@ class Across:
 
                 # Keep historical behavior for character columns where
                 # dtype(object) should be reported as str.
-                if isinstance(value, np.dtype) and value == np.dtype(object):  # pragma: no cover
+                if isinstance(value, np.dtype) and value == np.dtype(
+                    object
+                ):  # pragma: no cover
                     value = "str"
 
                 ret = add_to_tibble(ret, name, value, broadcast_tbl=True)
@@ -184,6 +180,7 @@ class Glimpse:
         width: The width of the output
         formatter: The formatter to use to format data elements
     """
+
     def __init__(self, x, width, formatter) -> None:
         self.x = x
         self.width = width or get_terminal_size((100, 20)).columns
@@ -214,9 +211,7 @@ class Glimpse:
     def _general(self):
         if isinstance(self.x, TibbleGrouped):
             groups = ", ".join((str(name) for name in self.x.group_vars))
-            group_title = (
-                "Rowwise" if isinstance(self.x, TibbleRowwise) else "Groups"
-            )
+            group_title = "Rowwise" if isinstance(self.x, TibbleRowwise) else "Groups"
             return (
                 f"Rows: {self.x.shape[0]}",
                 f"Columns: {self.x.shape[1]}",
@@ -265,9 +260,7 @@ class Glimpse:
         while not out.endswith(placeholder) and i < data.size:
             if out:
                 out += ", "
-            out += ", ".join(
-                self.formatter(d) for d in data[i:i + chunk_size]
-            )
+            out += ", ".join(self.formatter(d) for d in data[i : i + chunk_size])
             i += chunk_size
             out = textwrap.shorten(
                 out,
@@ -280,7 +273,7 @@ class Glimpse:
 
     def _format_variable_str(self, col, dtype, data):
         name_col = col.ljust(self.colwidths[0])
-        dtype_col = f'<{dtype}>'.ljust(self.colwidths[1])
+        dtype_col = f"<{dtype}>".ljust(self.colwidths[1])
         data_col = self._format_data(data)
         return f". {name_col} {dtype_col} {data_col}"
 
@@ -289,9 +282,9 @@ class Glimpse:
         dtype_col = f"<i>&lt;{dtype}&gt;</i>"
         data_col = html.escape(self._format_data(data))
         return (
-            f"<tr><th style=\"text-align: left\">{name_col}</th>"
-            f"<td style=\"text-align: left\">{dtype_col}</td>"
-            f"<td style=\"text-align: left\">{data_col}</td></tr>"
+            f'<tr><th style="text-align: left">{name_col}</th>'
+            f'<td style="text-align: left">{dtype_col}</td>'
+            f'<td style="text-align: left">{data_col}</td></tr>'
         )
 
 
@@ -309,6 +302,5 @@ class CurColumn:
     ) -> Mapping[str, Any]:
         """Replace self with the real column in kwargs"""
         return {
-            key: column if isinstance(val, cls) else val
-            for key, val in kwargs.items()
+            key: column if isinstance(val, cls) else val for key, val in kwargs.items()
         }

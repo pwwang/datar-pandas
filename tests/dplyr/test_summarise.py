@@ -42,9 +42,7 @@ def test_input_recycled():
 
     gf = group_by(tibble(a=[1, 2]), f.a)
     df1 = gf >> summarise(x=1, y=[1, 2, 3], z=1)
-    df2 = tibble(
-        a=rep([1, 2], each=3), x=1, y=rep([1, 2, 3], 2), z=1
-    ) >> group_by(f.a)
+    df2 = tibble(a=rep([1, 2], each=3), x=1, y=rep([1, 2, 3], 2), z=1) >> group_by(f.a)
     assert_frame_equal(df1, df2)
 
     df1 = gf >> summarise(x=seq_len(f.a), y=1)
@@ -120,9 +118,7 @@ def test_0col_df_in_results_ignored():
 
 
 def test_peels_off_a_single_layer_of_grouping():
-    df = tibble(
-        x=rep([1, 2, 3, 4], each=4), y=rep([1, 2], each=8), z=runif(16)
-    )
+    df = tibble(x=rep([1, 2, 3, 4], each=4), y=rep([1, 2], each=8), z=runif(16))
     gf = df >> group_by(f.x, f.y)
 
     assert_equal(group_vars(gf >> summarise()), ["x"])
@@ -162,11 +158,7 @@ def test_allows_names():
 
 def test_list_output_columns():
     df = tibble(x=range(1, 11), g=rep([1, 2], each=5))
-    res = (
-        df
-        >> group_by(f.g)
-        >> summarise(y=f.x.apply(list))
-    )
+    res = df >> group_by(f.g) >> summarise(y=f.x.apply(list))
     assert_iterable_equal(res.y[0], [1, 2, 3, 4, 5])
 
 
@@ -308,8 +300,7 @@ def test_errors(caplog):
 
 
 def test_summarise_with_multiple_acrosses():
-    """https://stackoverflow.com/questions/63200530/python-pandas-equivalent-to-dplyr-1-0-0-summarizeacross
-    """  # noqa
+    """https://stackoverflow.com/questions/63200530/python-pandas-equivalent-to-dplyr-1-0-0-summarizeacross"""  # noqa
     out = (
         mtcars
         >> group_by(f.cyl)

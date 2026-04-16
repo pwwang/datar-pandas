@@ -69,7 +69,7 @@ def test_pull_nest_df_col():
 
 
 def test_pull_grouped():
-    df = tibble(x=1, y=2).group_by('x')
+    df = tibble(x=1, y=2).group_by("x")
     out = pull(df, f.y)
     assert isinstance(out, Series)
     assert_equal(out.tolist(), [2])

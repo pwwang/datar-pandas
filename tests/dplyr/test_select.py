@@ -70,7 +70,7 @@ def test_with_no_args_returns_nothing():
 
 
 def test_excluding_all_vars_returns_nothing():
-    out = select(mtcars, ~c[f.mpg:])
+    out = select(mtcars, ~c[f.mpg :])
     assert out.shape == (32, 0)
 
     out = mtcars >> select(starts_with("x"))
@@ -103,13 +103,14 @@ def test_can_be_before_group_by():
     df = tibble(
         id=c(1, 1, 2, 2, 2, 3, 3, 4, 4, 5),
         year=c(2013, 2013, 2012, 2013, 2013, 2013, 2012, 2012, 2013, 2013),
-        var1=rnorm(10)
+        var1=rnorm(10),
     )
-    dfagg = df >> group_by(
-        f.id, f.year
-    ) >> select(
-        f.id, f.year, f.var1
-    ) >> summarise(var1=mean(f.var1))
+    dfagg = (
+        df
+        >> group_by(f.id, f.year)
+        >> select(f.id, f.year, f.var1)
+        >> summarise(var1=mean(f.var1))
+    )
 
     assert_iterable_equal(colnames(dfagg), ["id", "year", "var1"])
 

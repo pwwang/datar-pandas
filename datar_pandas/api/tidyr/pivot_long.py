@@ -2,8 +2,9 @@
 
 https://github.com/tidyverse/tidyr/blob/HEAD/R/pivot-long.R
 """
+
 import re
-from typing import Mapping, Callable, Union
+from typing import Any, Mapping, Callable, Union, Optional, cast
 
 from datar.core.names import repair_names
 from datar.apis.tidyr import extract, separate, pivot_longer
@@ -12,10 +13,13 @@ from ... import pandas as pd
 from ...pandas import DataFrame
 from ...common import is_scalar, setdiff, union, unique
 from ...contexts import Context
-from ...utils import DEFAULT_COLUMN_PREFIX, vars_select, apply_dtypes
+from ...utils import DEFAULT_COLUMN_PREFIX, vars_select, apply_dtypes, meta_kwargs
 from ...tibble import reconstruct_tibble
 from ..dplyr.relocate import relocate
 from ..dplyr.group_by import ungroup
+
+
+meta_pd = cast(Any, meta_kwargs)
 
 
 @pivot_longer.register(DataFrame, context=Context.SELECT, backend="pandas")
@@ -23,16 +27,16 @@ def _pivot_longer(
     _data: DataFrame,
     cols,
     names_to="name",
-    names_prefix: str = None,
-    names_sep: str = None,
-    names_pattern: str = None,
+    names_prefix: Optional[str] = None,
+    names_sep: Optional[str] = None,
+    names_pattern: Optional[str] = None,
     names_dtypes=None,
-    names_transform: Union[Callable, Mapping[str, Callable]] = None,
+    names_transform: Optional[Union[Callable, Mapping[str, Callable]]] = None,
     names_repair="check_unique",
     values_to: str = "value",
     values_drop_na: bool = False,
     values_dtypes=None,
-    values_transform: Union[Callable, Mapping[str, Callable]] = None,
+    values_transform: Optional[Union[Callable, Mapping[str, Callable]]] = None,
 ):
     """ "lengthens" data, increasing the number of rows and
     decreasing the number of columns.
@@ -122,7 +126,7 @@ def _pivot_longer(
         The pivoted dataframe.
     """
     rowid_column = "_PIVOT_ROWID_"
-    ret = ungroup(_data, __ast_fallback="normal", __backend="pandas").assign(
+    ret = ungroup(_data, **meta_pd).assign(
         **{rowid_column: range(_data.shape[0])}
     )
     all_columns = ret.columns
@@ -157,9 +161,7 @@ def _pivot_longer(
             "Only one of `names_sep` or `names_pattern` should be supplied."
         )
 
-    var_name = (
-        "__tmp_names_to__" if names_pattern or names_sep else names_to[0]
-    )
+    var_name = "__tmp_names_to__" if names_pattern or names_sep else names_to[0]
     ret = ret.melt(
         id_vars=id_columns,
         # Use the rest columns automatically.
@@ -169,8 +171,12 @@ def _pivot_longer(
         value_name=values_to,
     )
     if names_prefix:
-        names_prefix = re.compile(f"^{re.escape(names_prefix)}")
-        ret[var_name] = ret[var_name].str.replace(names_prefix, "", regex=True)
+        names_prefix_pattern = re.compile(f"^{re.escape(names_prefix)}")
+        ret[var_name] = ret[var_name].str.replace(
+            names_prefix_pattern,
+            "",
+            regex=True,
+        )
 
     if all(pd.is_categorical_dtype(_data[col]) for col in columns):
         ret[values_to] = ret[values_to].astype("category")
@@ -181,8 +187,7 @@ def _pivot_longer(
             var_name,
             into=names_to,
             regex=names_pattern,
-            __ast_fallback="normal",
-            __backend="pandas",
+            **meta_pd,
         )
 
     if names_sep:
@@ -191,16 +196,14 @@ def _pivot_longer(
             var_name,
             into=names_to,
             sep=names_sep,
-            __ast_fallback="normal",
-            __backend="pandas",
+            **meta_pd,
         )
     # extract/separate puts `into` last
     ret = relocate(
         ret,
         values_to,
         _after=-1,
-        __ast_fallback="normal",
-        __backend="pandas",
+        **meta_pd,
     )
 
     if ".value" in names_to:
@@ -217,29 +220,27 @@ def _pivot_longer(
         ret = pd.concat(
             [
                 id_data[
-                    id_data.columns.difference(na_names_to).difference(
-                        [rowid_column]
-                    )
+                    id_data.columns.difference(na_names_to).difference([rowid_column])
                 ],
                 ret2[value_columns],
             ],
             axis=1,
         )
-        values_to = value_columns
+        value_columns_sel = list(value_columns)
     else:
-        values_to = [values_to]
+        value_columns_sel = [values_to]
         ret = ret.drop(columns=[rowid_column])
 
     if values_drop_na:
-        ret.dropna(subset=values_to, inplace=True)
+        ret.dropna(subset=value_columns_sel, inplace=True)
 
     names_data = ret.loc[:, names_to]  # SettingwithCopyWarning
     apply_dtypes(names_data, names_dtypes)
     ret[names_to] = names_data
 
-    values_data = ret[values_to]
+    values_data = ret.loc[:, value_columns_sel]
     apply_dtypes(values_data, values_dtypes)
-    ret[values_to] = values_data
+    ret[value_columns_sel] = values_data
 
     if names_transform:
         for name in names_to:
@@ -249,7 +250,7 @@ def _pivot_longer(
                 ret[name] = ret[name].apply(names_transform[name])
 
     if values_transform:
-        for name in values_to:
+        for name in value_columns_sel:
             if callable(values_transform):
                 ret[name] = ret[name].apply(values_transform)
             elif name in values_transform:

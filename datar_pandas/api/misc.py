@@ -1,3 +1,6 @@
+# pyright: reportGeneralTypeIssues=false, reportAttributeAccessIssue=false
+# pyright: reportArgumentType=false
+
 import warnings
 
 from pipda import register_verb, register_func
@@ -37,22 +40,26 @@ def itemgetter(x, subscr):
 def _itemgetter_pobj(x, subscr):
     if isinstance(x, SeriesGroupBy) and isinstance(subscr, SeriesGroupBy):
         df = Tibble.from_args(x=x, subscr=subscr)
-        return df._datar["grouped"].apply(
-            lambda subdf: itemgetter(
-                subdf["x"],
-                subdf["subscr"],
-                __backend="pandas",
-                __ast_fallback="normal",
+        return (
+            df._datar["grouped"]
+            .apply(
+                lambda subdf: itemgetter(
+                    subdf["x"],
+                    subdf["subscr"],
+                    __backend="pandas",  # type: ignore
+                    __ast_fallback="normal",  # type: ignore
+                )
             )
-        ).droplevel(-1)
+            .droplevel(-1)
+        )
 
     if isinstance(x, SeriesGroupBy):
         return x.apply(
             lambda ser: itemgetter(
                 ser,
                 subscr,
-                __backend="pandas",
-                __ast_fallback="normal",
+                __backend="pandas",  # type: ignore
+                __ast_fallback="normal",  # type: ignore
             )
         ).droplevel(-1)
 
@@ -62,8 +69,8 @@ def _itemgetter_pobj(x, subscr):
                 lambda ser: itemgetter(
                     x,
                     ser,
-                    __backend="pandas",
-                    __ast_fallback="normal",
+                    __backend="pandas",  # type: ignore
+                    __ast_fallback="normal",  # type: ignore
                 )
             ).droplevel(-1)
 
@@ -77,7 +84,12 @@ def _itemgetter_pobj(x, subscr):
     # then subscr must be a PandasObject
     # as the function is registered for PandasObject
     x = as_series(x)
-    return itemgetter(x, subscr, __backend="pandas", __ast_fallback="normal")
+    return itemgetter(
+        x,
+        subscr,
+        __backend="pandas",  # type: ignore
+        __ast_fallback="normal",  # type: ignore
+    )
 
 
 class _MethodAccessor:
@@ -173,7 +185,12 @@ def pd_str(x):
 
     This is helpful when x is a SeriesGroupBy object
     """
-    return attrgetter(x, "str", __ast_fallback="normal", __backend="_default")
+    return attrgetter(
+        x,
+        "str",
+        __ast_fallback="normal",  # type: ignore
+        __backend="_default",  # type: ignore
+    )
 
 
 @register_verb(PandasObject, context=Context.EVAL)
@@ -182,7 +199,12 @@ def pd_cat(x):
 
     This is helpful when x is a SeriesGroupBy object
     """
-    return attrgetter(x, "cat", __ast_fallback="normal", __backend="_default")
+    return attrgetter(
+        x,
+        "cat",
+        __ast_fallback="normal",  # type: ignore
+        __backend="_default",  # type: ignore
+    )
 
 
 @register_verb(PandasObject, context=Context.EVAL)
@@ -191,7 +213,12 @@ def pd_dt(x):
 
     This is helpful when x is a SeriesGroupBy object
     """
-    return attrgetter(x, "dt", __ast_fallback="normal", __backend="_default")
+    return attrgetter(
+        x,
+        "dt",
+        __ast_fallback="normal",  # type: ignore
+        __backend="_default",  # type: ignore
+    )
 
 
 @register_verb(DataFrame)

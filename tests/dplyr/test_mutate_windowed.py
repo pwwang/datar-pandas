@@ -49,9 +49,7 @@ def test_desc_correctly_handled_by_window_functions():
     )
     out = mutate(df, rank=min_rank(desc(f.x))) >> pull(to="list")
     assert out == list(range(10, 0, -1))
-    out = mutate(group_by(df, f.g), rank=min_rank(desc(f.x))) >> pull(
-        to="list"
-    )
+    out = mutate(group_by(df, f.g), rank=min_rank(desc(f.x))) >> pull(to="list")
     assert out == rep(range(5, 0, -1), 2).tolist()
 
     out = df >> mutate(rank=row_number(desc(f.x))) >> pull()
@@ -210,9 +208,7 @@ def test_rank_functions_deal_correctly_with_na():
     assert all(is_na(res.ntile[[2, 5]]))
     assert all(is_na(res.row_number[[2, 5]]))
 
-    assert res.percent_rank[[0, 1, 3, 4]].tolist() == c(
-        1.0 / 3.0, 1.0, 1.0 / 3.0, 0.0
-    )
+    assert res.percent_rank[[0, 1, 3, 4]].tolist() == c(1.0 / 3.0, 1.0, 1.0 / 3.0, 0.0)
     assert res.min_rank[[0, 1, 3, 4]].tolist() == c(2, 4, 2, 1)
     assert res.dense_rank[[0, 1, 3, 4]].tolist() == c(2, 3, 2, 1)
     assert res.cume_dist[[0, 1, 3, 4]].tolist() == c(0.75, 1.0, 0.75, 0.25)
@@ -309,6 +305,7 @@ def test_lag_handles_default_argument_in_mutate():
 # #   expect_error(df_sqlite %>% mutate(r = row_number()), "does not support")
 # # })
 
+
 def test_mutate_handles_matrix_columns():
     df = tibble(a=rep([1, 2, 3], each=2), b=range(1, 7))
 
@@ -319,13 +316,13 @@ def test_mutate_handles_matrix_columns():
     assert_iterable_equal(
         df_regular.b,
         [-1.336306, -0.801784, -0.267261, 0.267261, 0.801784, 1.336306],
-        approx=1e-5
+        approx=1e-5,
     )
 
     assert_iterable_equal(
         get_obj(df_grouped.b),
         [-0.707107, 0.707107, -0.707107, 0.707107, -0.707107, 0.707107],
-        approx=1e-5
+        approx=1e-5,
     )
 
     assert_iterable_equal(

@@ -2,6 +2,7 @@
 
 See souce https://github.com/tidyverse/dplyr/blob/master/R/context.R
 """
+
 import numpy as np
 from datar.apis.dplyr import (
     group_data,
@@ -81,9 +82,7 @@ def _cur_data(_data: DataFrame) -> Series:
 def _cur_data_grouped(_data: TibbleGrouped) -> Series:
     _data = _data._datar.get("summarise_source", _data)
     cols = setdiff(_data.columns, _data.group_vars or [])
-    return (
-        _data._datar["grouped"].apply(lambda g: Series([g[cols]])).iloc[:, 0]
-    )
+    return _data._datar["grouped"].apply(lambda g: Series([g[cols]])).iloc[:, 0]
 
 
 @cur_group.register(DataFrame, context=Context.EVAL, backend="pandas")
@@ -95,7 +94,7 @@ def _cur_group(_data: DataFrame) -> Tibble:
 @cur_group.register(TibbleGrouped, context=Context.EVAL, backend="pandas")
 def _cur_group_grouped(_data: TibbleGrouped) -> Series:
     _data = _data._datar.get("summarise_source", _data)
-    out = group_keys(_data, __ast_fallback="normal", __backend="pandas")
+    out = group_keys(_data, __ast_fallback="normal", __backend="pandas")  # type: ignore
     # split each row as a df
     out = out.apply(lambda row: row.to_frame().T, axis=1)
     out.index = get_grouper(_data._datar["grouped"]).result_index
@@ -117,7 +116,11 @@ def _cur_group_id_grouped(_data: TibbleGrouped) -> Series:
 @cur_group_rows.register(DataFrame, context=Context.EVAL, backend="pandas")
 def _cur_group_rows(_data: DataFrame) -> np.ndarray:
     _data = getattr(_data, "_datar", {}).get("summarise_source", _data)
-    gdata = group_data(_data, __ast_fallback="normal", __backend="pandas")
+    gdata = group_data(
+        _data,
+        __ast_fallback="normal",  # type: ignore
+        __backend="pandas",  # type: ignore
+    )  # type: ignore
     if isinstance(_data, TibbleGrouped):
         return gdata.set_index(_data.group_vars)["_rows"]
 

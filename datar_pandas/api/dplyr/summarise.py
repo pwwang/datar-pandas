@@ -1,7 +1,7 @@
 """Summarise each group to fewer rows"""
 
 from itertools import chain
-from typing import Any, Tuple
+from typing import Any, Optional, Tuple, cast
 
 from pipda import evaluate_expr
 from datar import get_option
@@ -26,19 +26,21 @@ from ...tibble import Tibble, TibbleGrouped, TibbleRowwise
 def _summarise(
     _data: DataFrame,
     *args: Any,
-    _groups: str = None,
+    _groups: Optional[str] = None,
     **kwargs: Any,
 ) -> Tibble:
     if not _data.columns.is_unique:
-        raise NameNonUniqueError(
-            "Can't transform a data frame with duplicate names."
-        )
+        raise NameNonUniqueError("Can't transform a data frame with duplicate names.")
 
     _groups = arg_match(
         _groups, "_groups", ["drop", "drop_last", "keep", "rowwise", None]
     )
 
-    gvars = group_vars(_data, __ast_fallback="normal", __backend="pandas")
+    gvars = group_vars(
+        _data,
+        __ast_fallback="normal",  # type: ignore
+        __backend="pandas",  # type: ignore
+    )
     out, all_ones = _summarise_build(_data, *args, **kwargs)
     if _groups is None:
         if not isinstance(_data, TibbleRowwise) and all_ones:
@@ -96,8 +98,8 @@ def _summarise_build(
     else:
         outframe = group_keys(
             _data,
-            __ast_fallback="normal",
-            __backend="pandas",
+            __ast_fallback="normal",  # type: ignore
+            __backend="pandas",  # type: ignore
         )
         if isinstance(_data, TibbleGrouped):
             grouped = _data._datar["grouped"]
@@ -119,9 +121,9 @@ def _summarise_build(
     all_ones = True
     for key, val in chain(enumerate(args), kwargs.items()):
         try:
-            val = evaluate_expr(val, outframe, Context.EVAL)
+            val = evaluate_expr(val, outframe, cast(Any, Context.EVAL))
         except KeyError:
-            val = evaluate_expr(val, _data, Context.EVAL)
+            val = evaluate_expr(val, _data, cast(Any, Context.EVAL))
 
         if val is None:
             continue
@@ -139,7 +141,11 @@ def _summarise_build(
 
         outframe = newframe
 
-    gvars = group_vars(_data, __ast_fallback="normal", __backend="pandas")
+    gvars = group_vars(
+        _data,
+        __ast_fallback="normal",  # type: ignore
+        __backend="pandas",  # type: ignore
+    )
     tmp_cols = [
         mcol
         for mcol in outframe.columns
@@ -147,6 +153,10 @@ def _summarise_build(
         and mcol not in _data._datar["used_refs"]
         and mcol not in gvars
     ]
-    outframe = ungroup(outframe, __ast_fallback="normal", __backend="pandas")
+    outframe = ungroup(
+        outframe,
+        __ast_fallback="normal",  # type: ignore
+        __backend="pandas",  # type: ignore
+    )
     outframe = outframe[setdiff(outframe.columns, tmp_cols)]
     return outframe.reset_index(drop=True), all_ones

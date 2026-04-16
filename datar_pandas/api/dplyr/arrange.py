@@ -2,6 +2,7 @@
 
 See source https://github.com/tidyverse/dplyr/blob/master/R/arrange.R
 """
+
 from typing import Any
 
 from datar.apis.dplyr import mutate, arrange
@@ -25,17 +26,15 @@ def _arrange(
         return _data.copy()
 
     if not _data.columns.is_unique:
-        raise NameNonUniqueError(
-            "Cannot arrange a data frame with duplicate names."
-        )
+        raise NameNonUniqueError("Cannot arrange a data frame with duplicate names.")
 
     gvars = getattr(_data, "group_vars", [])
 
     sorting_df = mutate(
         _data,
         *args,
-        __ast_fallback="normal",
-        __backend="pandas",
+        __ast_fallback="normal",  # type: ignore
+        __backend="pandas",  # type: ignore
         **kwargs,
     )
     if _by_group:

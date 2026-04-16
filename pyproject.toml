@@ -47,3 +47,6 @@ filterwarnings = [
 ]
 console_output_style = "progress"
 junit_family = "xunit1"
+
+[tool.pyright]
+reportFunctionMemberAccess = false

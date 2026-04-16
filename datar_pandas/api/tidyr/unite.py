@@ -1,5 +1,6 @@
 """Unite multiple columns into one by pasting strings together"""
-from typing import Union
+
+from typing import Any, Union, cast
 
 from datar.apis.tidyr import unite
 
@@ -7,9 +8,12 @@ from ... import pandas as pd
 from ...pandas import DataFrame, Series
 from ...common import setdiff
 from ...contexts import Context
-from ...utils import vars_select
+from ...utils import vars_select, meta_kwargs
 from ...tibble import reconstruct_tibble
 from ..dplyr.group_by import ungroup
+
+
+meta_pd = cast(Any, meta_kwargs)
 
 
 @unite.register(DataFrame, context=Context.SELECT, backend="pandas")
@@ -37,15 +41,15 @@ def _unite(
     """
     all_columns = data.columns
     if not columns:
-        unite_idx = range(data.shape[1])
-        columns = all_columns
+        unite_idx = list(range(data.shape[1]))
+        selected_columns = list(all_columns)
     else:
-        unite_idx = vars_select(data, columns)
-        columns = all_columns[unite_idx]
+        unite_idx = list(vars_select(all_columns, *columns))
+        selected_columns = list(all_columns[unite_idx])
 
-    out = ungroup(data, __ast_fallback="normal", __backend="pandas").copy()
+    out = ungroup(data, **meta_pd).copy()
 
-    united = Series(out[columns].values.tolist(), index=out.index)
+    united = Series(out[selected_columns].values.tolist(), index=out.index)
     if sep is not None:
         if na_rm:
             united = united.transform(

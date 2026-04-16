@@ -2,8 +2,9 @@
 
 See https://github.com/tidyverse/dplyr/blob/master/R/bind.r
 """
+
 from __future__ import annotations
-from typing import Any, Callable
+from typing import Any, Callable, Optional, cast
 
 from datar.core.utils import logger
 from datar.core.names import repair_names
@@ -11,7 +12,7 @@ from datar.apis.dplyr import bind_rows, bind_cols
 
 from ... import pandas as pd
 from ...pandas import DataFrame, Categorical, union_categoricals
-from ...common import is_factor, is_scalar, is_null
+from ...common import is_factor, is_scalar
 from ...tibble import Tibble, TibbleGrouped, reconstruct_tibble
 
 
@@ -29,7 +30,7 @@ def _construct_tibble(data):
 @bind_rows.register((DataFrame, list, dict, type(None)), backend="pandas")
 def _bind_rows(
     *datas: DataFrame | list | dict | None,
-    _id: str = None,
+    _id: Optional[str] = None,
     _copy: bool = True,
     **kwargs: Any,
 ) -> DataFrame:
@@ -71,8 +72,7 @@ def _bind_rows(
             if col in dat and not dat[col].isna().all()
         ]
         all_categorical = [
-            is_factor(ser) or is_null(ser).all()
-            for ser in all_series
+            is_factor(ser) or bool(pd.isnull(ser).all()) for ser in all_series
         ]
         if all(all_categorical):
             union_cat = union_categoricals(all_series)
@@ -82,40 +82,43 @@ def _bind_rows(
                 data[col] = Categorical(
                     data[col],
                     categories=union_cat.categories,
-                    ordered=is_factor(data[col])
-                    and data[col].cat.ordered,
+                    ordered=is_factor(data[col]) and data[col].cat.ordered,
                 )
         elif any(all_categorical):
             logger.warning("Factor information lost during rows binding.")
 
     if _id is not None:
+        key_values = list(key_data.values())
+        key_names = list(key_data.keys())
         return (
             pd.concat(
-                key_data.values(),
-                keys=key_data.keys(),
+                cast(Any, key_values),
+                keys=cast(Any, key_names),
                 names=[_id, None],
                 copy=_copy,
-            )
+                # pandas overloads are stricter than runtime accepted inputs
+                # for keyed concatenation here.
+            )  # type: ignore[call-overload]
             .reset_index(level=0)
             .reset_index(drop=True)
         )
 
-    to_concat = [
-        kdata
-        for kdata in
-        key_data.values()
-        if kdata.shape[0] > 0
-    ]
+    to_concat = [kdata for kdata in key_data.values() if kdata.shape[0] > 0]
     if not to_concat:
         return key_data[0].loc[[], :]
 
-    return pd.concat(to_concat, copy=_copy).reset_index(drop=True)
+    return pd.concat(
+        cast(Any, to_concat),
+        copy=_copy,
+    ).reset_index(  # type: ignore[call-overload]
+        drop=True
+    )
 
 
 @bind_rows.register(TibbleGrouped, backend="pandas")
 def _bind_rows_grouped(
     *datas: Any,
-    _id: str = None,
+    _id: Optional[str] = None,
     **kwargs: Any,
 ) -> TibbleGrouped:
     grouped = [data for data in datas if isinstance(data, TibbleGrouped)]
@@ -125,7 +128,7 @@ def _bind_rows_grouped(
         _id=_id,
         **kwargs,
     )
-    return reconstruct_tibble(out, grouped)
+    return cast(TibbleGrouped, reconstruct_tibble(out, grouped))
 
 
 @bind_cols.register((DataFrame, dict, type(None)), backend="pandas")
@@ -135,9 +138,7 @@ def _bind_cols(
     _copy=True,
 ) -> DataFrame:
     ds = [
-        Tibble.from_args(**d)
-        if isinstance(d, dict)
-        else d
+        Tibble.from_args(**d) if isinstance(d, dict) else d
         for d in datas
         if d is not None
     ]
@@ -145,6 +146,6 @@ def _bind_cols(
     if not ds:
         return Tibble()
 
-    ret = pd.concat(ds, axis=1, copy=_copy)
+    ret = pd.concat(cast(Any, ds), axis=1, copy=_copy)  # type: ignore[call-overload]
     ret.columns = repair_names(ret.columns.tolist(), repair=_name_repair)
     return ret

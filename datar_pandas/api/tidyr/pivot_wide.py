@@ -1,6 +1,6 @@
 """Pivot data from long to wide"""
 
-from typing import List, Any, Union, Callable, Mapping
+from typing import Any, Callable, List, Mapping, Optional, Union, cast
 
 import numpy as np
 from datar.apis.base import identity
@@ -10,9 +10,12 @@ from ... import pandas as pd
 from ...pandas import DataFrame, Index
 from ...common import is_scalar
 from ...contexts import Context
-from ...utils import NA_integer_, vars_select
+from ...utils import NA_integer_, vars_select, meta_kwargs
 from ...tibble import reconstruct_tibble
 from ..dplyr.group_by import ungroup
+
+
+meta_pd = cast(Any, meta_kwargs)
 
 ROWID_COLUMN = "_PIVOT_ROWID_"
 
@@ -24,7 +27,7 @@ def _pivot_wider(
     names_from="name",
     names_prefix: str = "",
     names_sep: str = "_",
-    names_glue: str = None,
+    names_glue: Optional[str] = None,
     names_sort: bool = False,
     # names_repair: str = "check_unique", # todo
     values_from="value",
@@ -74,17 +77,15 @@ def _pivot_wider(
     if id_cols is not None and is_scalar(id_cols):
         id_cols = [id_cols]  # type: ignore
 
-    undata = ungroup(_data, __ast_fallback="normal", __backend="pandas")
+    undata = ungroup(_data, **meta_pd)
     if id_cols is None:
         all_cols = _data.columns
-        names_from = all_cols[vars_select(all_cols, names_from)]
+        names_from = all_cols[vars_select(all_cols, cast(Any, names_from))]
         # values_from could be a df-column
         new_values_from = []
         for value_from in values_from:
             if isinstance(value_from, str) and value_from not in all_cols:
-                df_cols = [
-                    col for col in all_cols if col.startswith(f"{value_from}$")
-                ]
+                df_cols = [col for col in all_cols if col.startswith(f"{value_from}$")]
                 if not df_cols:
                     raise KeyError(value_from)
                 new_values_from.extend(df_cols)
@@ -164,7 +165,10 @@ def _pivot_wider(
 
 
 def _flatten_column_names(
-    names: Index, names_prefix: str, names_sep: str, names_glue: str
+    names: Index,
+    names_prefix: str,
+    names_sep: str,
+    names_glue: Optional[str],
 ) -> List[str]:
     """Flatten the hierachical column names:
 
@@ -200,12 +204,12 @@ def _flatten_column_names(
             prefix = names_prefix + names_sep.join(
                 col for name, col in cols.items() if name != "_value"
             )
-            out.append(f'{prefix}${cols["_value"].split("$", 1)[1]}')
+            out.append(f"{prefix}${cols['_value'].split('$', 1)[1]}")
         elif not names_glue:
             out.append(f"{names_prefix}{names_sep.join(cols.values())}")
         else:
             if "_value" in cols:
                 cols[".value"] = cols["_value"]
-            out.append(names_glue.format(**cols))
+            out.append(names_glue.format(**cast(Mapping[str, Any], cols)))
 
     return out

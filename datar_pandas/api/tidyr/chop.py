@@ -2,8 +2,9 @@
 
 https://github.com/tidyverse/tidyr/blob/master/R/chop.R
 """
+
 from collections import defaultdict
-from typing import Iterable
+from typing import Any, Iterable, cast
 
 import numpy as np
 from datar.apis.tidyr import drop_na, chop, unchop
@@ -11,10 +12,13 @@ from datar.apis.tidyr import drop_na, chop, unchop
 from ... import pandas as pd
 from ...pandas import DataFrame, Series
 from ...common import is_scalar, union, setdiff
-from ...utils import vars_select, apply_dtypes
+from ...utils import vars_select, apply_dtypes, meta_kwargs
 from ...contexts import Context
 from ...tibble import reconstruct_tibble
 from ..dplyr.group_by import ungroup
+
+
+meta_pd = cast(Any, meta_kwargs)
 
 
 def _keep_column_order(df: DataFrame, order: Iterable[str]):
@@ -54,24 +58,19 @@ def _chop(
         return data.copy()
 
     all_columns = data.columns
-    cols = vars_select(all_columns, cols)
+    cols = vars_select(all_columns, cast(Any, cols))
     cols = all_columns[cols]
     # when cols is empty
     # order may change for all_columns.difference([])
-    key_cols = (
-        setdiff(all_columns, cols)
-        if cols.size > 0
-        else all_columns
-    )
-    ungrouped = ungroup(data, __ast_fallback="normal", __backend="pandas")
+    key_cols = setdiff(all_columns, cols) if cols.size > 0 else all_columns
+    ungrouped = ungroup(data, **meta_pd)
     if key_cols.size == 0:
         grouped = ungrouped.groupby([1] * data.shape[0], sort=False)
         out = grouped.agg(list).reset_index(drop=True)
     else:
         grouped = ungroup(
             data,
-            __ast_fallback="normal",
-            __backend="pandas",
+            **meta_pd,
         ).groupby(
             list(key_cols),
             dropna=False,
@@ -124,15 +123,15 @@ def _unchop(
     """
     # TODO: use df.explode() with pandas 1.3+?
     all_columns = data.columns
-    cols = vars_select(all_columns, cols)
+    cols = vars_select(all_columns, cast(Any, cols))
 
     if len(cols) == 0 or data.shape[0] == 0:
         return data.copy()
 
-    cols = all_columns[cols]
+    cols = all_columns[list(cols)]
     key_cols = all_columns.difference(cols).tolist()
     out = _unchopping(
-        ungroup(data, __ast_fallback="normal", __backend="pandas"),
+        ungroup(data, **meta_pd),
         cols,
         key_cols,
         keep_empty,
@@ -155,13 +154,13 @@ def _unchopping(
     # key_cols could be empty
     rsize = None
     val_data = {}
+    dtypes = {}
     for dcol in data_cols:
         # check dtype first so that we don't need to check
         # other types of columns element by element
         is_df_col = data[dcol].dtype == object and all(
             # it's either null or a dataframe
-            (is_scalar(val) and pd.isnull(val))
-            or isinstance(val, DataFrame)
+            (is_scalar(val) and pd.isnull(val)) or isinstance(val, DataFrame)
             for val in data[dcol]
         )
         if is_df_col:
@@ -176,13 +175,15 @@ def _unchopping(
             tmpsize = []
             for prevsize, cursize in zip(rsize, sizes):
                 if prevsize != cursize and 1 not in (prevsize, cursize):
-                    raise ValueError(
-                        f"Incompatible lengths: {prevsize}, {cursize}."
-                    )
+                    raise ValueError(f"Incompatible lengths: {prevsize}, {cursize}.")
                 tmpsize.append(max(prevsize, cursize))
             rsize = tmpsize
 
-    key_data = {key: np.repeat(data[key].values, rsize) for key in key_cols}
+    assert rsize is not None
+    key_data = {
+        key: np.repeat(np.asarray(data[key].values), rsize)
+        for key in key_cols
+    }
     key_data.update(val_data)
     # DataFrame(key_data) may have nested dfs
     # say y$a, then ['y'] will not select it
@@ -191,9 +192,7 @@ def _unchopping(
         out = drop_na(
             out,
             *val_data,
-            how_="all",
-            __ast_fallback="normal",
-            __backend="pandas",
+            **cast(Any, {"how_": "all", **meta_kwargs}),
         )
     apply_dtypes(out, dtypes)
     return out
@@ -240,7 +239,8 @@ def _unchopping_nondf_column(series: Series):
     """Unchopping non-dataframe column"""
     val_data = {}
     vals = [
-        [np.nan] if is_scalar(val) and pd.isnull(val)
+        [np.nan]
+        if is_scalar(val) and pd.isnull(val)
         else [val]
         if is_scalar(val)
         else val

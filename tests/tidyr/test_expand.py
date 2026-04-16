@@ -92,7 +92,8 @@ def test_expand_respects_groups():
     df = tibble(a=[1, 1, 2], b=[1, 2, 1], c=[2, 1, 1])
     out = df >> group_by(f.a) >> expand(f.b, f.c) >> nest(data=c(f.b, f.c))
     assert_frame_equal(
-        get_obj(out.data).values[0], crossing(b=[1, 2], c=[1, 2]),
+        get_obj(out.data).values[0],
+        crossing(b=[1, 2], c=[1, 2]),
         check_dtype=False,
     )
     assert_frame_equal(
@@ -216,6 +217,7 @@ def test_crossing_nesting_expand_respect_name_repair():
 #   expect_equal(out$x, out$y)
 # })
 
+
 # expand_grid ----------------------------------
 def test_expand_grid():
     out = expand_grid(x=seq(1, 3), y=[1, 2])
@@ -233,9 +235,7 @@ def test_expand_grid():
         ),
     )
 
-    out = expand_grid(
-        x1=tibble(a=[1, 2], b=[3, 4]), x2=tibble(a=[5, 6], b=[7, 8])
-    )
+    out = expand_grid(x1=tibble(a=[1, 2], b=[3, 4]), x2=tibble(a=[5, 6], b=[7, 8]))
     assert_frame_equal(
         out,
         tibble(

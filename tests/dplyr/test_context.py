@@ -90,9 +90,7 @@ def test_cur_group_rows():
 
 def test_cur_data_all_sequentially():
     df = tibble(a=1)
-    out = df >> mutate(
-        x=cur_data().transform(ncol), y=cur_data().transform(ncol)
-    )
+    out = df >> mutate(x=cur_data().transform(ncol), y=cur_data().transform(ncol))
     expect = tibble(a=1, x=1, y=2)
     assert out.equals(expect)
 

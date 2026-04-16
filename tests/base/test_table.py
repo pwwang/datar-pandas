@@ -76,9 +76,7 @@ def test_table():
     assert_iterable_equal(tab.columns.to_list(), ["A", "C", "D", "E"])
     assert_iterable_equal(tab.values.flatten(), [10, 10, 0, 0])
 
-    ds = Series(
-        factor(rep(c("A", "B", "C"), 10), levels=c("A", "B", "C", "D", "E"))
-    )
+    ds = Series(factor(rep(c("A", "B", "C"), 10), levels=c("A", "B", "C", "D", "E")))
     tab = table(ds, exclude="B", dnn=["x"])
     assert_iterable_equal(tab.columns.to_list(), ["A", "C", "D", "E"])
     assert_iterable_equal(tab.values.flatten(), [10, 10, 0, 0])

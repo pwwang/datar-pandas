@@ -187,9 +187,7 @@ def test_as_ordered():
 
 
 def test_as_pd_date():
-    assert_equal(
-        as_pd_date("Sep 16, 2021"), pd.Timestamp("2021-09-16 00:00:00")
-    )
+    assert_equal(as_pd_date("Sep 16, 2021"), pd.Timestamp("2021-09-16 00:00:00"))
 
 
 def test_is_atomic():
@@ -256,8 +254,7 @@ def test_is_finite():
 def test_is_infinite():
     assert_iterable_equal(is_infinite(Series([1, 2, 3])), [False, False, False])
     assert_iterable_equal(
-        is_infinite(Series([1, 2, 3]).groupby([1, 1, 2])).obj,
-        [False, False, False]
+        is_infinite(Series([1, 2, 3]).groupby([1, 1, 2])).obj, [False, False, False]
     )
 
     assert_iterable_equal(

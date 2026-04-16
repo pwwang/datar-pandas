@@ -1,8 +1,10 @@
 import builtins
 
 import numpy as np
+
 # load numpy implementation of datar
 import datar_numpy.api.asis  # noqa: F401
+
 # make sure all_ and any_ loaded first
 import datar_numpy.api.sets  # noqa: F401
 from datar.apis.base import (
@@ -63,24 +65,12 @@ is_logical.register(Series, backend="pandas")(is_bool_dtype)
 is_numeric.register(Series, backend="pandas")(is_numeric_dtype)
 is_factor.register(object, backend="pandas")(is_categorical_dtype)
 
-is_character.register(SeriesGroupBy, backend="pandas")(
-    lambda x: x.agg(is_string_dtype)
-)
-is_complex.register(SeriesGroupBy, backend="pandas")(
-    lambda x: x.agg(is_complex_dtype)
-)
-is_double.register(SeriesGroupBy, backend="pandas")(
-    lambda x: x.agg(is_float_dtype)
-)
-is_integer.register(SeriesGroupBy, backend="pandas")(
-    lambda x: x.agg(is_integer_dtype)
-)
-is_logical.register(SeriesGroupBy, backend="pandas")(
-    lambda x: x.agg(is_bool_dtype)
-)
-is_numeric.register(SeriesGroupBy, backend="pandas")(
-    lambda x: x.agg(is_numeric_dtype)
-)
+is_character.register(SeriesGroupBy, backend="pandas")(lambda x: x.agg(is_string_dtype))
+is_complex.register(SeriesGroupBy, backend="pandas")(lambda x: x.agg(is_complex_dtype))
+is_double.register(SeriesGroupBy, backend="pandas")(lambda x: x.agg(is_float_dtype))
+is_integer.register(SeriesGroupBy, backend="pandas")(lambda x: x.agg(is_integer_dtype))
+is_logical.register(SeriesGroupBy, backend="pandas")(lambda x: x.agg(is_bool_dtype))
+is_numeric.register(SeriesGroupBy, backend="pandas")(lambda x: x.agg(is_numeric_dtype))
 is_factor.register(SeriesGroupBy, backend="pandas")(
     lambda x: x.agg(is_categorical_dtype)
 )
@@ -143,11 +133,15 @@ def _as_factor_series(x):
 
 @as_factor.register(SeriesGroupBy, backend="pandas")
 def _as_factor_series_groupby(x):
-    return get_obj(x).astype("category").groupby(
-        get_grouper(x),
-        sort=x.sort,
-        observed=x.observed,
-        dropna=x.dropna,
+    return (
+        get_obj(x)
+        .astype("category")
+        .groupby(
+            get_grouper(x),
+            sort=x.sort,
+            observed=x.observed,
+            dropna=x.dropna,
+        )
     )
 
 
@@ -168,11 +162,16 @@ def _as_ordered_series(x):
 
 @as_ordered.register(SeriesGroupBy, backend="pandas")
 def _as_ordered_series_groupby(x):
-    return get_obj(x).astype("category").cat.as_ordered().groupby(
-        get_grouper(x),
-        sort=x.sort,
-        observed=x.observed,
-        dropna=x.dropna,
+    return (
+        get_obj(x)
+        .astype("category")
+        .cat.as_ordered()
+        .groupby(
+            get_grouper(x),
+            sort=x.sort,
+            observed=x.observed,
+            dropna=x.dropna,
+        )
     )
 
 
@@ -190,7 +189,11 @@ def _as_integer_ser(x):
 
 @as_integer.register(SeriesGroupBy, backend="pandas")
 def _as_integer_sgb(x: SeriesGroupBy):
-    out = as_integer(get_obj(x), __ast_fallback="normal", __backend="pandas")
+    out = as_integer(
+        get_obj(x),
+        __ast_fallback="normal",  # type: ignore
+        __backend="pandas",  # type: ignore
+    )
     out = as_series(out)
     out.index = get_obj(x).index
     out = out.groupby(

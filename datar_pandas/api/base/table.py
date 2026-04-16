@@ -1,5 +1,8 @@
 """Port `table` function from r-base"""
+
 import numpy as np
+from typing import Any, cast
+
 from datar.apis.base import as_integer, table, tabulate
 from datar_numpy.utils import make_array
 
@@ -29,18 +32,16 @@ def _fillna_safe(data, rep=NA_character_):
     # elementwise comparison failed; returning scalar instead
     # if rep in data:
     if rep in list(data):
-        raise ValueError(
-            "The value to replace NAs is already present in data."
-        )
+        raise ValueError("The value to replace NAs is already present in data.")
 
     if not pd.isnull(data).any():
         return data
 
     if is_categorical_dtype(data):
-        if isinstance(data, Series):  # pragma: no cover
-            data = data.values
-        data = data.add_categories(rep)
-        return data.fillna(rep)
+        cat = data.values if isinstance(data, Series) else data
+        cat = cast(Any, cat)
+        cat = cat.add_categories([rep])
+        return cat.fillna(rep)
 
     # rep may not be the same dtype as data
     return Series(data).fillna(rep).values
@@ -71,11 +72,11 @@ def _table(x, *more, exclude=None, use_na="no", dnn=None, deparse_level=1):
     dn1 = dn2 = None
     if isinstance(dnn, str):
         dn1 = dn2 = dnn
-    elif not is_scalar(dnn):
-        dnn = list(dnn)
-        if len(dnn) == 1:
-            dnn = dnn * 2
-        dn1, dn2 = dnn[:2]
+    elif dnn is not None and not is_scalar(dnn):
+        dnn_list = list(dnn)
+        if len(dnn_list) == 1:
+            dnn_list = dnn_list * 2
+        dn1, dn2 = dnn_list[:2]
 
     if obj1 is obj2:
         obj1 = obj2 = _iterable_excludes(obj1, exclude=exclude)
@@ -83,13 +84,13 @@ def _table(x, *more, exclude=None, use_na="no", dnn=None, deparse_level=1):
         obj1 = _iterable_excludes(obj1, exclude=exclude)
         obj2 = _iterable_excludes(obj2, exclude=exclude)
 
-    kwargs = {"dropna": False}
+    kwargs: dict[str, Any] = {"dropna": False}
     if dn1:
         kwargs["rownames"] = [dn1]
     if dn2:
         kwargs["colnames"] = [dn2]
 
-    tab = pd.crosstab(obj1, obj2, **kwargs)
+    tab = pd.crosstab(cast(Any, obj1), cast(Any, obj2), **kwargs)
     tab = tab.loc[~pd.isnull(tab.index), :]
     if obj1 is obj2:
         tab = DataFrame(dict(count=np.diag(tab)), index=tab.columns).T
@@ -115,7 +116,7 @@ def _tabulate(bin, nbins=None):
         There is a bin for each of the values `1, ..., nbins`
     """
     is_cat = is_categorical_dtype(bin)
-    bin = as_integer(bin, __ast_fallback="normal")
+    bin = as_integer(bin, __ast_fallback="normal")  # type: ignore
     if is_cat:
         bin = bin + 1
 
@@ -124,13 +125,8 @@ def _tabulate(bin, nbins=None):
         bin if is_scalar(bin) else 0 if len(bin) == 0 else max(bin),
         0 if nbins is None else nbins,
     )
-    tabled = table(bin, __ast_fallback="normal", __backend="pandas")
-    tabled = (
-        tabled.T
-        .reindex(range(1, nbins + 1), fill_value=0)
-        .iloc[:, 0]
-        .values
-    )
+    tabled = table(bin, __ast_fallback="normal", __backend="pandas")  # type: ignore
+    tabled = tabled.T.reindex(range(1, nbins + 1), fill_value=0).iloc[:, 0].values
 
     return tabled
 
@@ -196,10 +192,11 @@ def _iterable_excludes(data, exclude):
     exclude = make_array(exclude)
 
     if is_categorical_dtype(data):
-        if isinstance(data, Series):
-            data = data.values
-        data = data[~data.isin(exclude)]
-        data = data.remove_categories(data.categories.intersection(exclude))
+        cat = data.values if isinstance(data, Series) else data
+        cat = cast(Any, cat)
+        cat = cat[~cat.isin(exclude)]
+        cat = cat.remove_categories(cat.categories.intersection(exclude))
+        data = cat
 
     else:
         data = Series(data)

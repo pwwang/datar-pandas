@@ -1,4 +1,3 @@
-
 import pytest
 import numpy as np
 from collections import namedtuple
@@ -20,6 +19,7 @@ def pytest_sessionstart(session):
     use_modin = session.config.getoption("modin")
     if use_modin:
         from os import environ
+
         environ["MODIN_ENGINE"] = "Dask"
 
     options(use_modin=use_modin)
@@ -87,6 +87,7 @@ def is_installed(pkg):
 def pd_data():
     from datar_pandas.pandas import DataFrame, Series
     from datar_pandas.tibble import Tibble, TibbleGrouped
+
     out = namedtuple(
         "pd_data",
         "scalar list tuple array series sgb df gf tibble tg tr",
@@ -101,9 +102,7 @@ def pd_data():
     out.farray = np.array([1.2, 2.2, 2.2, 3.2])
     out.negarray = np.array([-1, -2, -2, -3])
     out.series = Series([1, 2, 2, 3])
-    out.sgb = Series([1, 2, 2, 3], name="x").groupby(
-        Series([1, 2, 2, 3], name="x")
-    )
+    out.sgb = Series([1, 2, 2, 3], name="x").groupby(Series([1, 2, 2, 3], name="x"))
     out.df = DataFrame({"x": [1, 2, 2, 3]})
     out.gf = out.df.groupby([1, 2, 2, 3])
     out.tibble = Tibble(out.df, copy=True)

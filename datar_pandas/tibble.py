@@ -1,5 +1,10 @@
-"""Provides wrapped DataFrame. Should be only used with pandas/modin backends
-"""
+"""Provides wrapped DataFrame. Should be only used with pandas/modin backends"""
+# pyright: reportGeneralTypeIssues=false, reportReturnType=false
+# pyright: reportArgumentType=false, reportAttributeAccessIssue=false
+# pyright: reportIncompatibleMethodOverride=false, reportOperatorIssue=false
+# pyright: reportCallIssue=false
+from __future__ import annotations
+
 from itertools import chain
 from typing import TYPE_CHECKING, Callable, Mapping, Union, Sequence
 
@@ -55,7 +60,7 @@ class Tibble(DataFrame):
         names: Sequence[str],
         data: Sequence,
         _name_repair: Union[str, Callable] = "check_unique",
-        _dtypes: Union["Dtype", Mapping[str, "Dtype"]] = None,
+        _dtypes: Union["Dtype", Mapping[str, "Dtype"]] | None = None,
     ) -> "Tibble":
         """Construct a tibble with name-value pairs
 
@@ -73,9 +78,7 @@ class Tibble(DataFrame):
         from .contexts import Context
 
         if len(names) != len(data):
-            raise ValueError(
-                "Lengths of `names` and `values` are not the same."
-            )
+            raise ValueError("Lengths of `names` and `values` are not the same.")
         names = repair_names(names, _name_repair)
 
         out = None
@@ -137,14 +140,12 @@ class Tibble(DataFrame):
         try:
             result = super().__getitem__(key)
         except KeyError:
-            subdf_cols = [
-                col for col in self.columns if str(col).startswith(f"{key}$")
-            ]
+            subdf_cols = [col for col in self.columns if str(col).startswith(f"{key}$")]
             if not subdf_cols:
                 raise
 
             result = Tibble(self.loc[:, subdf_cols])
-            result.columns = [col[len(key) + 1:] for col in subdf_cols]
+            result.columns = [col[len(key) + 1 :] for col in subdf_cols]
 
         return result
 
@@ -199,13 +200,7 @@ class Tibble(DataFrame):
 
     def rowwise(self, cols: Sequence[str] = None) -> "TibbleRowwise":
         """Get a rowwise tibble"""
-        cols = (
-            []
-            if cols is None
-            else [cols]
-            if isinstance(cols, str)
-            else list(cols)
-        )
+        cols = [] if cols is None else [cols] if isinstance(cols, str) else list(cols)
         grouped = self.groupby(
             Index(range(self.shape[0])),
             sort=False,
@@ -267,9 +262,7 @@ class TibbleGrouped(Tibble):
         """"""
         if isinstance(grouped, SeriesGroupBy):
             frame = (
-                get_obj(grouped).to_frame(name)
-                if name
-                else get_obj(grouped).to_frame()
+                get_obj(grouped).to_frame(name) if name else get_obj(grouped).to_frame()
             )
             grouped = frame.groupby(
                 get_grouper(grouped),
@@ -418,9 +411,7 @@ class TibbleGrouped(Tibble):
     @property
     def group_vars(self) -> Sequence[str]:
         # When column names changed, we save the new group vars
-        return self._datar.get(
-            "group_vars", get_grouper(self._datar["grouped"]).names
-        )
+        return self._datar.get("group_vars", get_grouper(self._datar["grouped"]).names)
 
 
 class TibbleRowwise(TibbleGrouped):

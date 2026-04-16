@@ -1,4 +1,5 @@
-"""Provide shortcuts to register functions for different types but """
+"""Provide shortcuts to register functions for different types but"""
+
 from __future__ import annotations
 
 import inspect
@@ -10,9 +11,12 @@ from typing import (
     Callable,
     List,
     Mapping,
+    Optional,
     Sequence,
     Set,
     Tuple,
+    Union,
+    cast,
 )
 
 import numpy as np
@@ -49,18 +53,21 @@ def _preprocess_data_args(
 
     args_raw = bound.arguments.copy()
     args_df = Tibble.from_args(
-        **{
-            key: (
-                val
-                if bound.signature.parameters[key].kind
-                != inspect.Parameter.VAR_POSITIONAL
-                else None
-                if len(val) == 0
-                else Tibble.from_pairs([str(i) for i in range(len(val))], val)
-            )
-            for key, val in bound.arguments.items()
-            if key not in exclude
-        }
+        **cast(
+            Mapping[str, Any],
+            {
+                key: (
+                    val
+                    if bound.signature.parameters[key].kind
+                    != inspect.Parameter.VAR_POSITIONAL
+                    else None
+                    if len(val) == 0
+                    else Tibble.from_pairs([str(i) for i in range(len(val))], val)
+                )
+                for key, val in bound.arguments.items()
+                if key not in exclude
+            },
+        )
     )
 
     # inject __args_raw and __args_frame
@@ -70,25 +77,20 @@ def _preprocess_data_args(
         elif arg == "__args_raw":
             bound.arguments[arg] = args_raw
         elif arg in args_df or args_df.columns.str.startswith(f"{arg}$").any():
-            if (
-                bound.signature.parameters[arg].kind
-                != inspect.Parameter.VAR_POSITIONAL
-            ):
+            if bound.signature.parameters[arg].kind != inspect.Parameter.VAR_POSITIONAL:
                 bound.arguments[arg] = args_df[arg]
             elif len(bound.arguments[arg]) > 0:
                 # nest frames
-                bound.arguments[arg] = tuple(
-                    args_df[arg].to_dict("series").values()
-                )
+                bound.arguments[arg] = tuple(args_df[arg].to_dict("series").values())
             # else:  # nothing passed to *args
 
     return bound, args_df
 
 
 def _with_hooks(
-    func: Callable = None,
-    pre: Callable = None,
-    post: str | Callable = None,
+    func: Callable | None = None,
+    pre: Callable | None = None,
+    post: str | Callable | None = None,
 ) -> Callable:
     """Apply hooks to a function
 
@@ -115,8 +117,7 @@ def _with_hooks(
         out = func(*args, **kwargs)
         if post == "transform":
             grouped = [
-                arg for arg in args
-                if isinstance(arg, (SeriesGroupBy, TibbleGrouped))
+                arg for arg in args if isinstance(arg, (SeriesGroupBy, TibbleGrouped))
             ]
             if not grouped:
                 return out
@@ -169,9 +170,9 @@ def _deconstruct_df(df: DataFrame) -> List[DataFrame | Series]:
 
 def _bootstrap_agg_func(
     registered: Callable,
-    func: Callable,
-    pre: Callable,
-    post: Callable,
+    func: Callable | str,
+    pre: Callable | None,
+    post: Callable | str | None,
 ) -> Callable:
 
     @registered.register(Series, backend="pandas")
@@ -179,7 +180,10 @@ def _bootstrap_agg_func(
     def _series_agg(*args, **kwargs):
         if isinstance(func, str) and hasattr(args[0], func):
             return getattr(args[0], func)(*args[1:], **kwargs)
-        return func(*args, **kwargs)
+        if callable(func):
+            return func(*args, **kwargs)
+        else:  # pragma: no cover
+            raise TypeError("`func` must be callable or method name")
 
     @registered.register(DataFrame, backend="pandas")
     @_with_hooks(pre=pre, post=post)
@@ -221,9 +225,9 @@ def _bootstrap_agg_func(
 
 def _bootstrap_transform_func(
     registered: Callable,
-    func: Callable,
-    pre: Callable,
-    post: Callable,
+    func: Callable | str,
+    pre: Callable | None,
+    post: Callable | str | None,
 ) -> Callable:
 
     @registered.register(Series, backend="pandas")
@@ -231,8 +235,10 @@ def _bootstrap_transform_func(
     def _series_transform(*args, **kwargs):
         if isinstance(func, str) and hasattr(args[0], func):  # pragma: no cover
             out = getattr(args[0], func)(*args[1:], **kwargs)
-        else:
+        elif callable(func):
             out = func(*args, **kwargs)
+        else:  # pragma: no cover
+            raise TypeError("`func` must be callable or method name")
         if not isinstance(out, Series):
             out = Series(out, index=args[0].index)
         return out
@@ -269,18 +275,18 @@ def _bootstrap_transform_func(
 def _bootstrap_apply_func(
     registered: Callable,
     func: Callable,
-    pre: Callable,
-    post: Callable,
+    pre: Callable | None,
+    post: Callable | str | None,
     exclude: str | Sequence[str] = (),
-    signature: inspect.Signature = None,
+    signature: inspect.Signature | None = None,
 ) -> Callable:
 
     signature = signature or inspect.signature(func)
 
     if isinstance(exclude, str):
-        exclude = {exclude}
+        exclude_set = {exclude}
     else:
-        exclude = set(exclude)
+        exclude_set = set(exclude)
 
     @singledispatch
     def apply_df(data, bound, exclude, func):
@@ -294,10 +300,7 @@ def _bootstrap_apply_func(
                 dt = data[key]
             except KeyError:
                 continue
-            if (
-                bound.signature.parameters[key].kind
-                == inspect.Parameter.VAR_POSITIONAL
-            ):
+            if bound.signature.parameters[key].kind == inspect.Parameter.VAR_POSITIONAL:
                 dt = _deconstruct_df(dt)
             bound.arguments[key] = dt
 
@@ -318,28 +321,28 @@ def _bootstrap_apply_func(
         bound, args_frame = _preprocess_data_args(
             args,
             kwargs,
-            exclude,
+            exclude_set,
             signature,
         )
-        return apply_df(args_frame, bound, exclude, func)
+        return apply_df(args_frame, bound, exclude_set, func)
 
     registered.apply_df = apply_df
     return registered
 
 
 def func_factory(
-    func: Callable = None,
+    func: Callable | None = None,
     *,
     kind: str = "apply",
-    name: str = None,
-    qualname: str = None,
-    doc: str = None,
-    module: str = None,
+    name: str | None = None,
+    qualname: str | None = None,
+    doc: str | None = None,
+    module: str | None = None,
     pipeable: bool = False,
-    dispatchable: str = None,
+    dispatchable: str | None = None,
     ast_fallback: str = "normal_warning",
-    pre: Callable = None,
-    post: Callable = None,
+    pre: Callable | None = None,
+    post: Callable | None = None,
     **kwargs,  # Other kind-specific arguments.
 ) -> Callable:
     """A factory to register functions.
@@ -421,10 +424,10 @@ def func_factory(
 def func_bootstrap(
     registered: Callable,
     *,
-    func: Callable = None,
+    func: Callable | str | None = None,
     kind: str = "apply",
-    pre: Callable = NO_DEFAULT,
-    post: Callable = NO_DEFAULT,
+    pre: Callable | object = NO_DEFAULT,
+    post: Callable | str | object = NO_DEFAULT,
     **kwargs: Any,
 ) -> Callable:
     """Bootstrap a function
@@ -482,12 +485,42 @@ def func_bootstrap(
     if kind == "transform" and post is None:
         post = "transform"
 
-    bsfunc = (
-        _bootstrap_agg_func
-        if kind in ("agg", "aggregation")
-        else _bootstrap_transform_func
-        if kind == "transform"
-        else _bootstrap_apply_func
-    )
+    if not callable(func) and not isinstance(func, str):  # pragma: no cover
+        raise TypeError("`func` must be a callable or function name")
+    if pre is not None and not callable(pre):  # pragma: no cover
+        raise TypeError("`pre` must be callable or None")
+    if (
+        post is not None
+        and post != "transform"
+        and not callable(post)
+    ):  # pragma: no cover
+        raise TypeError("`post` must be callable, 'transform', or None")
 
-    return bsfunc(registered, func, pre, post, **kwargs)
+    if kind == "apply" and isinstance(func, str):  # pragma: no cover
+        raise TypeError("`func` cannot be a string when kind='apply'")
+
+    if kind == "apply":
+        return _bootstrap_apply_func(
+            registered,
+            cast(Callable, func),
+            cast(Optional[Callable], pre),
+            cast(Optional[Union[Callable, str]], post),
+            **kwargs,
+        )
+
+    if kind == "transform":
+        return _bootstrap_transform_func(
+            registered,
+            cast(Union[Callable, str], func),
+            cast(Optional[Callable], pre),
+            cast(Optional[Union[Callable, str]], post),
+            **kwargs,
+        )
+
+    return _bootstrap_agg_func(
+        registered,
+        cast(Union[Callable, str], func),
+        cast(Optional[Callable], pre),
+        cast(Optional[Union[Callable, str]], post),
+        **kwargs,
+    )

@@ -57,9 +57,7 @@ def test_broadcast_base_array_groupby():
     assert get_obj(out.a).values.tolist() == [2, 2, 1, 1, 1, 2]
 
     df = tibble(a=[1, 2, 2, 3, 3, 3]).groupby("a")
-    with pytest.raises(
-        ValueError, match=r"Cannot recycle `x` with size 2 to 1"
-    ):
+    with pytest.raises(ValueError, match=r"Cannot recycle `x` with size 2 to 1"):
         _broadcast_base([1, 2], df, "x")
 
     df = tibble(a=[1, 2, 1, 2]).group_by("a")
@@ -171,24 +169,18 @@ def test_broadcast_base_groupby_ndframe():
 def test_broadcast_base_ndframe_groupby():
     df = tibble(a=1).groupby("a")
     value = Series(1, name="b")
-    with pytest.raises(
-        ValueError, match="`b` is an incompatible aggregated result"
-    ):
+    with pytest.raises(ValueError, match="`b` is an incompatible aggregated result"):
         _broadcast_base(value, df)
 
     value = Series(1, index=[2])
     value.index.name = "a"
-    with pytest.raises(
-        ValueError, match="`x` is an incompatible aggregated result"
-    ):
+    with pytest.raises(ValueError, match="`x` is an incompatible aggregated result"):
         _broadcast_base(value, df, "x")
 
     df = tibble(a=[2, 1, 2, 1]).groupby("a")
     value = Series([1, 3, 3, 3], index=[1, 2, 2, 2])
     value.index.name = "a"
-    with pytest.raises(
-        ValueError, match="`x` is an incompatible aggregated result"
-    ):
+    with pytest.raises(ValueError, match="`x` is an incompatible aggregated result"):
         _broadcast_base(value, df, "x")
 
     df = tibble(a=[2, 1, 2, 1]).groupby("a")
