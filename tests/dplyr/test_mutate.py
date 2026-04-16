@@ -223,7 +223,7 @@ def test_rowwise_mutate_as_expected():
     res = (
         tibble(x=[1, 2, 3]) >> rowwise() >> mutate(y=if_else(f.x < 2, NA, f.x))
     )
-    assert res.y.fillna(0).tolist() == [0, 2, 3]
+    assert res.y.obj.fillna(0).tolist() == [0, 2, 3]
 
 
 # grouped mutate does not drop grouping attributes

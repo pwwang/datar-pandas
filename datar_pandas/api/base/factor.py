@@ -38,7 +38,8 @@ def _levels(x):
     if not is_categorical_dtype(x):
         return None
 
-    return x.cat.categories.values.copy()
+    import numpy as np
+    return np.asarray(x.cat.categories)
 
 
 @levels.register(object, backend="pandas")
@@ -48,7 +49,8 @@ def _levels_object(x):
 
 @levels.register(Categorical, backend="pandas")
 def _levels_cat(x):
-    return x.categories.values.copy()
+    import numpy as np
+    return np.asarray(x.categories)
 
 
 @func_bootstrap(nlevels, kind="agg")

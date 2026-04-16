@@ -1,38 +1,40 @@
-[tool.poetry]
+[project]
 name = "datar-pandas"
 version = "0.6.0"
 description = "The pandas backend for datar"
-authors = ["pwwang <pwwang@pwwang.com>"]
-license = "MIT"
+authors = [{name = "pwwang", email = "pwwang@pwwang.com"}]
+license = {text = "MIT"}
 readme = "README.md"
-packages = [{include = "datar_pandas"}]
+requires-python = ">=3.9"
+dependencies = [
+    # requires pandas v2+
+    "pdtypes>=0.3",
+    "datar>=0.15.10,<0.16",
+    "datar-numpy>=0.3.6,<0.4",
+]
 
-[tool.poetry.dependencies]
-python = "^3.9"
-# requires pandas v2+
-pdtypes = "^0.2.3"
-datar = "^0.15.10"
-datar-numpy = "^0.3.6"
-# datar-numpy = { path = "../datar-numpy", extras = ["all"] }
-scipy = { version = "^1.8", optional = true }
-wcwidth = { version = "^0.2", optional = true }
+[project.optional-dependencies]
+all = [
+    "scipy>=1.8,<2",
+    "wcwidth>=0.2,<0.3",
+]
 
-[tool.poetry.extras]
-all = ["scipy", "wcwidth"]
-
-[tool.poetry.build]
-generate-setup-file = true
-
-[tool.poetry.group.dev.dependencies]
-pytest = "^8"
-pytest-cov = "^6"
-
-[tool.poetry.plugins.datar]
+[project.entry-points.datar]
 pandas = "datar_pandas:plugin"
 
+[dependency-groups]
+dev = [
+    "pytest>=8",
+    "pytest-cov>=6",
+    "flake8",
+]
+
 [build-system]
-requires = ["poetry-core"]
-build-backend = "poetry.core.masonry.api"
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[tool.hatch.build.targets.wheel]
+packages = ["datar_pandas"]
 
 [tool.pytest.ini_options]
 addopts = "-vv --assert=plain -p no:asyncio -p no:xdist --tb=short --cov-config=.coveragerc --cov=datar_pandas --cov-report xml:cov.xml --cov-report term-missing"

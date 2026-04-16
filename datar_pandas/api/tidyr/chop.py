@@ -158,7 +158,7 @@ def _unchopping(
     for dcol in data_cols:
         # check dtype first so that we don't need to check
         # other types of columns element by element
-        is_df_col = data_cols.dtype == object and all(
+        is_df_col = data[dcol].dtype == object and all(
             # it's either null or a dataframe
             (is_scalar(val) and pd.isnull(val))
             or isinstance(val, DataFrame)
@@ -240,7 +240,8 @@ def _unchopping_nondf_column(series: Series):
     """Unchopping non-dataframe column"""
     val_data = {}
     vals = [
-        [val]
+        [np.nan] if is_scalar(val) and pd.isnull(val)
+        else [val]
         if is_scalar(val)
         else val
         for val in series

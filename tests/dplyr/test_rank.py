@@ -123,8 +123,8 @@ def test_ntile_puts_large_groups_first():
     assert_iterable_equal(ntile(range(6), n=7), np.arange(6) + 1)
     assert_iterable_equal(ntile(range(7), n=7), np.arange(7) + 1)
     # assert_iterable_equal(ntile(range(8), n=7), c(1, np.arange(7) + 1))
-    # Result of qcut
-    assert_iterable_equal(ntile(range(8), n=7), [1, 1, 2, 3, 4, 6, 6, 7])
+    # Result of qcut (pandas 3: matches R behavior)
+    assert_iterable_equal(ntile(range(8), n=7), [1, 1, 2, 3, 4, 5, 6, 7])
 
 
 def test_plain_arrays():

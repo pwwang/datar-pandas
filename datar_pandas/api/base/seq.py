@@ -36,7 +36,7 @@ from ...tibble import Tibble, TibbleGrouped, reconstruct_tibble
 func_bootstrap(length, func=lambda x: x.shape[0], kind="agg")
 func_bootstrap(
     lengths,
-    func=lambda x: x.agg(lambda y: 1 if is_scalar(y) else len(y)),
+    func=lambda x: x.apply(lambda y: 1 if is_scalar(y) else len(y)),
     kind="agg",
 )
 func_bootstrap(

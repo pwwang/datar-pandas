@@ -103,17 +103,22 @@ else:
         return grouped.obj
 
     @_contextmanager
-    def option_context(key, val, *args):
+    def option_context(key, val, *args):  # pragma: no cover
+        import warnings as _warnings
         from pandas._config.config import OptionError
         try:
-            pd_get_option(key)
+            with _warnings.catch_warnings():
+                _warnings.simplefilter("ignore")
+                pd_get_option(key)
         except OptionError:  # pragma: no cover
-            # some option not avialable in earlier pandas
+            # some option not available in earlier pandas
             # e.g. future.no_silent_downcasting
             yield
         else:
-            with pd_option_context(key, val, *args):
-                yield
+            with _warnings.catch_warnings():
+                _warnings.simplefilter("ignore")
+                with pd_option_context(key, val, *args):
+                    yield
 
     def is_categorical_dtype(x):  # noqa: F811
         # pandas2.1

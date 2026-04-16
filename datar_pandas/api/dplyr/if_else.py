@@ -8,7 +8,7 @@ from datar.apis.dplyr import if_else, case_when, case_match
 
 from ... import pandas as pd
 from ...utils import meta_kwargs, get_grouper
-from ...pandas import Series, SeriesGroupBy, get_obj, option_context
+from ...pandas import Series, SeriesGroupBy, get_obj
 from ...tibble import Tibble, reconstruct_tibble
 from ..dplyr.group_by import ungroup
 
@@ -91,11 +91,13 @@ def _case_when(when, case, *when_cases):
     df = Tibble.from_args(*when_cases, _name_repair="minimal")
     ungrouped = ungroup(df, **meta_kwargs)
 
-    value = Series(np.nan, index=ungrouped.index)
-    with option_context("future.no_silent_downcasting", True):
-        for i in range(ungrouped.shape[1] - 1, 0, -2):
-            condition = ungrouped.iloc[:, i - 1].fillna(False).values.astype(bool)
-            value[condition] = ungrouped.iloc[:, i][condition]
+    value = Series(np.nan, index=ungrouped.index, dtype=object)
+    for i in range(ungrouped.shape[1] - 1, 0, -2):
+        raw_condition = ungrouped.iloc[:, i - 1].values
+        condition = np.where(pd.isnull(raw_condition), False, raw_condition)
+        condition = condition.astype(bool)
+        value[condition] = ungrouped.iloc[:, i][condition]
+    value = value.infer_objects()
 
     value = value.to_frame(name="when_case_result")
     value = reconstruct_tibble(value, df)
@@ -112,7 +114,7 @@ def _case_match(_x, *args, _default=None, _dtypes=None):
     cases = (
         arg
         if i % 2 == 1
-        else np.in1d(x, arg).astype(bool) | pd.isnull(x)
+        else np.isin(x, arg).astype(bool) | pd.isnull(x)
         for i, arg in enumerate(args)
     )
     cases = (*cases, True, [None] if _default is None else _default)

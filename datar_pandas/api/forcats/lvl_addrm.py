@@ -75,6 +75,7 @@ def _fct_explicit_na(_f, na_level: Any = "(Missing)") -> Categorical:
 
     if any(is_missing):
         _f = fct_expand(_f, na_level)
+        _f = _f.copy()
         _f[is_missing] = na_level
         return _f
 

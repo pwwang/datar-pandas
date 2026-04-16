@@ -131,7 +131,7 @@ def _pivot_wider(
     if values_from and ret is _data:
         ret = _data.copy()
     for col in values_from:
-        ret[col].fillna(NA_integer_, inplace=True)
+        ret[col] = ret[col].fillna(NA_integer_)
 
     ret = pd.pivot_table(
         ret,

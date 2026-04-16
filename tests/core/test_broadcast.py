@@ -135,8 +135,9 @@ def test_broadcast_base_groupby_groupby():
 
     # rowwise
     df = tibble(a=[1, 2, 2]).rowwise()
-    base = _broadcast_base(df.a, df.a)
-    assert get_obj(base) is get_obj(df.a)
+    dfa = df.a
+    base = _broadcast_base(dfa, dfa)
+    assert get_obj(base) is get_obj(dfa)
 
     base = _broadcast_base(df.a, df)
     assert base is df
@@ -217,8 +218,9 @@ def test_broadcast_base_ndframe_groupby():
     base = _broadcast_base(value, df)
     assert base is df
 
-    base = _broadcast_base(value, df.a)
-    assert get_obj(base) is get_obj(df.a)
+    dfa = df.a
+    base = _broadcast_base(value, dfa)
+    assert get_obj(base) is get_obj(dfa)
 
     value = tibble(a=[1, 2, 3])
     with pytest.raises(ValueError):
@@ -361,7 +363,7 @@ def test_broadcast2():
     )
     assert_iterable_equal(left, [1, 2, 3, 4])
     assert_iterable_equal(right, [7, 7, 8, 8])
-    assert_iterable_equal(grouper.group_info[0], [0, 1, 0, 1])
+    assert_iterable_equal(grouper.codes_info, [0, 1, 0, 1])
     assert not is_rowwise
 
     left, right, grouper, is_rowwise = broadcast2(
@@ -371,7 +373,7 @@ def test_broadcast2():
 
     assert_iterable_equal(left.x, [1, 2, 3, 4])
     assert right == 7
-    assert_iterable_equal(grouper.group_info[0], [0, 1, 2, 3])
+    assert_iterable_equal(grouper.codes_info, [0, 1, 2, 3])
     assert is_rowwise
 
 

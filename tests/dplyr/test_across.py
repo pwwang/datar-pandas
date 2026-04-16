@@ -109,7 +109,13 @@ def test_names_output():
 
 def test_result_locations_aligned_with_column_names():
     df = tibble(x=[1, 2], y=["a", "b"])
-    expect = tibble(x_cls=numpy.int64, x_type=True, y_cls=object, y_type=False)
+    expect = tibble(
+        x_cls=numpy.int64,
+        x_type=True,
+        y_cls="str",
+        y_type=False,
+        _dtypes={"y_cls": object},
+    )
     x = df >> summarise(
         across(everything(), {"cls": lambda x: x.dtype, "type": is_numeric})
     )

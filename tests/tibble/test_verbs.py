@@ -198,15 +198,15 @@ def test_can_safely_add_to_factor_columns_everywhere():
     assert_frame_equal(out, exp)
 
     out = add_row(df, a="d")
-    exp = tibble(a=letters[:4], _dtypes=object)
+    exp = tibble(a=letters[:4])
     assert_frame_equal(out, exp)
 
     out = add_row(df, a="d", _before=0)
-    exp = tibble(a=c("d", letters[:3]), _dtypes=object)
+    exp = tibble(a=c("d", letters[:3]))
     assert_frame_equal(out, exp)
 
     out = add_row(df, a="d", _before=1)
-    exp = tibble(a=list("adbc"), _dtypes=object)
+    exp = tibble(a=list("adbc"))
     assert_frame_equal(out, exp)
 
 

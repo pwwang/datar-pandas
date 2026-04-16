@@ -134,7 +134,9 @@ def _diag_df(
 
     x = x.copy()
     if nrow is not None:
-        np.fill_diagonal(x.values, nrow)
+        arr = x.to_numpy().copy()
+        np.fill_diagonal(arr, nrow)
+        x = type(x)(arr, index=x.index, columns=x.columns)
         return x
     return np.diag(x)
 

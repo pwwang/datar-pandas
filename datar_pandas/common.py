@@ -1,6 +1,8 @@
 import warnings
 from typing import Any
 
+import numpy as np
+
 from datar.apis.base import (
     is_factor as _is_factor,
     is_logical as _is_logical,
@@ -22,11 +24,10 @@ np_meta_kwargs = {"__backend": "numpy", "__ast_fallback": "normal"}
 
 
 def unique(x: Any) -> Any:
-    with warnings.catch_warnings():
-        # unique with argument that is not not a Series, Index, ExtensionArray,
-        # or np.ndarray is deprecated and will raise in a future version.
-        warnings.simplefilter("ignore", FutureWarning)
-        return _unique(x)
+    from .pandas import Series, Index, Categorical
+    if not isinstance(x, (Series, Index, Categorical, np.ndarray)):
+        x = np.array(x, dtype=object)
+    return _unique(x)
 
 
 def is_null(x: Any) -> Data[Bool]:

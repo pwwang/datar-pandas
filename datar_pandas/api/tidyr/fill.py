@@ -63,13 +63,29 @@ def _fill_grouped(
     *columns: str,
     _direction: str = "down",
 ) -> TibbleGrouped:
-    # TibbleGrouped
-    out = _data._datar["grouped"].apply(
-        fill,
-        *columns,
-        _direction=_direction,
-        __ast_fallback="normal",
-        __backend="pandas",
-        # drop the index, pandas 1.4 and <1.4 act differently
-    ).sort_index().reset_index(drop=True)
-    return reconstruct_tibble(out, _data)
+    # Use transform instead of apply to avoid include_groups issue in pandas 3
+    data = _data.copy()
+    if not columns:  # pragma: no cover
+        colidx = list(range(len(_data.columns)))
+    else:
+        colidx = vars_select(_data.columns, *columns)
+    cols = list(_data.columns[colidx])
+    grouped = _data._datar["grouped"]
+    group_vars = list(_data.group_vars)
+
+    for col in cols:
+        sgb = grouped[col]
+        if _direction.startswith("down"):
+            data[col] = sgb.transform(lambda g: g.ffill())
+        else:  # pragma: no cover
+            data[col] = sgb.transform(lambda g: g.bfill())
+
+        if len(_direction) > 4:  # pragma: no cover
+            # Second pass with re-grouped data
+            sgb2 = data[col].groupby(data[group_vars] if group_vars else data.index)
+            if _direction.endswith("down"):
+                data[col] = sgb2.transform(lambda g: g.ffill())
+            else:
+                data[col] = sgb2.transform(lambda g: g.bfill())
+
+    return reconstruct_tibble(data, _data)

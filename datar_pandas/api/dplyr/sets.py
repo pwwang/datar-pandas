@@ -63,6 +63,19 @@ def _intersect_df(x: DataFrame, y: DataFrame) -> DataFrame:
         pd.merge(x, ungroup(y, **meta_kwargs), how="inner"),
         **meta_kwargs,
     )
+    # In pandas 3, merging str (StringDtype) with category can produce object
+    # Restore x's column dtypes when the merge produced object dtype
+    for col in x.columns:
+        if (
+            col in out.columns
+            and out[col].dtype == object
+            and x[col].dtype != object
+            and not isinstance(x[col].dtype, pd.CategoricalDtype)
+        ):
+            try:
+                out[col] = out[col].astype(x[col].dtype)
+            except (TypeError, ValueError):  # pragma: no cover
+                pass
     if isinstance(y, TibbleGrouped):
         return reconstruct_tibble(out, y)
     return out
@@ -88,9 +101,11 @@ def _intersect_sg(x, y) -> SeriesGroupBy:
             )
 
         # intersect each group
+        y_groups = y.groups
+        y_obj = y.obj
         x = (
             x
-            .apply(lambda s: intersect(s, y.get_group(s.name)))
+            .apply(lambda s: intersect(s, y_obj.iloc[y_groups[s.name]]))
             .explode(ignore_index=False)
             .convert_dtypes()
         )
@@ -175,6 +190,18 @@ def _setdiff_df(x, y):
         .reset_index(drop=True),
         **meta_kwargs,
     )
+    # In pandas 3, merging str with category can produce object dtype
+    for col in x.columns:
+        if (
+            col in out.columns
+            and out[col].dtype == object
+            and x[col].dtype != object
+            and not isinstance(x[col].dtype, pd.CategoricalDtype)
+        ):
+            try:
+                out[col] = out[col].astype(x[col].dtype)
+            except (TypeError, ValueError):  # pragma: no cover
+                pass
     if isinstance(y, TibbleGrouped):
         return reconstruct_tibble(out, y)
     return out

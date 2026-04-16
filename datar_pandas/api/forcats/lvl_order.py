@@ -34,6 +34,15 @@ from .utils import check_factor, ForcatsRegType
 from .lvls import lvls_seq
 
 
+def _safe_level_dtype(dtype):
+    """Return dtype if numpy-compatible, else object (for pandas extension dtypes)"""
+    try:
+        np.dtype(dtype)
+        return dtype
+    except TypeError:  # pragma: no cover
+        return object
+
+
 @fct_relevel.register(ForcatsRegType, context=Context.EVAL, backend="pandas")
 def _fct_relevel(
     _f,
@@ -71,7 +80,9 @@ def _fct_relevel(
         first_levels = intersect(first_levels, old_levels)
 
     new_levels = append(
-        setdiff(old_levels, first_levels).astype(old_levels.dtype),
+        setdiff(old_levels, first_levels).astype(
+            _safe_level_dtype(old_levels.dtype)
+        ),
         first_levels,
         after=after,
         __ast_fallback="normal",

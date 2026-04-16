@@ -379,7 +379,7 @@ def _(
             val_sizes = value.index.remove_unused_categories().value_counts(
                 sort=False,
             )
-        elif PANDAS_VERSION[0] == 2 and isinstance(value.index, MultiIndex):
+        elif PANDAS_VERSION[0] == 2 and isinstance(value.index, MultiIndex):  # pragma: no cover
             # Pandas 2 does convert MultiIndex to CategoricalIndex if all
             # are CategoricalIndex
             val_sizes = value.index.to_series().value_counts(sort=False)
@@ -594,14 +594,14 @@ def _(
         if isinstance(value, Series):
             out = Series(
                 value,
-                index=grouper.result_index.take(grouper.group_info[0]),
+                index=grouper.result_index.take(grouper.codes_info),
                 name=value.name,
                 copy=False,
             )
         else:  # DataFrame
             out = Tibble(
                 value,
-                index=grouper.result_index.take(grouper.group_info[0]),
+                index=grouper.result_index.take(grouper.codes_info),
                 copy=False,
             )
 
@@ -627,7 +627,7 @@ def _(
     vgrouper = get_grouper(value)
     # Compatibility has been checked in _broadcast_base
     if isinstance(value, SeriesGroupBy):
-        if np.array_equal(grouper.group_info[0], vgrouper.group_info[0]):
+        if np.array_equal(grouper.codes_info, vgrouper.codes_info):
             return Series(get_obj(value).values, index=index, name=get_obj(value).name)
 
         # broadcast size-one groups and
@@ -635,7 +635,7 @@ def _(
         revalue = _realign_indexes(value, grouper)
         return Series(revalue, index=index, name=get_obj(value).name)
 
-    if np.array_equal(grouper.group_info[0], vgrouper.group_info[0]):
+    if np.array_equal(grouper.codes_info, vgrouper.codes_info):
         return Tibble(
             get_obj(value).values, index=index, columns=get_obj(value).columns
         )

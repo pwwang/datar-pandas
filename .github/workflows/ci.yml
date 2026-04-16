@@ -31,30 +31,25 @@ jobs:
         #     pandas: pandas==2.1.0
 
     steps:
-      - uses: actions/checkout@v4
-      - name: Setup Python # Set Python version
-        uses: actions/setup-python@v5
+      - uses: actions/checkout@v6
+      - name: Install uv
+        uses: astral-sh/setup-uv@v8.0.0
         with:
           python-version: ${{ matrix.python-version }}
       - name: Install dependencies
         run: |
-          python -m pip install --upgrade pip
-          python -m pip install flake8
-          python -m pip install poetry
-          poetry config virtualenvs.create false
-          poetry install -v -E all
-          # reinstall pandas to specific version
-          pip install -U "$PANDAS"
+          uv sync --extra all
+          uv pip install -U "$PANDAS"
         env:
           PANDAS: ${{ matrix.pandas }}
       - name: Run flake8
-        run: flake8 datar_pandas
+        run: uv run flake8 datar_pandas
       - name: Show versions
-        run: python -c 'import datar; datar.get_versions()'
+        run: uv run python -c 'import datar; datar.get_versions()'
       - name: Test with pytest
-        run: pytest tests/ --junitxml=junit/test-results-${{ matrix.python-version }}.xml
+        run: uv run pytest tests/ --junitxml=junit/test-results-${{ matrix.python-version }}.xml
       - name: Upload pytest test results
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         with:
           name: pytest-results-${{ matrix.python-version }}-${{ matrix.pandas }}
           path: junit/test-results-${{ matrix.python-version }}-${{ matrix.pandas }}.xml
@@ -114,15 +109,11 @@ jobs:
       matrix:
         python-version: ["3.10"]
     steps:
-      - uses: actions/checkout@v4
-      - name: Setup Python # Set Python version
-        uses: actions/setup-python@v5
+      - uses: actions/checkout@v6
+      - name: Install uv
+        uses: astral-sh/setup-uv@v8.0.0
         with:
           python-version: ${{ matrix.python-version }}
-      - name: Install dependencies
-        run: |
-          python -m pip install --upgrade pip
-          python -m pip install poetry
       - name: Publish to PyPI
-        run: poetry publish --build -u ${{ secrets.PYPI_USER }} -p ${{ secrets.PYPI_PASSWORD }}
+        run: uv build && uv publish --token ${{ secrets.PYPI_TOKEN }}
         if: success()

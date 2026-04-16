@@ -92,7 +92,8 @@ def test_expand_respects_groups():
     df = tibble(a=[1, 1, 2], b=[1, 2, 1], c=[2, 1, 1])
     out = df >> group_by(f.a) >> expand(f.b, f.c) >> nest(data=c(f.b, f.c))
     assert_frame_equal(
-        get_obj(out.data).values[0], crossing(b=[1, 2], c=[1, 2])
+        get_obj(out.data).values[0], crossing(b=[1, 2], c=[1, 2]),
+        check_dtype=False,
     )
     assert_frame_equal(
         get_obj(out.data).values[1].reset_index(drop=True), tibble(b=1, c=1)

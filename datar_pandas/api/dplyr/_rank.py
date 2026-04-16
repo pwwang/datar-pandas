@@ -105,6 +105,24 @@ def _ntile(x, n):
     return _ntile(np.array(x), n)
 
 
+def _ntile_array_values(x, n):
+    """Compute ntile labels with R-like large-group-first behavior."""
+    if x.size == 0:
+        return np.array([], dtype=float)
+
+    na_mask = pd.isnull(x)
+    if na_mask.all():
+        return np.array([np.nan] * x.size)
+
+    non_na_count = (~na_mask).sum()
+    n = min(n, non_na_count)
+    ranked = Series(x).rank(method="min", na_option="keep").values
+
+    out = np.array([np.nan] * x.size)
+    out[~na_mask] = np.floor((ranked[~na_mask] - 1) * n / non_na_count) + 1
+    return out
+
+
 @_ntile.register(GeneratorType)
 def _ntile_generator(x, n):
     return _ntile(np.array(list(x)), n)
@@ -134,25 +152,18 @@ def _ntile_tibblegrouped(x, n):
 
 @_ntile.register(np.ndarray)
 def _ntile_ndarray(x, n):
-    if x.size == 0:
+    out = _ntile_array_values(x, n)
+    if out.size == 0:
         return Categorical([])
 
-    if pd.isnull(x).all():
-        return Categorical([np.nan] * x.size)
-
-    n = min(n, x.size)
-    return pd.qcut(x, n, labels=np.arange(n) + 1)
+    labels = out[~pd.isnull(out)].astype(int)
+    categories = np.arange(labels.max()) + 1 if labels.size else []
+    return Categorical(labels if labels.size == out.size else out, categories=categories)
 
 
 @_ntile.register(GroupBy)
 def _ntile_groupby(x, n):
-    return x.transform(
-        lambda grup: pd.qcut(
-            grup,
-            min(n, len(grup)),
-            labels=np.arange(min(n, len(grup))) + 1,
-        )
-    )
+    return x.transform(lambda grup: _ntile_array_values(grup.values, n))
 
 
 @singledispatch

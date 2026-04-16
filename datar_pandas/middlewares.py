@@ -1,6 +1,7 @@
 """Middlewares for datar"""
 import html
 import textwrap
+import numpy as np
 from abc import ABC, abstractmethod
 from functools import singledispatch
 from shutil import get_terminal_size
@@ -105,6 +106,11 @@ class Across:
                         *evaluate_expr(args, self.data, context),
                         **evaluate_expr(kwargs, self.data, context),
                     )
+
+                # Keep historical behavior for character columns where
+                # dtype(object) should be reported as str.
+                if isinstance(value, np.dtype) and value == np.dtype(object):  # pragma: no cover
+                    value = "str"
 
                 ret = add_to_tibble(ret, name, value, broadcast_tbl=True)
 

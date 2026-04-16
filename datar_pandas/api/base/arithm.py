@@ -156,9 +156,13 @@ def _cov_seriesgroupby(
     with warnings.catch_warnings():
         # size-1 group will warning about ddof
         warnings.simplefilter("ignore", RuntimeWarning)
-        return (
-            df._datar["grouped"].cov(ddof=ddof).droplevel(-1)["cov"].iloc[::2]
-        )
+        out = df.cov(ddof=ddof)  # type: ignore
+        #             x       cov
+        #     <float64> <float64>
+        # x         3.5       0.0
+        # cov       0.0       0.0
+        # [TibbleGrouped: x (n=2)]
+        return DataFrame(out)["cov"]
 
 
 @scale.register(DataFrame, backend="pandas")

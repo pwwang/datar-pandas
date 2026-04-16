@@ -10,7 +10,7 @@ from datar.core.names import repair_names
 from .pandas import DataFrame, Index, Series, SeriesGroupBy, GroupBy, Grouper, get_obj
 
 from .common import is_scalar, intersect, setdiff, union
-from .utils import PANDAS_VERSION, apply_dtypes, name_of, get_grouper
+from .utils import apply_dtypes, name_of, get_grouper
 
 if TYPE_CHECKING:
     from pandas._typing import Dtype
@@ -288,7 +288,13 @@ class TibbleGrouped(Tibble):
         result = super().__getitem__(key)
         grouped = self._datar["grouped"]
         if isinstance(result, Series):
-            return grouped[key]
+            try:
+                return grouped[key]
+            except KeyError:  # pragma: no cover
+                # key is a grouping column not present in grouped.obj
+                # (pandas 2.2+ excludes group keys from DataFrameGroupBy columns)
+                series = DataFrame.__getitem__(self, key)
+                return series.groupby(get_grouper(grouped))
         if isinstance(result, DataFrame):
             newmeta = self._datar.copy()
             newmeta["grouped"] = result.groupby(
@@ -314,8 +320,7 @@ class TibbleGrouped(Tibble):
         else:
             DataFrame.__setitem__(self, key, value)
 
-        if PANDAS_VERSION[0] == 2:
-            self.regroup(hard=False, inplace=True)
+        self.regroup(hard=False, inplace=True)
 
     def regroup(self, hard=True, inplace=True) -> "TibbleGrouped":
         """Apply my grouping settings to another data frame"""
@@ -352,15 +357,20 @@ class TibbleGrouped(Tibble):
 
     def copy(self, deep: bool = True) -> "TibbleGrouped":
         grouped = self._datar["grouped"]
-        return self.__class__.from_groupby(
-            get_obj(grouped).groupby(
-                get_grouper(grouped),
-                observed=grouped.observed,
-                sort=grouped.sort,
-                dropna=grouped.dropna,
-            ),
-            deep=deep,
+        # Use self (current DataFrame) as the base, not grouped.obj
+        # This ensures column selections (e.g., from iloc) are preserved
+        df_copy = DataFrame.copy(self, deep=deep)
+        new_grouped = df_copy.groupby(
+            get_grouper(grouped),
+            observed=grouped.observed,
+            sort=grouped.sort,
+            dropna=grouped.dropna,
         )
+        meta = {k: v for k, v in self._datar.items() if k != "grouped"}
+        meta["grouped"] = new_grouped
+        result = self.__class__(df_copy, copy=False, meta=meta)
+        result.regroup(hard=False, inplace=True)
+        return result
 
     def reindex(self, *args, **kwargs) -> "TibbleGrouped":
         result = Tibble.reindex(self, *args, **kwargs)
