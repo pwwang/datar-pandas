@@ -9,7 +9,7 @@ requires-python = ">=3.9"
 dependencies = [
     # requires pandas v2+
     "pdtypes>=0.3",
-    "datar>=0.15.10,<0.16",
+    "datar",
     "datar-numpy>=0.3.6,<0.4",
 ]
 

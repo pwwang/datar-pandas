@@ -269,16 +269,16 @@ toml = [
 
 [[package]]
 name = "datar"
-version = "0.15.16"
+version = "0.15.17"
 source = { registry = "https://pypi.org/simple" }
 dependencies = [
     { name = "pipda" },
     { name = "python-simpleconf", extra = ["toml"] },
     { name = "simplug" },
 ]
-sdist = { url = "https://files.pythonhosted.org/packages/25/96/35b2ecb066907631491e5e143731d100afa1e9337b8f15e0022ebd26d79f/datar-0.15.16.tar.gz", hash = "sha256:d0f3baef97653c660c4bbe989b8e3b7ec8ed9ffad3db7b3a2ee805089978811a", size = 11103059, upload-time = "2026-04-15T17:23:34.986Z" }
+sdist = { url = "https://files.pythonhosted.org/packages/80/f2/dc71d380c01bb2d15d4bea0a1d40914789e3d21cf2296caac509b1be74d8/datar-0.15.17.tar.gz", hash = "sha256:c80ad669c6dd6506cb0fd6323bb989dac516cce2cc8a59544ab9a03f79e34540", size = 11106912, upload-time = "2026-04-16T06:30:23.257Z" }
 wheels = [
-    { url = "https://files.pythonhosted.org/packages/34/fe/e6903cc232e49652dd85e7a8369f982151ebbbb83309bba7cc11569d8b43/datar-0.15.16-py3-none-any.whl", hash = "sha256:20bac0eb5415ceceeda08f9f005213a3fe99d3c19166c8a15b3da16c87a4bb0b", size = 10333194, upload-time = "2026-04-15T17:23:37.821Z" },
+    { url = "https://files.pythonhosted.org/packages/78/73/b9dbfbf4578e309722b8a7d53c91a773836da1019f4e971ebe94b22a04f0/datar-0.15.17-py3-none-any.whl", hash = "sha256:076a5b2b7d822ce4a675d3694c4e59aefeee1ed9a685d6deb8f1125eb3cac13e", size = 10333193, upload-time = "2026-04-16T06:30:26.307Z" },
 ]
 
 [[package]]
@@ -324,7 +324,7 @@ dev = [
 
 [package.metadata]
 requires-dist = [
-    { name = "datar", specifier = ">=0.15.10,<0.16" },
+    { name = "datar" },
     { name = "datar-numpy", specifier = ">=0.3.6,<0.4" },
     { name = "pdtypes", specifier = ">=0.3" },
     { name = "scipy", marker = "extra == 'all'", specifier = ">=1.8,<2" },
