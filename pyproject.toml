@@ -1,6 +1,6 @@
 [project]
 name = "datar-pandas"
-version = "0.6.0"
+version = "0.7.0"
 description = "The pandas backend for datar"
 authors = [{name = "pwwang", email = "pwwang@pwwang.com"}]
 license = {text = "MIT"}
