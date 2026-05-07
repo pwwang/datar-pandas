@@ -1,6 +1,6 @@
 [project]
 name = "datar-pandas"
-version = "0.7.0"
+dynamic = ["version"]
 description = "The pandas backend for datar"
 authors = [{name = "pwwang", email = "pwwang@pwwang.com"}]
 license = {text = "MIT"}
@@ -12,6 +12,9 @@ dependencies = [
     "datar>0.15",
     "datar-numpy>=0.3.6,<0.4",
 ]
+
+[tool.hatch.version]
+path = "datar_pandas/version.py"
 
 [project.optional-dependencies]
 all = [
